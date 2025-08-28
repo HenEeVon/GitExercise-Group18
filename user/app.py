@@ -43,13 +43,16 @@ def add_user(user_email,name,gender):
 def home():
     return render_template('home.html')
 
-@app.route("/register", methods=['POST'])
+@app.route("/register", methods=['POST','GET'])
 def register():
-    user_email = request.form['user_email']
-    name = request.form['name']
-    gender = request.form['gender']
-    add_user(user_email,name,gender)
-    return redirect(url_for('login'))
+    if request.method =='POST':
+        user_email = request.form['user_email']
+        name = request.form['name']
+        gender = request.form['gender']
+        add_user(user_email,name,gender)
+        return redirect(url_for('login'))
+        
+    return render_template('register.html')
 
 @app.route("/login")
 def login():
