@@ -1,17 +1,23 @@
 <!DOCTYPE html>
-<html lang=""en">
-
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Home</title>
+    <title>Register</title>
 </head>
+<body>
+    <h1>Sign Up User</h1>
 
-    <body>
-        <h1>Sign Up User</h1>
-         <a href="{{url_for('register')}}">Already have an account? Login here</a><br>
-         <a href="{{url_for('home')}}">Back to Home</a><br>
-         
-    </body>
-    </body>
 
+    <form action="{{ url_for('register') }}" method="POST">
+        <input type="text" name="StudentID" placeholder="Student ID" required><br>
+        <input type="email" name="student_email" placeholder="Email" required><br>
+        <input type="text" name="gender" placeholder="Gender"><br>
+        <input type="text" name="interest" placeholder="Interest"><br>
+        <button type="submit">Register</button>
+    </form>
+
+    <br>
+    <a href="{{ url_for('login') }}">Already have an account? Login here</a><br>
+    <a href="{{ url_for('home') }}">Back to Home</a>
+</body>
 </html>
