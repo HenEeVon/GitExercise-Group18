@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Blog</title>
+    <title>Activity Post</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body class="blogpost">
+<body class="activitypost">
     <div class="container">
-        <h1>My Blog</h1>
+        <h1>Activity Post</h1>
         <a href="{{ url_for('create') }}" class="btn">Create New Post</a>
 
         {% for post in posts %}
@@ -20,7 +20,7 @@
             </form>
         </div>
         {% else %}
-        <p>No blog posts yet.</p>
+        <p>No activity posts yet.</p>
         {% endfor %}
     </div>
 </body>

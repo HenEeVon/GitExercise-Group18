@@ -2,12 +2,12 @@ from flask import Flask, request, redirect, url_for, render_template
 
 app = Flask(__name__)
 
-blog_posts = []
+activity_posts = []
 next_id = 0
 
 @app.route("/")
 def home():
-    return render_template("index.html", posts=blog_posts)
+    return render_template("index.html", posts=activity_posts)
 
 @app.route("/create", methods=["GET", "POST"])
 def create():
@@ -18,8 +18,8 @@ def create():
         date = request.form["date"]
         location = request.form["location"]
 
-        # store blog post with unique ID
-        blog_posts.append({
+        # store activity post with unique ID
+        activity_posts.append({
             "id": next_id,
             "title": title,
             "content": content,
@@ -33,8 +33,8 @@ def create():
 
 @app.route("/delete/<int:post_id>", methods=["POST"])
 def delete(post_id):
-    global blog_posts
-    blog_posts = [post for post in blog_posts if post["id"] != post_id]
+    global activity_posts
+    activity_posts = [post for post in activity_posts if post["id"] != post_id]
     return redirect(url_for("home"))
 
 if __name__ == "__main__":
