@@ -1,30 +1,22 @@
-from flask import Flask, redirect, url_for, render_template
+from flask import Flask, render_template, request
+from activitydb import db, Activity
 
 app = Flask(__name__)
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///FLASKDEMO.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db.init_app(app)
 
-"""
-a = False
-"""
-
-activities = ["Archery","Badminton","Football","Rugby","Swimming"]
-
-posts = [
-    {"id": 1, "title": "Find a partner for Archery!!", "content": "If you r interested, pls contact me", "author": "Eevon" },
-    {"id": 2, "title": "Please join me in Badminton!!", "content": "If you r free, pls contact me", "author": "Eevee" },
-    {"id": 3, "title": "Yoo, u want to swim?", "content": "If you r professional, pls contact me", "author": "Eevery" }
-    ]
 
 @app.route("/")
 def home():
-    return render_template("home.html", act = activities, posts=posts)
+    return render_template("search.html", results = [])
 
 
-app.route("/", methods=["GET","POST"])
-
-
-@app.route("/search", methods=["POST"] )
-def search():
-    return "Search engine not yet done"
+@app.route("/search/<sport>")
+def search(sport):
+    sport = sport.lower()
+    results = (Activity.query.filter(func.lower(Activity.category).like(f"%{sport}%"))).all()
+    
 
 
 
@@ -32,15 +24,6 @@ def search():
 def user(name):
     return f"Hello {name}!"
 
-"""
-@app.route("/admin")
-def admin():
-    if a:
-        return "Hello, admin. What r u doin?"
-    else:
-        return redirect(url_for("home"))
-
-"""
 
 if __name__ == "__main__":
     app.run(debug=True)
