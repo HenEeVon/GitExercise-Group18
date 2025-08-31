@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, url_for, render_template
+from flask import Flask, request, redirect, url_for, render_template, flash
 
 app = Flask(__name__)
 
@@ -9,6 +9,11 @@ next_id = 0
 def home():
     return render_template("index.html", posts=activity_posts)
 
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template("404.html"),404 
+
+# create post form
 @app.route("/create", methods=["GET", "POST"])
 def create():
     global next_id
@@ -31,11 +36,15 @@ def create():
         return redirect(url_for("home"))
     return render_template("create.html")
 
+# delete post
 @app.route("/delete/<int:post_id>", methods=["POST"])
 def delete(post_id):
     global activity_posts
     activity_posts = [post for post in activity_posts if post["id"] != post_id]
     return redirect(url_for("home"))
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
