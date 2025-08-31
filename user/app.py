@@ -9,38 +9,32 @@ DB_path = os.path.join(os.path.dirname(__file__), "user.db")
 
 #Database setup
 def init_db():
-    conn=sqlite3.connect(DB_path)
-    cursor = conn.cursor()
-    cursor.execute("DROP TABLE IF EXISTS users")
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users(
-            user_email TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            gender NOT NULL,
-            password TEXT NOT NULL
-            
-                   )
-                   
-                   ''')
-    conn.commit()
-    conn.close()
+    with sqlite3.connect(DB_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users(
+                user_email TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                gender NOT NULL,
+                password TEXT NOT NULL
+            )
+        ''')
+        conn.commit()
 
-# Get all users from the database
 def get_users():
-    conn=sqlite3.connect(DB_path)
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM users')
-    users = cursor.fetchall()
-    conn.close()
-    return users
+    with sqlite3.connect(DB_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM users')
+        return cursor.fetchall()
 
-# Add new user to database
-def add_user(user_email,name,gender,password):
-    conn = sqlite3.connect(DB_path)
-    cursor = conn.cursor()
-    cursor.execute('INSERT INTO users (user_email,name,gender,password) VALUES (?,?,?,?)',(user_email, name,gender,password))
-    conn.commit()
-    conn.close()
+def add_user(user_email, name, gender, password):
+    with sqlite3.connect(DB_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            'INSERT INTO users (user_email, name, gender, password) VALUES (?, ?, ?, ?)',
+            (user_email, name, gender, password)
+        )
+        conn.commit()
 
 @app.route("/")
 def home():
@@ -66,7 +60,7 @@ def login():
         password = request.form['password']
         users = get_users()
         for user in users:
-            if user[0] == email and user[2] == password: 
+            if user[0] == email and user[3] == password:  #user[0]is index of email
                 return f"Login successful! Welcome {user[1]}"
         message = "Invalid email or password"
 
