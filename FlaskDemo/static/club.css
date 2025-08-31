@@ -1,4 +1,7 @@
-.post-card {
-    background-color: aqua;
+.postcard { 
+    background-color: whitesmoke;
+    padding: 15px;
+    margin: 10px;
     border-radius: 20px;
+    box-shadow: 2px 2px 2px;
 }
