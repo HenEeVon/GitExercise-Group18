@@ -1,8 +1,19 @@
-<!--
 {% extends "base.html" %}
+{% block content %}
+<form class="searchingbar" methods ="GET" action="/">
+    <input name="sport" placeholder="Search by Category..." value="{{sport}}">
+    <button type="submit">Search</button>
+</form>
 
-{% block content%}
+{% for post in results %}
+<h1>Search Result:</h1>
+<h3>{{ post.title }}</h3>
+<p>Category: {{ post.category }}</p>
+<p>Date: {{ post.date }}</p>
+<p>Location: {{ post.location }}</p>
+<p>Gender: {{ post.gender }}</p>
+{% else %}
+<p>No posts found for {{ sport }}</p>
+{% endfor%}
 
-<h1>You searched for...</h1>
-
-{% endblock %}-->
+{% endblock %}
