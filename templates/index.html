@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <html>
+{% extends "base.html" %}
+
+{% block content %}
+
 <head>
     <title>Activity Post</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -24,4 +28,6 @@
         {% endfor %}
     </div>
 </body>
+
+{% endblock %}
 </html>
