@@ -10,14 +10,16 @@
 </head>
 
 <body class="register">
-    <div class="container">
-        <div class="hero">
-            <h1>Register Here</h1>
-        </div>
-
-        <div class="form-container">
-            <form action="{{ url_for('register') }}" method="POST">
-                <input type="email" name="user_email" placeholder="Email" required><br>
+    <div id="page" class="site">
+        <div class="container">
+            <div class="login">
+                <div class="hero">
+                    <h1>Welcome <br>Register here</h1>
+                    <p> If you dont have an account,<br><a href="#">Register.</a></p>
+                    
+                    <div class="main">
+                            <form action="{{ url_for('register') }}" method="POST">
+                                <input type="email" name="user_email" placeholder="Email" required><br>
                 <input type="text" name="name" placeholder="Name" required><br>
 
                 <select name="gender" required>
@@ -33,7 +35,7 @@
 
         <div class="links">
             <a href="{{ url_for('login') }}">Already have an account? Login here</a><br>
-            <a href="{{ url_for('home') }}">Back to Home</a>
+          
         </div>
     </div>
 </body>
