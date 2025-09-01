@@ -19,7 +19,8 @@ def home():
     if sport:
         searched =True
         results = Activity.query.filter(func.lower(Activity.category).like(f"%{sport}%")).all()
-    elif dateinpost:
+        
+    if dateinpost:
         searched = True
         datechosen = datetime.strptime(dateinpost, "%Y-%m-%d").date()
         results = Activity.query.filter(Activity.date == datechosen).all()
