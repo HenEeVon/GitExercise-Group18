@@ -5,15 +5,20 @@
     <button type="submit">Search</button>
 </form>
 
-{% for post in results %}
-<h1>Search Result:</h1>
-<h3>{{ post.title }}</h3>
-<p>Category: {{ post.category }}</p>
-<p>Date: {{ post.date }}</p>
-<p>Location: {{ post.location }}</p>
-<p>Gender: {{ post.gender }}</p>
+{% if results %}
+    <h1>Search Result:</h1>
+    {% for post in results %}
+    <div class="postcard">
+        <h3>{{ post.title }}</h3>
+        <p><b>Category:</b> {{ post.category }}</p>
+        <p><b>Date:</b> {{ post.date }}</p>
+        <p><b>Location:</b> {{ post.location }}</p>
+        <p><b>Gender:</b> {{ post.gender }}</p>
+    </div>
+    {% endfor%}
 {% else %}
-<p>No posts found for {{ sport }}</p>
-{% endfor%}
+<h1>Search Result:</h1>
+<p>No posts related to {{ sport }}</p>
+{% endif %}
 
 {% endblock %}
