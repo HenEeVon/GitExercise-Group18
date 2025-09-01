@@ -1,28 +1,14 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Create Activity Post</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body class="activitypost">
-    <div class="container">
-        <h1>Create Activity Post</h1>
-        <form method="POST">
-            <label>Title</label>
-            <input type="text" name="title" required>
+{% extends "base.html" %}
 
-            <label>Content</label>
-            <textarea name="content" rows="5" required></textarea>
-
-            <label>Date</label>
-            <input type="date" name="date" required>
-
-            <label>Location</label>
-            <input type="text" name="location" required>
-
-            <button type="submit" class="btn">Post</button>
-        </form>
-    </div>
-</body>
-
-</html>
+{% block content %}
+<div class="container">
+    <h1>Create Activity Post</h1>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        {{ form.title.label }} {{ form.title() }}
+        {{ form.content.label }} {{ form.content() }}
+        {{ form.location.label }} {{ form.location() }}
+        {{ form.submit() }}
+    </form>
+</div>
+{% endblock %}

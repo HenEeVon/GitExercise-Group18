@@ -1,33 +1,45 @@
-<!DOCTYPE html>
-<html>
 {% extends "base.html" %}
+
+{% block title %}Activity Posts{% endblock %}
 
 {% block content %}
 
-<head>
-    <title>Activity Post</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body class="activitypost">
-    <div class="container">
-        <h1>Activity Post</h1>
-        <a href="{{ url_for('create') }}" class="btn">Create New Post</a>
+<div class="container">
 
-        {% for post in posts %}
-            <div class="post">
-                <h2>{{ post.title }}</h2>
-                <p class="meta">{{ post.date }} | {{ post.location }}</p>
-                <p>{{ post.content }}</p>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="flashes">
+            {% for msg in messages %}
+                <li>{{ msg }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
 
-                <form method="POST" action="{{ url_for('delete', post_id=post.id) }}" onsubmit="return confirm('Are you sure you want to delete this post?');">
-                    <button type="submit" class="btn delete-btn">Delete</button>
-                </form>
-            </div>
-        {% else %}
-            <p>No activity posts yet.</p>
-        {% endfor %}
-    </div>
-</body>
+    <h1>Activity Post</h1>
+    <a href="{{ url_for('create') }}" class="btn">Create New Post</a>
 
+    {% for post in posts %}
+        <div class="post">
+            <h2>{{ post.title }}</h2>
+            <p class="meta">
+                {% if post.local_event_date %}
+                    {{ post.local_event_date.strftime('%Y-%m-%d %H:%M') }}
+                {% endif %}
+                | {{ post.location }}
+            </p>
+            <p class="meta">
+                {% if post.local_date_posted %}
+                    Posted on {{ post.local_date_posted.strftime('%Y-%m-%d %H:%M') }}
+                {% endif %}
+            </p>
+            <form method="POST" action="{{ url_for('delete', post_id=post.id) }}" onsubmit="return confirm('Are you sure you want to delete this post?');">
+                <button type="submit" class="btn delete-btn">Delete</button>
+            </form>
+        </div>
+    {% else %}
+        <p>No activity posts yet.</p>
+    {% endfor %}
+</div>
 {% endblock %}
-</html>
+
