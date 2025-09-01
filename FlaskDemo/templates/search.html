@@ -1,13 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-<form class="searchingbar" methods ="GET" action="/">
-    <input name="sport" placeholder="Search by Category..." value="{{sport}}">
+<form class="searchingbar" method ="GET" action="/">
+    <input type="text" name="sport" placeholder="Search by Category..." value="{{sport or '' }}">
     <button type="submit">Search</button>
+</form>
 
-    <h3>Choose Date: </h3>
-    <input type="date" name="date" value="{{ date }}">
-
-    <button type="submit">Search</button>
+<form class="searchingdate" method ="GET" action="/">
+<label><b>Choose Date: </b></label>
+    <input type="date" name="date" value="{{ date or '' }}">
+    <input type="hidden" name="sport" value="{{ sport or '' }}">
+    <button type="submit">Apply</button>
 </form>
 
 
@@ -17,7 +19,7 @@
     <div class="postcard">
         <h3>{{ post.title }}</h3>
         <p><b>Category:</b> {{ post.category }}</p>
-        <p><b>Date:</b> {{ post.date.year }}/{{ post.date.month }}/{{ post.date.day}}</p>
+        <p><b>Date:</b> {{ post.date.year }}/{{ post.date.day }}/{{ post.date.month}}</p>
         <p><b>Location:</b> {{ post.location }}</p>
         <p><b>Gender:</b> {{ post.gender }}</p>
     </div>
