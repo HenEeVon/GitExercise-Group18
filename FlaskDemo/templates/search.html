@@ -13,20 +13,22 @@
 </form>
 
 
-{% if results %}
+{% if searched %}
     <h1>Search Result:</h1>
-    {% for post in results %}
-    <div class="postcard">
-        <h3>{{ post.title }}</h3>
-        <p><b>Category:</b> {{ post.category }}</p>
-        <p><b>Date:</b> {{ post.date.year }}/{{ post.date.day }}/{{ post.date.month}}</p>
-        <p><b>Location:</b> {{ post.location }}</p>
-        <p><b>Gender:</b> {{ post.gender }}</p>
-    </div>
-    {% endfor%}
-{% else %}
-<h1>Search Result:</h1>
-<p>No posts related to {{ sport }}</p>
+
+   {% if results %} 
+        {% for post in results %}
+        <div class="postcard">
+            <h3>{{ post.title }}</h3>
+            <p><b>Category:</b> {{ post.category }}</p>
+            <p><b>Date:</b> {{ post.date.year }}/{{ post.date.month }}/{{ post.date.day}}</p>
+            <p><b>Location:</b> {{ post.location }}</p>
+            <p><b>Gender:</b> {{ post.gender }}</p>
+        </div>
+        {% endfor%}
+    {% else %}
+    <p>No posts related to {{ sport }}</p>
+    {% endif %}
 {% endif %}
 
 {% endblock %}
