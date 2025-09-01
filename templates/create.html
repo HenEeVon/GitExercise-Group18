@@ -6,6 +6,7 @@
     <form method="POST">
         {{ form.hidden_tag() }}
         {{ form.title.label }} {{ form.title() }}
+        {{ form.author.label }} {{ form.author() }}
         {{ form.content.label }} {{ form.content() }}
         {{ form.location.label }} {{ form.location() }}
         {{ form.submit() }}

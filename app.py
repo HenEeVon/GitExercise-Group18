@@ -1,6 +1,6 @@
 from flask import Flask, request, redirect, url_for, render_template, flash
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
+from wtforms import StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
@@ -41,6 +41,7 @@ class ActivityForm(FlaskForm):
     title = StringField("Title", validators=[DataRequired()])
     content = StringField("Content", validators=[DataRequired()])
     location = StringField("Location", validators=[DataRequired()])
+    author = StringField("Author")
     submit = SubmitField("Post")
 
 @app.route("/")
@@ -74,6 +75,7 @@ def create():
             title=form.title.data,
             content=form.content.data,
             location=form.location.data,
+            author=form.author.data if form.author.data else "Anonymous",
             event_date=datetime.utcnow().replace(tzinfo=pytz.utc)
         )
         db.session.add(new_post)
@@ -90,6 +92,24 @@ def delete(post_id):
     db.session.commit()
     flash("Post deleted successfully!")
     return redirect(url_for("home"))
+
+@app.route("/post/<int:post_id>")
+def post_detail(post_id):
+    post = Posts.query.get_or_404(post_id)
+
+    if post.event_date:
+        post.local_event_date = post.event_date.replace(tzinfo=pytz.utc).astimezone(MALAYSIA_TZ)
+    else:
+        post.local_event_date = None
+
+    if post.date_posted:
+        post.local_date_posted = post.date_posted.replace(tzinfo=pytz.utc).astimezone(MALAYSIA_TZ)
+    else:
+        post.local_date_posted = None
+
+    return render_template("post_detail.html", post=post)
+
+
 
 if __name__ == "__main__":
     with app.app_context():
