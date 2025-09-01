@@ -1,15 +1,36 @@
 {% extends "base.html" %}
 
+{% block title %}Create Activity Post{% endblock %}
+
 {% block content %}
 <div class="container">
     <h1>Create Activity Post</h1>
     <form method="POST">
         {{ form.hidden_tag() }}
-        {{ form.title.label }} {{ form.title() }}
-        {{ form.author.label }} {{ form.author() }}
-        {{ form.content.label }} {{ form.content() }}
-        {{ form.location.label }} {{ form.location() }}
-        {{ form.submit() }}
+
+        <p>
+            {{ form.title.label }} <br>
+            {{ form.title() }}
+        </p>
+        <p>
+            {{ form.author.label }} <br>
+            {{ form.author() }}
+        </p>
+        <p>
+            {{ form.content.label }} <br>
+            {{ form.content() }}
+        </p>
+        <p>
+            {{ form.location.label }} <br>
+            {{ form.location() }}
+        </p>
+        <p>
+            {{ form.event_datetime.label }} <br>
+            {{ form.event_datetime() }}
+        </p>
+        <p>
+            {{ form.submit() }}
+        </p>
     </form>
 </div>
 {% endblock %}

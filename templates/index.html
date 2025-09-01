@@ -23,12 +23,12 @@
     <div class="post">
         <h2>{{ post.title }}</h2>
         <p class="meta">
-            {% if post.local_date_posted %}
-                Posted on {{ post.local_date_posted.strftime('%Y-%m-%d %H:%M') }}
-            {% endif %}
-            | Author: {{ post.author or "Anonymous" }}
+            Event: {{ post.event_datetime }} | {{ post.location }}
         </p>
-        <a href="{{ url_for('post_detail', post_id=post.id) }}" class="btn">Find out more</a>
+        <p class="meta">
+            Posted on {{ post.date_posted.strftime('%Y-%m-%d %H:%M') if post.local_date_posted else '' }} by {{ post.author }}
+        </p>
+        <a href="{{ url_for('post_detail', post_id=post.id) }}" class="btn">Find Out More</a>
 
         <form method="POST" action="{{ url_for('delete', post_id=post.id) }}" onsubmit="return confirm('Are you sure you want to delete this post?');">
             <button type="submit" class="btn delete-btn">Delete</button>

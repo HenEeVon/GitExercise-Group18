@@ -1,25 +1,23 @@
 {% extends "base.html" %}
 
-{% block title %}{{ post.title }}{% endblock %}
+{% block title %}My post{% endblock %}
 
 {% block content %}
 <div class="container">
     <h1>{{ post.title }}</h1>
     <p class="meta">
-        {% if post.local_event_date %}
-            Event Date: {{ post.local_event_date.strftime('%Y-%m-%d %H:%M') }}
-        {% endif %}
-        <br>
-        {% if post.local_date_posted %}
-            Posted on: {{ post.local_date_posted.strftime('%Y-%m-%d %H:%M') }}
-        {% endif %}
-        <br>
-        Author: {{ post.author or "Anonymous" }}
-        <br>
-        Location: {{ post.location }}
+        Event Date: {{ post.local_event_datetime }} | {{ post.location }}
     </p>
-    <p>{{ post.content }}</p>
+    <p class="meta">
+        Posted on: {{ post.local_date_posted.strftime('%Y-%m-%d %H:%M') if post.local_date_posted else '' }} by {{ post.author }}
+    </p>
+    <p>Location: {{ post.location }}</p>
+    </p>
+    <div class="content">
+        <p>{{ post.content }}</p>
+    </div>
+    
 
-    <a href="{{ url_for('home') }}" class="btn">Back to Posts</a>
+    <a href="{{ url_for('home') }}" class="btn">Back to Home</a>
 </div>
 {% endblock %}
