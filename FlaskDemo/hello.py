@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request
 from activitydb import db, Activity
 from sqlalchemy import func
+from datetime import datetime
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///FLASKDEMO.db"
@@ -11,12 +12,20 @@ db.init_app(app)
 @app.route("/", methods = ["GET"])
 def home():
     sport = (request.args.get("sport") or "" ).strip().lower()
-    searched = bool(sport)
+    dateinpost = request.args.get("date")
+    results =[]
+    searched = False
 
-    results = []
-    if searched:
+    if sport:
+        searched =True
         results = Activity.query.filter(func.lower(Activity.category).like(f"%{sport}%")).all()
-    return render_template("search.html", results=results, searched = searched, sport=sport)
+    elif dateinpost:
+        searched = True
+        datechosen = dateinpost.strptime(dateinpost, "%Y-%m-%d").date()
+        results = Activity.query.filter(Activity.date == datechosen).all()
+
+    return render_template("search.html", results=results, searched = searched, sport=sport, date = dateinpost)
+
     
 if __name__ == "__main__":
     with app.app_context():
