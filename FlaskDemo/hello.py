@@ -8,18 +8,16 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db.init_app(app)
 
 
-@app.route("/")
+@app.route("/", methods = ["GET"])
 def home():
-    return render_template("search.html", results = [], searched = False, sport = None)
+    sport = (request.args.get("sport") or "" ).strip().lower()
+    searched = bool(sport)
 
-
-@app.route("/search/<sport>")
-def search(sport):
-    sport = sport.lower()
-    results = (Activity.query.filter(func.lower(Activity.category).like(f"%{sport}%"))).all()
-    return render_template("search.html", results=results, searched = True, sport=sport)
+    results = []
+    if searched:
+        results = Activity.query.filter(func.lower(Activity.category).like(f"%{sport}%")).all()
+    return render_template("search.html", results=results, searched = searched, sport=sport)
     
-
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
