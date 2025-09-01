@@ -21,7 +21,7 @@ def home():
         results = Activity.query.filter(func.lower(Activity.category).like(f"%{sport}%")).all()
     elif dateinpost:
         searched = True
-        datechosen = dateinpost.strptime(dateinpost, "%Y-%m-%d").date()
+        datechosen = datetime.strptime(dateinpost, "%Y-%m-%d").date()
         results = Activity.query.filter(Activity.date == datechosen).all()
 
     return render_template("search.html", results=results, searched = searched, sport=sport, date = dateinpost)
