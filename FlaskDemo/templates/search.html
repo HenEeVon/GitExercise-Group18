@@ -3,7 +3,13 @@
 <form class="searchingbar" methods ="GET" action="/">
     <input name="sport" placeholder="Search by Category..." value="{{sport}}">
     <button type="submit">Search</button>
+
+    <h3>Choose Date: </h3>
+    <input type="date" name="date" value="{{ date }}">
+
+    <button type="submit">Search</button>
 </form>
+
 
 {% if results %}
     <h1>Search Result:</h1>
@@ -11,7 +17,7 @@
     <div class="postcard">
         <h3>{{ post.title }}</h3>
         <p><b>Category:</b> {{ post.category }}</p>
-        <p><b>Date:</b> {{ post.date }}</p>
+        <p><b>Date:</b> {{ post.date.year }}/{{ post.date.month }}/{{ post.date.day}}</p>
         <p><b>Location:</b> {{ post.location }}</p>
         <p><b>Gender:</b> {{ post.gender }}</p>
     </div>
