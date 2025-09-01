@@ -16,16 +16,21 @@ def home():
     results =[]
     searched = False
 
-    if sport:
+    if sport and dateinpost:
         searched =True
+        datechosen = datetime.strptime(dateinpost, "%Y-%m-%d").date()
+        results = Activity.query.filter(func.lower(Activity.category).like(f"%{sport}%"), Activity.date == datechosen).all()
+
+    elif sport:
+        searched = True
         results = Activity.query.filter(func.lower(Activity.category).like(f"%{sport}%")).all()
-        
-    if dateinpost:
+
+    elif dateinpost:
         searched = True
         datechosen = datetime.strptime(dateinpost, "%Y-%m-%d").date()
         results = Activity.query.filter(Activity.date == datechosen).all()
 
-    return render_template("search.html", results=results, searched = searched, sport=sport, date = dateinpost)
+    return render_template("search.html", results=results, searched=searched, sport=sport, date=dateinpost)
 
     
 if __name__ == "__main__":
