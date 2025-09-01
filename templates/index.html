@@ -26,7 +26,7 @@
             Event: {{ post.event_datetime }} | {{ post.location }}
         </p>
         <p class="meta">
-            Posted on {{ post.date_posted.strftime('%Y-%m-%d %H:%M') if post.local_date_posted else '' }} by {{ post.author }}
+            Posted on {{ post.local_date_posted_value.strftime('%Y-%m-%d %H:%M') if post.local_date_posted_value else '' }}
         </p>
         <a href="{{ url_for('post_detail', post_id=post.id) }}" class="btn">Find Out More</a>
 

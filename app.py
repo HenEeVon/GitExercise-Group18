@@ -7,6 +7,7 @@ from datetime import datetime
 import pytz
 
 MALAYSIA_TZ = pytz.timezone("Asia/Kuala_Lumpur")
+UTC = pytz.utc
 
 app = Flask(__name__)
 # add database
@@ -24,12 +25,16 @@ class Posts(db.Model):
     author = db.Column(db.String(255))
     location = db.Column(db.String(255))
     event_datetime = db.Column(db.String(255))
-    date_posted = db.Column(db.DateTime, default=lambda: datetime.utcnow().replace(tzinfo=pytz.utc))
+    date_posted = db.Column(db.DateTime, default=datetime.utcnow()) 
 
     def local_date_posted(self):
         if self.date_posted is None:
             return None
-        return self.date_posted.replace(tzinfo=pytz.utc).astimezone(MALAYSIA_TZ)
+    
+        utc_time = UTC.localize(self.date_posted)
+        malaysia_time = utc_time.astimezone(MALAYSIA_TZ)
+        return malaysia_time
+
 
 # Flask-WTF form
 class ActivityForm(FlaskForm):
@@ -45,11 +50,11 @@ class ActivityForm(FlaskForm):
 def home():
     posts = Posts.query.order_by(Posts.date_posted.desc()).all()
     for post in posts:
-        # posted date handling
         if post.date_posted:
-            post.local_date_posted = post.date_posted.replace(tzinfo=pytz.utc).astimezone(MALAYSIA_TZ)
+            utc_time = pytz.utc.localize(post.date_posted)
+            post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
         else:
-            post.local_date_posted = None
+            post.local_date_posted_value = None
     return render_template("index.html", posts=posts)
 
 
@@ -72,7 +77,7 @@ def create():
         )
         db.session.add(new_post)
         db.session.commit()
-        flash("Activity post created successfully!")
+        flash("Post created successfully!")
         return redirect(url_for("home"))
     return render_template("create.html", form=form)
 
@@ -86,15 +91,11 @@ def delete(post_id):
     flash("Post deleted successfully!")
     return redirect(url_for("home"))
 
+
 @app.route("/post/<int:post_id>")
 def post_detail(post_id):
     post = Posts.query.get_or_404(post_id)
-
-    if post.date_posted:
-        post.local_date_posted = post.date_posted.replace(tzinfo=pytz.utc).astimezone(MALAYSIA_TZ)
-    else:
-        post.local_date_posted = None
-
+    post.local_date_posted_value = post.local_date_posted()
     return render_template("post_detail.html", post=post)
 
 
