@@ -26,7 +26,7 @@
 
                         <!--Show error if login fails -->
                         {% if message %}
-                            <p class="errorlogin">{{ message }}</p>
+                            <p class="error1">{{ message }}</p>
                         {% endif %}
 
                         <p class="colortext">
@@ -55,26 +55,24 @@
             </div>
         </div>
     </div>
-    
     <!-- Reset Password Modal -->
-    <div id="resetModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="document.getElementById('resetModal').style.display='none'">&times;</span>
-            <h2>Reset Password</h2>
-            <form action="{{ url_for('resetpass') }}" method="POST">
-                <p class="colortext">
-                    <span><strong>Email address:</strong></span>
-                    <input type="email" name="email" required>
-                </p>
-                <p class="colortext">
-                    <span><strong>New Password:</strong></span>
-                    <input type="password" name="new_password" required>
-                </p>
-                <p>
-                    <input type="submit" value="Reset Password">
-                </p>
-            </form>
-        </div>
+<div id="resetModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="document.getElementById('resetModal').style.display='none'">&times;</span>
+        <h2>Reset Password</h2>
+        
+        <form action="{{ url_for('resetpass') }}" method="POST">
+            <p class="colortext">
+                <span><strong>Email address:</strong></span>
+                <input type="email" name="email" required>
+            </p>
+            <p class="colortext">
+                <span><strong>New Password:</strong></span>
+                <input type="password" name="new_password" required>
+            </p>
+            <p>
+                <input type="submit" value="Reset Password">
+            </p>
+        </form>
     </div>
-</body>
 </html>
