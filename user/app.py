@@ -47,10 +47,16 @@ def register():
         name = request.form['name']
         gender = request.form['gender']
         password = request.form['password']
-        add_user(user_email,name,gender,password)
-        return redirect(url_for('login'))
+
+        try:
+            add_user(user_email, name, gender, password)
+            return redirect(url_for('login'))
         
-    return render_template('register.html')
+        except sqlite3.IntegrityError:
+            message = "Email already exist! Please log in."
+            return render_template('register.html', message=message)
+
+    return render_template('register.html', message=message)
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
@@ -59,11 +65,22 @@ def login():
         email = request.form['user_email'].strip().lower() 
         password = request.form['password']
         users = get_users()
-        for user in users:
-            if user[0] == email and user[3] == password:  #user[0]is index of email
+
+        # find user in databse 
+        user = None
+        for u in users:
+            if u[0].strip().lower() == email:
+                user = u
+                break
+
+        # check password correct or not
+        if user:
+            if user[3] == password:
                 return f"Login successful! Welcome {user[1]}"
-            
-            message = "User not Found. Invalid email or password !!!" #loop finishes without returning
+            else:
+                message = "Incorrect password! Try again."
+        else:
+            message = "Email not found!"
 
     return render_template('login.html', message=message)
 
@@ -84,11 +101,11 @@ def resetpass():
                 # Update password
                 c.execute('UPDATE users SET password = ? WHERE user_email = ?', (new_password, user_email))
                 conn.commit()
-                return 'Password updated successfully!'
+                message = 'Password updated successfully!'
             else:
-                return 'Email not found!'
+                message = 'Email not found! Please type again.'
 
-    return render_template('resetpass.html')
+    return render_template('login.html', message=message)
 
 
 if __name__ =='__main__':
