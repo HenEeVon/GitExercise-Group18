@@ -17,6 +17,7 @@
 *,::before,::after{
     box-sizing:border-box;
 }
+
 body.login{
     font-family:'Rubik', sans-serif;
     font-size:16px;
@@ -74,7 +75,7 @@ body.login{
 .hero::before {
     content:'';
     position: absolute;
-    top:35%;
+    top:30%;
     left:50%;
     width: 280px;
     height: 100px;
@@ -136,8 +137,12 @@ form input:not(.submit){
     background: var(--light-bg-color);
 }
 
+.password span {
+    color: #605d5d;
+}
+
 .form-title {
-    font-size: 20px;
+    font-size: 30px;
     font-weight: 600;
     margin: 0 0 10px 0;        
     color: var(--dark-color);
@@ -175,8 +180,8 @@ form input.submit:hover{
 
 .icon-btn {
     position: absolute;    
-    top: -5px;             
-    left: -520px;            
+    top: 20px;             
+    left: -530px;            
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -194,4 +199,90 @@ form input.submit:hover{
 .icon-btn:hover {
     background: #3347c2;
     transform: scale(1.1);
+}
+
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5); 
+}
+
+/* Modal content box */
+.modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+}
+
+.modal-content p {
+    margin-bottom: 15px; /* gap between each row */
+}
+
+
+/* Close button */
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.close:hover {
+    color: #000;
+}
+
+/*register page*/
+body.register{
+    font-family:'Rubik', sans-serif;
+    font-size:16px;
+    font-weight: 400;
+    line-height: 1.8;
+    color: var(--dark-color);
+    background: linear-gradient(to right, #f1f1ff,#ffffff);
+}
+
+.gender-row {
+    display: flex;
+    gap: 15px; /* spacing between items */
+    color: #605d5d;
+}
+
+.gender-row label {
+    display: flex;
+    align-items: center;
+    gap: 5px; /* space between dot and text */
+}
+
+.colortext span{
+    color: #605d5d;
+}
+
+.icon-btnreg { /* x button */
+    position: absolute;    
+    top: 100px;             
+    left: -620px;            
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: var(--white-color);
+    font-size: 22px;
+    text-decoration: none;
+    transition: 0.2s ease;
+    z-index: 1000;         
+}
+
+.errorlogin{
+    color:red;
 }
