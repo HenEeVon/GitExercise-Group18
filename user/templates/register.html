@@ -21,8 +21,13 @@
                 </div>
 
                 <div class="main">
+                    
                     <form action="{{ url_for('register') }}" method="POST">
                         <h2 class="form-title">Register User:</h2>
+                        
+                        {% if message %}
+                        <p class="error1">{{ message }}</p>
+                        {% endif %}
 
                         <p class="colortext">
                             <span>
