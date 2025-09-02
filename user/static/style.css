@@ -283,6 +283,27 @@ body.register{
     z-index: 1000;         
 }
 
-.errorlogin{
+.error1{
     color:red;
+    font-weight: bold;
+}
+
+.reset{
+    color:rgb(213, 0, 0);
+}
+
+.back-home-btn {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 10px 18px;
+    background-color: #007BFF; /* blue */
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.back-home-btn:hover {
+    background-color: #0056b3;
 }
