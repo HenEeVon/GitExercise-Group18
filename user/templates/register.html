@@ -24,14 +24,14 @@
                     
                     <form action="{{ url_for('register') }}" method="POST">
                         <h2 class="form-title">Register User:</h2>
-                        
+
                         {% if message %}
                         <p class="error1">{{ message }}</p>
                         {% endif %}
 
                         <p class="colortext">
                             <span>
-                                <strong>Email adress:</strong> <!--make text bold-->
+                                <strong>Email address:</strong> <!--make text bold-->
                             </span>
                             <input type="email" name="user_email" required>
                         </p>
