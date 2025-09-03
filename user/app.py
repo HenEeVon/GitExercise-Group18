@@ -42,6 +42,7 @@ def home():
 
 @app.route("/register", methods=['POST','GET'])
 def register():
+    message = '' #define message
     if request.method =='POST':
         user_email = request.form['user_email'].strip().lower() 
         name = request.form['name']
