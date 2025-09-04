@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+    <body>
+        <h1>Home</h1>
+        <a href="{{url_for('login')}}">Login User</a><br>
+        <a href="{{url_for('register')}}">Register User</a><br>
+    </body>
+
+</html>
