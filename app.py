@@ -77,7 +77,7 @@ def create():
         )
         db.session.add(new_post)
         db.session.commit()
-        flash("Post created successfully!")
+        flash("Post created successfully!","success")
         return redirect(url_for("home"))
     return render_template("create.html", form=form)
 
@@ -95,7 +95,7 @@ def edit_post(post_id):
         post.event_datetime = form.event_datetime.data
         # update database
         db.session.commit()
-        flash("Post Has Been Updated!")
+        flash("Post Has Been Updated!","info")
         return redirect(url_for("post_detail",post_id=post.id))
     form.title.data = post.title
     form.author.data = post.author
@@ -112,7 +112,7 @@ def delete(post_id):
     post = Posts.query.get_or_404(post_id)
     db.session.delete(post)
     db.session.commit()
-    flash("Post deleted successfully!")
+    flash("Post deleted successfully!","danger")
     return redirect(url_for("home"))
 
 

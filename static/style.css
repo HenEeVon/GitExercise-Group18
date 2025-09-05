@@ -74,12 +74,6 @@ input, textarea {
     
 }
 
-.del-rpt-btn {
-    display:flex;
-    gap:4px;
-    
-}
-
 
 .delete-btn {
     background: #dc3545;
@@ -92,23 +86,6 @@ input, textarea {
     background: #a71d2a;
 }
 
-.report-btn {
-    margin-top: 15px;
-    padding: 10px 15px;
-    color: white;
-    text-decoration: none;
-    border-style:solid;
-    border-color:black;
-    border-radius: 8px;
-    text-align: center;
-    background: #dc3545;
-    margin-top: 10px;
-    cursor: pointer;
-}
-
-.report-btn:hover {
-    background: #a71d2a;
-}
 
 .post {
     position: relative;
@@ -172,9 +149,41 @@ input, textarea {
 }
 
 .cancel-btn {
-    background-color:#6c757d;
+    background-color:#007bff;
 }
 
 .cancel-btn:hover {
-    background-color:#5a6268;
+    background-color:#0056b3;
+}
+
+
+.alert {
+    font-family: Arial, sans-serif;
+    padding: 12px 20px;
+    margin: 15px 0;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #fff;
+    text-align:center;
+}
+
+
+.alert-success {
+    background-color: #7cd491;
+}
+
+
+.alert-danger {
+    background-color: #ef5161;
+}
+
+
+.alert-info {
+    background-color: #78b9ff;
+}
+
+
+.alert {
+    animation: fadeIn 0.4s ease-in-out;
 }

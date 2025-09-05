@@ -3,8 +3,22 @@
 {% block title %}Create Activity Post{% endblock %}
 
 {% block content %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, msg in messages %}
+            <div class="alert alert-{{ category }}" role="alert">
+                {{ msg }}
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
 <div class="container">
     <h1>Create Activity Post</h1>
+
+    
+
     <form method="POST">
         {{ form.hidden_tag() }}
 
