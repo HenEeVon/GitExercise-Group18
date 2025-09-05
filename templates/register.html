@@ -21,33 +21,35 @@
                 </div>
 
                 <div class="main">
+
+                    {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                    {% for message in messages %}
+                    <div class="popup">
+                        <div class="popup-content">
+                            <p>{{ message }}</p>
+                            <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    {% endwith %}
                     
                     <form action="{{ url_for('register') }}" method="POST">
                         <h2 class="form-title">Register User:</h2>
 
-                        {% if message %}
-                        <p class="error1">{{ message }}</p>
-                        {% endif %}
-
                         <p class="colortext">
-                            <span>
-                                <strong>Email address:</strong> <!--make text bold-->
-                            </span>
+                            <span><strong>Email address:</strong></span>
                             <input type="email" name="user_email" required>
                         </p>
 
                         <p class="colortext">
-                            <span>
-                                <strong>Full name:</strong> <!--make text bold-->
-                            </span>
+                            <span><strong>Full name:</strong></span>
                             <input type="text" name="name" required>
                         </p>
 
                         <p class="gender-row">
-                             <span>
-                                <strong>Gender:</strong> <!--make text bold-->
-                            </span>
-                            
+                            <span><strong>Gender:</strong></span>
                             <label>
                                 <input type="radio" name="gender" value="Male" required> Male
                             </label>
@@ -57,9 +59,7 @@
                         </p>
 
                         <p class="colortext">
-                            <span>
-                                <strong>Password:</strong> <!--make text bold-->
-                            </span>
+                            <span><strong>Password:</strong></span>
                             <input type="password" name="password" required>
                         </p>
 
