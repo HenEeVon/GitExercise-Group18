@@ -10,6 +10,11 @@ form.searchingbar button {
     width: 80px;
 }
 
+form.searchingdate input {
+margin: 10px;
+
+}
+
 .postcard { 
     background-color: whitesmoke;
     padding: 15px;
