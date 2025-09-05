@@ -28,9 +28,11 @@
             {{ form.event_datetime.label }} <br>
             {{ form.event_datetime() }}
         </p>
-        <p>
-            {{ form.submit() }}
-        </p>
+        <div style="margin-top:1rem;">
+            {{ form.submit(class="btn post-btn") }}
+            <a href="{{ url_for('home') }}" class="btn cancel-btn">Cancel</a>
+        </div>
+            
     </form>
 </div>
 {% endblock %}

@@ -41,6 +41,9 @@ input, textarea {
     text-decoration: none;
     border-radius: 8px;
     text-align: center;
+    vertical-align: middle;
+    cursor:pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .btn:hover {
@@ -58,11 +61,120 @@ input, textarea {
     font-size: 0.9em;
 }
 
+.join-btn {
+    display:inline-bloock;
+    border:none;
+    margin-top: 15px;
+    padding: 11.5px 12px;
+    background: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    text-align: center;
+    
+}
+
+.del-rpt-btn {
+    display:flex;
+    gap:4px;
+    
+}
+
+
 .delete-btn {
     background: #dc3545;
     margin-top: 10px;
+    cursor: pointer;
 }
+
 
 .delete-btn:hover {
     background: #a71d2a;
+}
+
+.report-btn {
+    margin-top: 15px;
+    padding: 10px 15px;
+    color: white;
+    text-decoration: none;
+    border-style:solid;
+    border-color:black;
+    border-radius: 8px;
+    text-align: center;
+    background: #dc3545;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+.report-btn:hover {
+    background: #a71d2a;
+}
+
+.post {
+    position: relative;
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.post-menu {
+    position: relative;
+    display: inline-block;
+}
+
+.menu-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.menu-dropdown {
+    display: none;
+    position: absolute;
+    top: 25px;
+    right: 0;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    min-width: 100px;
+    z-index: 10;
+}
+
+.menu-dropdown a {
+    display: block;
+    padding: 8px 12px;
+    text-decoration: none;
+    color: #333;
+}
+
+.menu-dropdown a:hover {
+    background: #f0f0f0;
+}
+
+.post-menu:hover .menu-dropdown {
+    display: block;
+}
+
+.chat-btn {
+    font-family: Arial, sans-serif;
+    border:none;
+    padding:11px;
+    cursor:pointer;
+}
+
+.cancel-btn {
+    background-color:#6c757d;
+}
+
+.cancel-btn:hover {
+    background-color:#5a6268;
 }
