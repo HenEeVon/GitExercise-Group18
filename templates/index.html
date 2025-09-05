@@ -4,7 +4,9 @@
 
 {% block content %}
 
-   {% with messages = get_flashed_messages(with_categories=true) %}
+<div class="container">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, msg in messages %}
                 <div class="alert alert-{{ category }}" role="alert">
@@ -14,9 +16,6 @@
         {% endif %}
     {% endwith %}
 
-<div class="container">
-
- 
 
     <h1>Activity Post</h1>
     <a href="{{ url_for('create') }}" class="btn">Create New Post</a>
