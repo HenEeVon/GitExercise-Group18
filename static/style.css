@@ -72,16 +72,29 @@ body.login{
     text-decoration: underline;
 }
 
-.hero::before {
-    content:'';
+body.user .hero::before {
+    content: '';
     position: absolute;
-    top:30%;
-    left:50%;
+    top: 30%;
+    left: 50%;
     width: 280px;
     height: 100px;
     background: linear-gradient(to right, var(--primary-color), #c471ed, #f64f59);
     z-index: -1;
     filter: blur(70px);
+    transform: translate(-50%, -50%);
+}
+
+body.admin .hero::before {
+    content: '';
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    width: 280px;
+    height: 100px;
+    background: linear-gradient(to right, #4f7efe, #72ff6f, #eaff74);
+    z-index: -1;
+    filter: blur(50px); 
     transform: translate(-50%, -50%);
 }
 
