@@ -36,7 +36,7 @@ class Admin(UserMixin, db.Model):
     def get_id(self):
         return self.admin_email
     
-class Admin_requests(UserMixin, db.model):
+class Admin_requests(UserMixin, db.Model):
     __tablename__ = "admin_request"
     admin_request_id = db.Column(db.Integer, primary_key=True)
     admin_email = db.Column(db.String(255), db.ForeignKey('users.email'), nullable=False)
