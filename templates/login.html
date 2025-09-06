@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+    <title>Login</title>
+</head>
+
+<body class="user">
+
+    <!-- Navigation Bar -->
+    <header>
+        <a class="header-logo"><span>EbFit</span></a>
+        <nav class="nav-bar">
+            <a href="{{ url_for('home') }}" class="nav-items">Home</a>
+            <a href="{{ url_for('login') }}" class="nav-items-lines">Log In</a>
+            <a href="{{ url_for('register') }}" class="nav-items">Sign Up</a>
+        </nav>
+    </header>
+
+    <div id="popup"></div>
+    <div id="page" class="site">
+        <div class="container">
+            <div class="login">
+                <div class="hero">
+                    <h1>Welcome <br>to ebFit.</h1>
+                    <p>
+                        If you don’t have an account,<br>
+                        <a href="{{ url_for('register') }}">Register Here</a>.
+                    </p>
+                </div>
+
+                <div class="main">
+                    {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                    {% for message in messages %}
+                    <div class="popup">
+                        <div class="popup-content">
+                            <p>{{ message }}</p>
+                            <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    {% endwith %}
+
+                    <form action="{{ url_for('login') }}" method="POST">
+                        <h2 class="form-title">Login User:</h2>
+
+                        <p class="colortext">
+                            <span><strong>Email address:</strong></span>
+                            <input type="email" name="user_email" required>
+                        </p>
+
+                        <p class="password">
+                            <span><strong>Password:</strong></span>
+                            <input type="password" name="password" required>
+                            <br>
+                            <a href="#" onclick="document.getElementById('resetModal').style.display='block'">
+                                Forgot Password?
+                            </a>
+                        </p>
+
+                        <p>
+                            <input type="submit" class="submit" value="Login">
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div id="resetModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('resetModal').style.display='none'">&times;</span>
+            <h2>Reset Password</h2>
+            
+            <form action="{{ url_for('resetpass') }}" method="POST">
+                <p class="colortext">
+                    <span><strong>Email address:</strong></span>
+                    <input type="email" name="email" required>
+                </p>
+                <p class="colortext">
+                    <span><strong>New Password:</strong></span>
+                    <input type="password" name="new_password" required>
+                </p>
+                <p>
+                    <input type="submit" value="Reset Password">
+                </p>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
