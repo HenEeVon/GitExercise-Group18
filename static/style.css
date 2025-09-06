@@ -350,13 +350,12 @@ body.register{
     box-shadow: 0 5px 20px rgba(0,0,0,0.3);
     font-size: 16px;
 }
-
-/*home*/
-#herohome{
+/* Home Section */
+#herohome {
     padding: 0 15%;
 }
 
-header{
+header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -367,14 +366,14 @@ header{
     animation-delay: 0.2s;
 }
 
-.headerlogo{
+.header-logo {
     font-size: 32px;
-    font-weight:800;
+    font-weight: 800;
     color: #01B388;
 }
 
 .header-logo span {
-    color: #228FEB
+    color: #228FEB;
 }
 
 nav {
@@ -384,19 +383,27 @@ nav {
     gap: 30px;
 }
 
-.nav-item{
+.nav-items {
     font-size: 17px;
     font-weight: 500;
     color: grey;
     cursor: pointer;
     transition: 0.2s;
+    text-decoration: none;
+    padding-bottom: 5px;
 }
 
-.nav-items:hover{
-    color:#01B388
+.nav-items:hover {
+    color: #01B388;
 }
 
-.header-cta-btn{
+/* Active page highlight */
+.nav-items.lines {
+    border-bottom: 2px solid #01B388;
+    color: #01B388;
+}
+
+.header-cta-btn {
     font-size: 17px;
     font-weight: 600;
     padding: 10px 25px;
@@ -404,26 +411,26 @@ nav {
     color: white;
     border-radius: 25px;
     cursor: pointer;
-    transition:0.2s;
+    transition: 0.2s;
 }
 
-.header-cta-btn:hover{
+.header-cta-btn:hover {
     background-color: #009270;
 }
 
-/*herohome content*/
-.herohome-content{
-    display:grid;
+/* Hero Section Content */
+.herohome-content {
+    display: grid;
     grid-template-columns: 1fr 1.2fr;
+    align-items: center;
 }
 
-.left-content h1{
+.left-content h1 {
     font-size: 4rem;
     font-weight: 800;
     color: rgba(0,0,0,0.8);
     line-height: 1.5;
     margin-bottom: 30px;
-    width: 80px;
     animation: bottomIn 1s ease-in-out forwards;
     opacity: 0;
     animation-delay: 0.3s;
@@ -441,10 +448,10 @@ h1 span {
     margin-bottom: 30px;
     animation: bottomIn 1s ease-in-out forwards;
     opacity: 0;
-    animation-delay:0.3s;
+    animation-delay: 0.3s;
 }
 
-.big-cta-btn{
+.big-cta-btn {
     font-size: 18px;
     font-weight: 500;
     text-transform: uppercase;
@@ -458,21 +465,22 @@ h1 span {
     animation: bottomIn 1s ease-in-out forwards;
     opacity: 0;
     animation-delay: 0.4s;
+    text-decoration: none;
 }
 
-.big-cta-btn:hover{
-    background-color:#01B388;
+.big-cta-btn:hover {
+    background-color: #01B388;
     color: white;
 }
 
-.herohome-img{
+.herohome-img {
     width: 100%;
     animation: zoomIn 1s ease-in-out forwards;
     opacity: 0;
     animation-delay: 0.2s;
 }
 
-/*Animations*/
+/* Animations */
 @keyframes zoomIn {
     from {
         transform: scale(0.8);
