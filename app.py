@@ -79,10 +79,7 @@ class ActivityForm(FlaskForm):
     submit = SubmitField("Post")
 
 
-
-# ---------------------------
 # Flask-Login User Loader
-# ---------------------------
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.filter_by(user_email=user_id).first()
@@ -135,15 +132,13 @@ def login():
 
 
 # User homepage
-@app.route("/user-home")
-@login_required
+@app.route("/")
 def user_home():
-    return render_template("user_home.html")
+    return render_template("home.html")
 
 
 # Admin dashboard (manage requests)
 @app.route("/admin-dashboard")
-@login_required
 def admin_dashboard():
     if current_user.role != "admin":
         flash("Access denied.")
@@ -187,7 +182,6 @@ def logout():
 
 # Request admin access
 @app.route("/request-admin", methods=["GET", "POST"])
-@login_required
 def request_admin():
     if request.method == "POST":
         reason = request.form["reason"]
@@ -210,7 +204,6 @@ def request_admin():
 
 # Approve request
 @app.route("/approve-admin/<int:request_id>", methods=["POST"])
-@login_required
 def approve_admin(request_id):
     if current_user.role != "admin":
         flash("Access denied.")
@@ -244,7 +237,7 @@ def reject_admin(request_id):
     return redirect(url_for("admin_dashboard"))
 
 # post interface
-@app.route("/")
+@app.route("/index")
 def home():
     posts = Posts.query.order_by(Posts.date_posted.desc()).all()
     for post in posts:
@@ -320,10 +313,7 @@ def post_detail(post_id):
     post.local_date_posted_value = post.local_date_posted()
     return render_template("post_detail.html", post=post)
 
-
-# ---------------------------
 # Run
-# ---------------------------
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
