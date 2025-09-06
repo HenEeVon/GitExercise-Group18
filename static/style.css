@@ -46,9 +46,31 @@ body.login{
     display: flex;
     flex-wrap: nowrap;   
     justify-content: center;
-    align-items: center;
-    gap: 150px;           
+    align-items: center;  
+    margin-top: -100px;        
 }
+
+
+.login-box {
+    background: #ffffff;
+    padding: 40px 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 450px;
+    margin: 0 auto;
+    animation: fadeIn 0.5s ease-in-out;
+    margin-left: -80px;
+}
+
+.login-box .form-title {
+    margin-bottom: 20px;
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--dark-color);
+    text-align: center;
+}
+
 
 .hero{
     flex: 1 0 66.6666%;
@@ -194,29 +216,6 @@ form input.submit:hover{
     background: var(--light-bg-color);
 }
 
-.icon-btn {
-    position: absolute;    
-    top: 20px;             
-    left: -530px;            
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    color: var(--white-color);
-    font-size: 22px;
-    text-decoration: none;
-    transition: 0.2s ease;
-    z-index: 1000;         
-}
-
-.icon-btn:hover {
-    background: #3347c2;
-    transform: scale(1.1);
-}
-
 .modal {
     display: none; /* Hidden by default */
     position: fixed;
@@ -281,24 +280,6 @@ body.register{
     color: #605d5d;
 }
 
-.icon-btnreg { /* x button */
-    position: absolute;    
-    top: 100px;             
-    left: -520px;            
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    color: var(--white-color);
-    font-size: 22px;
-    text-decoration: none;
-    transition: 0.2s ease;
-    z-index: 1000;         
-}
-
 .error1{
     color:red;
     font-weight: bold;
@@ -306,22 +287,6 @@ body.register{
 
 .reset{
     color:rgb(213, 0, 0);
-}
-
-.back-home-btn {
-    display: inline-block;
-    margin-top: 10px;
-    padding: 10px 18px;
-    background-color: #007BFF; /* blue */
-    color: white;
-    text-decoration: none;
-    border-radius: 6px;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-}
-
-.back-home-btn:hover {
-    background-color: #0056b3;
 }
 
 /* Popup */
@@ -350,8 +315,15 @@ body.register{
     box-shadow: 0 5px 20px rgba(0,0,0,0.3);
     font-size: 16px;
 }
+
+/* Animation for smooth entry */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
 /* Home Section */
-#herohome {
+.page-container {
     padding: 0 15%;
 }
 
@@ -394,13 +366,13 @@ nav {
 }
 
 .nav-items:hover {
-    color: #01B388;
+    color: #ff1a1a;
 }
 
 /* Active page highlight */
 .nav-items.lines {
-    border-bottom: 2px solid #01B388;
-    color: #01B388;
+    border-bottom: 2px solid #07519b;
+    color: #3a7bcb;
 }
 
 .header-cta-btn {
