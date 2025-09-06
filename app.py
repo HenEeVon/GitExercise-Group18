@@ -24,7 +24,7 @@ UTC = pytz.utc
 
 # Flask app
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///user.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///ebfit.db"
 app.config["SECRET_KEY"] = "060226*"  # Needed for session management and flash messages
 db = SQLAlchemy(app)
 
@@ -167,15 +167,19 @@ def request_admin():
 
         hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
         new_admin = Admin(admin_email=admin_email, name=name, password=hashed_password)
-
+        
         try:
             db.session.add(new_admin)
             db.session.commit()
-            flash("Your request has been submitted.")
-
-        return redirect(url_for("user_home"))
+            flash("Your request has been submitted.", "success")
+            return redirect(url_for("user_home"))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"An error occurred: {str(e)}", "danger")
+            return redirect(url_for("request_admin"))
 
     return render_template("request_admin.html")
+
 
 
 @app.route("/login_admin", methods=["GET", "POST"])
