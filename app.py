@@ -88,14 +88,6 @@ def load_user(user_id):
     return User.query.filter_by(user_email=user_id).first()
 
 
-# ---------------------------
-# Routes
-# ---------------------------
-@app.route("/")
-def home():
-    return render_template("home.html")
-
-
 # User registration
 @app.route("/register", methods=["GET", "POST"])
 def register():
