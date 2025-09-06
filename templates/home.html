@@ -3,16 +3,40 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Home</title>
 </head>
+<body>
+    <section id ="herohome">
+        <header>
+            <a class="header-logo"><span>EbFit</span></a>
+            <nav class="nav-bar">
+                <a href="{{url_for('home')}}" class="nav-items">Home</a>
+                <a href="{{url_for('login')}}" class="nav-items">Log In</a>
+                <a href="{{url_for('register')}}" class="nav-items">Sign Up</a>
+            </nav>
+        </header>
 
-    <body>
-        <h1>Home</h1>
-        <a href="{{url_for('login')}}">Login User</a><br>
-        <a href="{{url_for('register')}}">Register User</a><br>
-        <a href="{{url_for('login_admin')}}">Login Admin</a><br>
-        <a href="{{url_for('request_admin')}}">Request Admin</a><br>
-    </body>
+        <div class="heohome-content">
+            <div class="left-content">
+                <div>
+                    <h1>About<span> ebFit</span> </h1>
+                    <p>Ebfit is designed to be free, simple, and student-focused. 
+                        Instead of confusing users with a wide variety of categories and expensive subscription, 
+                        Ebfit allows students to create an account and edit posts, request and join activities, as well as track activities. 
+                        This positions Ebfit as a user-friendly website that helps MMU students to find reliable sports activities.</p>
+                        <a href="{{url_for('login')}}" class="big-cta-btn">Log In</a>
+                        <a href="{{url_for('register')}}" class="big-cta-btn">Register</a>
+                </div>
+            </div>
+
+            <div class ="right-content">
+                <img src="static/images/run.jpg"class="herohome-img">
+            </div>
+        </div>
+    </section>
+</body>
 
 </html>
