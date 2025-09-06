@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Post{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Edit Post</h1>
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+
+        <div>
+            {{ form.title.label }}<br>
+            {{ form.title(size=40) }}
+        </div>
+
+        <div>
+            {{ form.author.label }}<br>
+            {{ form.author(size=40) }}
+        </div>
+
+        <div>
+            {{ form.content.label }}<br>
+            {{ form.content(rows=5, cols=40) }}
+        </div>
+
+        <div>
+            {{ form.location.label }}<br>
+            {{ form.location(size=40) }}
+        </div>
+
+        <div>
+            {{ form.event_datetime.label }}<br>
+            {{ form.event_datetime(size=40) }}
+        </div>
+
+
+        <div>
+            {{ form.submit(class="btn") }}
+        </div>
+    </form>
+
+    <a href="{{ url_for('post_detail', post_id=post.id) }}" class="btn">Cancel</a>
+</div>
+{% endblock %}

@@ -6,21 +6,38 @@ from flask_login import (
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField, TextAreaField
+from wtforms.validators import DataRequired
+from datetime import datetime
+import pytz
+import os
 
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+# Ensure the instance folder exists
+os.makedirs(os.path.join(basedir, "instance"), exist_ok=True)
+
+# Timezones
+MALAYSIA_TZ = pytz.timezone("Asia/Kuala_Lumpur")
+UTC = pytz.utc
+
+# Flask app
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///user.db"
-app.config["SECRET_KEY"] = "060226*"
+app.config["SECRET_KEY"] = "060226*"  # Needed for session management and flash messages
 db = SQLAlchemy(app)
 
-# Flask-Login setup
+# Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
-
-# ---------------------------
+# -------------------------
 # Database Models
-# ---------------------------
+# -------------------------
+
+# user database
 class User(UserMixin, db.Model):
     __tablename__ = "users"
     user_email = db.Column(db.String(255), primary_key=True)
@@ -33,33 +50,42 @@ class User(UserMixin, db.Model):
         return self.user_email
 
 
-class AdminRequest(db.Model):
-    __tablename__ = "admin_requests"
-    id = db.Column(db.Integer, primary_key=True)
-    user_email = db.Column(db.String(255), db.ForeignKey("users.user_email"), nullable=False)
+class Admin(UserMixin, db.Model):
+    __tablename__ = "admins"
+    admin_email = db.Column(db.String(255), primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+
+    def get_id(self):
+        return self.admin_email
+    
+class Admin_requests(UserMixin, db.Model):
+    __tablename__ = "admin_request"
+    admin_request_id = db.Column(db.Integer, primary_key=True)
+    admin_email = db.Column(db.String(255), db.ForeignKey('users.email'), nullable=False)
     join_reason = db.Column(db.Text, nullable=False)
-    approval = db.Column(db.String(20), default="pending")  # pending / approved / rejected
+    admin_approval = db.Column(db.Boolean, nullable=True, default=None) 
 
-    user = db.relationship("User", backref="admin_requests")
+    def __repr__(self):
+        return f"<AdminRequest {self.admin_email} - {self.admin_approval}>"
+    # self.admin_email： show user email who requested admin access
+    # self.admin_approval: show the request if true=approved, false(rejected)
 
-
-# ---------------------------
-# Flask-Login User Loader
-# ---------------------------
+# load user
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.filter_by(user_email=user_id).first()
+    user = User.query.filter_by(user_email=user_id).first()
+    if user:
+        return user
+    return Admin.query.filter_by(admin_email=user_id).first()
 
-
-# ---------------------------
-# Routes
-# ---------------------------
+# home
 @app.route("/")
 def home():
+
     return render_template("home.html")
 
-
-# User registration
+# user
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -70,7 +96,6 @@ def register():
 
         hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
         new_user = User(user_email=user_email, name=name, gender=gender, password=hashed_password)
-
         try:
             db.session.add(new_user)
             db.session.commit()
@@ -83,7 +108,6 @@ def register():
     return render_template("register.html")
 
 
-# Login (works for both user and admin)
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -105,32 +129,11 @@ def login():
     return render_template("login.html")
 
 
-# User homepage
-@app.route("/user-home")
-@login_required
-def user_home():
-    return render_template("user_home.html")
-
-
-# Admin dashboard (manage requests)
-@app.route("/admin-dashboard")
-@login_required
-def admin_dashboard():
-    if current_user.role != "admin":
-        flash("Access denied.")
-        return redirect(url_for("home"))
-
-    requests = AdminRequest.query.filter_by(approval="pending").all()
-    return render_template("admin_dashboard.html", requests=requests)
-
-
-# Reset password
 @app.route("/resetpass", methods=["GET", "POST"])
 def resetpass():
     if request.method == "POST":
         email = request.form.get("email").strip().lower()
         new_password = request.form.get("new_password")
-
         if not email or not new_password:
             flash("Email and new password are required!")
             return redirect(url_for("resetpass"))
@@ -143,7 +146,6 @@ def resetpass():
             return redirect(url_for("login"))
         else:
             flash("Email not found!")
-
     return render_template("resetpass.html")
 
 
@@ -155,22 +157,19 @@ def logout():
     flash("Logged out successfully.")
     return redirect(url_for("home"))
 
-
-# Request admin access
-@app.route("/request-admin", methods=["GET", "POST"])
-@login_required
+# admin
+@app.route("/request_admin", methods=["GET", "POST"])
 def request_admin():
     if request.method == "POST":
-        reason = request.form["reason"]
-        existing_request = AdminRequest.query.filter_by(
-            user_email=current_user.user_email, approval="pending"
-        ).first()
+        admin_email = request.form["admin_email"].strip().lower()
+        name = request.form["name"]
+        password = request.form["password"]
 
-        if existing_request:
-            flash("You already have a pending request.")
-        else:
-            new_request = AdminRequest(user_email=current_user.user_email, join_reason=reason)
-            db.session.add(new_request)
+        hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
+        new_admin = Admin(admin_email=admin_email, name=name, password=hashed_password)
+
+        try:
+            db.session.add(new_admin)
             db.session.commit()
             flash("Your request has been submitted.")
 
@@ -179,46 +178,26 @@ def request_admin():
     return render_template("request_admin.html")
 
 
-# Approve request
-@app.route("/approve-admin/<int:request_id>", methods=["POST"])
-@login_required
-def approve_admin(request_id):
-    if current_user.role != "admin":
-        flash("Access denied.")
-        return redirect(url_for("home"))
+@app.route("/login_admin", methods=["GET", "POST"])
+def login_admin():
+    if request.method == "POST":
+        email = request.form["admin_email"].strip().lower()
+        password = request.form["password"]
 
-    req = AdminRequest.query.get_or_404(request_id)
-    req.approval = "approved"
+        admin_instance = Admin.query.filter_by(admin_email=email).first()
+        if admin_instance and check_password_hash(admin_instance.password, password):
+            login_user(admin_instance)
+            flash(f"Welcome {admin_instance.name}!")
+            return redirect(url_for("home"))
+        else:
+            flash("Invalid email or you are NOT admin !")
 
-    user = User.query.filter_by(user_email=req.user_email).first()
-    if user:
-        user.role = "admin"
+    return render_template("login_admin.html")
 
-    db.session.commit()
-    flash(f"{user.name} is now an admin.")
-    return redirect(url_for("admin_dashboard"))
-
-
-# Reject request
-@app.route("/reject-admin/<int:request_id>", methods=["POST"])
-@login_required
-def reject_admin(request_id):
-    if current_user.role != "admin":
-        flash("Access denied.")
-        return redirect(url_for("home"))
-
-    req = AdminRequest.query.get_or_404(request_id)
-    req.approval = "rejected"
-    db.session.commit()
-
-    flash("Request rejected.")
-    return redirect(url_for("admin_dashboard"))
-
-
-# ---------------------------
-# Run
-# ---------------------------
+# run
 if __name__ == "__main__":
+    # Ensure instance folder exists
+    os.makedirs("instance", exist_ok=True)
     with app.app_context():
         db.create_all()
         app.run(debug=True)
