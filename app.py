@@ -8,55 +8,34 @@ from wtforms import StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired
 from datetime import datetime
 import pytz
+import os
 
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+# Ensure the instance folder exists
+os.makedirs(os.path.join(basedir, "instance"), exist_ok=True)
+
+# Timezones
 MALAYSIA_TZ = pytz.timezone("Asia/Kuala_Lumpur")
 UTC = pytz.utc
 
+# Flask app
 app = Flask(__name__)
-
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///user.db"
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///posts.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(basedir, "instance", "ebfit.db")
 app.config["SECRET_KEY"] = "***"  # Needed for session management and flash messages
+
 db = SQLAlchemy(app)
 
-
-# posts database model
-class Posts(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255))
-    content = db.Column(db.Text)
-    author = db.Column(db.String(255))
-    location = db.Column(db.String(255))
-    event_datetime = db.Column(db.String(255))
-    date_posted = db.Column(db.DateTime, default=datetime.utcnow) 
-
-    def local_date_posted(self):
-        if self.date_posted is None:
-            return None
-    
-        utc_time = UTC.localize(self.date_posted)
-        malaysia_time = utc_time.astimezone(MALAYSIA_TZ)
-        return malaysia_time
-
-
-# Flask-WTF form
-class ActivityForm(FlaskForm):
-    title = StringField("Title", validators=[DataRequired()])
-    content = TextAreaField("Content", validators=[DataRequired()])
-    location = StringField("Location", validators=[DataRequired()])
-    event_datetime = StringField("Event Date & Time (e.g. 2025-09-01, 8am - 10am)", validators=[DataRequired()])
-    author = StringField("Author")
-    submit = SubmitField("Post")
-
-
-
-# Flask-Login setup
+# Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
+# -------------------------
+# Database Models
+# -------------------------
 
-# user database
+# User model
 class User(UserMixin, db.Model):
     __tablename__ = "users"
     user_email = db.Column(db.String(255), primary_key=True)
@@ -65,9 +44,9 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(255), nullable=False)
 
     def get_id(self):
-        return self.user_email #create currently login user
+        return self.user_email
 
-
+# Admin model
 class Admin(UserMixin, db.Model):
     __tablename__ = "admins"
     admin_email = db.Column(db.String(255), primary_key=True)
@@ -76,20 +55,49 @@ class Admin(UserMixin, db.Model):
 
     def get_id(self):
         return self.admin_email
-    
+
+# Admin requests
 class Admin_requests(UserMixin, db.Model):
     __tablename__ = "admin_request"
     admin_request_id = db.Column(db.Integer, primary_key=True)
-    admin_email = db.Column(db.String(255), db.ForeignKey('users.email'), nullable=False)
+    admin_email = db.Column(db.String(255), db.ForeignKey('users.user_email'), nullable=False)  # FIXED
     join_reason = db.Column(db.Text, nullable=False)
-    admin_approval = db.Column(db.Boolean, nullable=True, default=None) 
+    admin_approval = db.Column(db.Boolean, nullable=True, default=None)
 
     def __repr__(self):
         return f"<AdminRequest {self.admin_email} - {self.admin_approval}>"
-    # self.admin_email： show user email who requested admin access
-    # self.admin_approval: show the request if true=approved, false(rejected)
 
-# load user
+# Posts model
+class Posts(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255))
+    content = db.Column(db.Text)
+    author = db.Column(db.String(255))
+    location = db.Column(db.String(255))
+    event_datetime = db.Column(db.String(255))
+    date_posted = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def local_date_posted(self):
+        if self.date_posted is None:
+            return None
+        utc_time = UTC.localize(self.date_posted)
+        malaysia_time = utc_time.astimezone(MALAYSIA_TZ)
+        return malaysia_time
+
+# -------------------------
+# Forms
+# -------------------------
+class ActivityForm(FlaskForm):
+    title = StringField("Title", validators=[DataRequired()])
+    content = TextAreaField("Content", validators=[DataRequired()])
+    location = StringField("Location", validators=[DataRequired()])
+    event_datetime = StringField("Event Date & Time (e.g. 2025-09-01, 8am - 10am)", validators=[DataRequired()])
+    author = StringField("Author")
+    submit = SubmitField("Post")
+
+# -------------------------
+# Flask-Login Loader
+# -------------------------
 @login_manager.user_loader
 def load_user(user_id):
     user = User.query.filter_by(user_email=user_id).first()
@@ -97,7 +105,18 @@ def load_user(user_id):
         return user
     return Admin.query.filter_by(admin_email=user_id).first()
 
-# user
+# -------------------------
+# Routes
+# -------------------------
+
+@app.route("/")
+def home():
+
+    return render_template("home.html")
+
+# -------------------------
+# User Routes
+# -------------------------
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -108,7 +127,6 @@ def register():
 
         hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
         new_user = User(user_email=user_email, name=name, gender=gender, password=hashed_password)
-
         try:
             db.session.add(new_user)
             db.session.commit()
@@ -119,7 +137,6 @@ def register():
             flash("Email already exists! Please log in.")
 
     return render_template("register.html")
-
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -137,13 +154,11 @@ def login():
 
     return render_template("login.html")
 
-
 @app.route("/resetpass", methods=["GET", "POST"])
 def resetpass():
     if request.method == "POST":
         email = request.form.get("email").strip().lower()
         new_password = request.form.get("new_password")
-
         if not email or not new_password:
             flash("Email and new password are required!")
             return redirect(url_for("resetpass"))
@@ -156,7 +171,6 @@ def resetpass():
             return redirect(url_for("login"))
         else:
             flash("Email not found!")
-
     return render_template("resetpass.html")
 
 @app.route("/logout")
@@ -166,7 +180,9 @@ def logout():
     flash("Logged out successfully.")
     return redirect(url_for("home"))
 
-# admin
+# -------------------------
+# Admin Routes
+# -------------------------
 @app.route("/request_admin", methods=["GET", "POST"])
 def request_admin():
     if request.method == "POST":
@@ -176,7 +192,6 @@ def request_admin():
 
         hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
         new_admin = Admin(admin_email=admin_email, name=name, password=hashed_password)
-
         try:
             db.session.add(new_admin)
             db.session.commit()
@@ -187,7 +202,6 @@ def request_admin():
             flash("Email already exists! Please log in.")
 
     return render_template("request_admin.html")
-
 
 @app.route("/login_admin", methods=["GET", "POST"])
 def login_admin():
@@ -205,24 +219,9 @@ def login_admin():
 
     return render_template("login_admin.html")
 
-@app.errorhandler(404)
-def page_not_found(e):
-    return render_template("404.html"), 404 
-
-# home
-@app.route("/")
-def home():
-    posts = Posts.query.order_by(Posts.date_posted.desc()).all()
-    for post in posts:
-        if post.date_posted:
-            utc_time = pytz.utc.localize(post.date_posted)
-            post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
-        else:
-            post.local_date_posted_value = None
-    return render_template("index.html", posts=posts)
-
-
-# create post form
+# -------------------------
+# Post Routes
+# -------------------------
 @app.route("/create", methods=["GET", "POST"])
 def create():
     form = ActivityForm()
@@ -236,13 +235,11 @@ def create():
         )
         db.session.add(new_post)
         db.session.commit()
-        flash("Post created successfully!","success")
+        flash("Post created successfully!", "success")
         return redirect(url_for("home"))
     return render_template("create.html", form=form)
 
-
-# edit post
-@app.route("/edit/<int:post_id>", methods=[ "GET", "POST" ])
+@app.route("/edit/<int:post_id>", methods=["GET", "POST"])
 def edit_post(post_id):
     post = Posts.query.get_or_404(post_id)
     form = ActivityForm()
@@ -252,28 +249,23 @@ def edit_post(post_id):
         post.content = form.content.data
         post.location = form.location.data
         post.event_datetime = form.event_datetime.data
-        # update database
         db.session.commit()
-        flash("Post Has Been Updated!","info")
-        return redirect(url_for("post_detail",post_id=post.id))
+        flash("Post Has Been Updated!", "info")
+        return redirect(url_for("post_detail", post_id=post.id))
     form.title.data = post.title
     form.author.data = post.author
     form.content.data = post.content
     form.location.data = post.location
     form.event_datetime.data = post.event_datetime
-    return render_template("edit_post.html",form=form, post=post )
+    return render_template("edit_post.html", form=form, post=post)
 
-
-
-# delete post
 @app.route("/delete/<int:post_id>", methods=["POST"])
 def delete(post_id):
     post = Posts.query.get_or_404(post_id)
     db.session.delete(post)
     db.session.commit()
-    flash("Post deleted successfully!","danger")
+    flash("Post deleted successfully!", "danger")
     return redirect(url_for("home"))
-
 
 @app.route("/post/<int:post_id>")
 def post_detail(post_id):
@@ -281,10 +273,19 @@ def post_detail(post_id):
     post.local_date_posted_value = post.local_date_posted()
     return render_template("post_detail.html", post=post)
 
+# -------------------------
+# Error Handlers
+# -------------------------
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template("404.html"), 404
 
-
-# run
+# -------------------------
+# Run App
+# -------------------------
 if __name__ == "__main__":
+    # Ensure instance folder exists
+    os.makedirs("instance", exist_ok=True)
     with app.app_context():
         db.create_all()
         app.run(debug=True)

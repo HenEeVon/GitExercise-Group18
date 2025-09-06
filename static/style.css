@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 .activitypost {
     font-family: Arial, sans-serif;
     background: #f9f9f9;
@@ -186,8 +185,8 @@ input, textarea {
 
 
 .alert {
-    animation: fadeIn 0.4s ease-in-out;
-=======
+    animation: fadeIn 0.4s ease-in-out;}
+    
 :root{
     --primary-color: #4460f1;
     --white-color: #ffffff;
@@ -691,5 +690,4 @@ h1 span {
         transform: translateY(0);
         opacity: 1;
     }
->>>>>>> main
 }
