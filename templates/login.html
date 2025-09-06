@@ -9,12 +9,23 @@
 </head>
 
 <body class="user">
+
+    <!-- Navigation Bar -->
+    <header>
+        <a class="header-logo"><span>EbFit</span></a>
+        <nav class="nav-bar">
+            <a href="{{ url_for('home') }}" class="nav-items">Home</a>
+            <a href="{{ url_for('login') }}" class="nav-items-lines">Log In</a>
+            <a href="{{ url_for('register') }}" class="nav-items">Sign Up</a>
+        </nav>
+    </header>
+
     <div id="popup"></div>
     <div id="page" class="site">
         <div class="container">
             <div class="login">
                 <div class="hero">
-                    <h1>Welcome <br>to ebFIt.</h1>
+                    <h1>Welcome <br>to ebFit.</h1>
                     <p>
                         If you don’t have an account,<br>
                         <a href="{{ url_for('register') }}">Register Here</a>.
@@ -56,10 +67,6 @@
                             <input type="submit" class="submit" value="Login">
                         </p>
                     </form>
-
-                    <a href="{{ url_for('home') }}" class="icon-btn">
-                        <i class="ri-close-fill"></i>
-                    </a>
                 </div>
             </div>
         </div>
