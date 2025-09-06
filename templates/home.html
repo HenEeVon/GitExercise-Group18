@@ -7,13 +7,13 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <section id="herohome">
+    <section id="herohome" class="page-container">
         <header>
             <a class="header-logo"><span>EbFit</span></a>
             <nav class="nav-bar">
-                <a href="{{ url_for('home') }}" class="nav-items-lines">Home</a>
+                <a href="{{ url_for('home') }}" class="nav-items lines">Home</a>
                 <a href="{{ url_for('login') }}" class="nav-items">Log In</a>
-                <a href="{{ url_for('register') }}" class="nav-items ">Sign Up</a>
+                <a href="{{ url_for('register') }}" class="nav-items ">Register</a>
             </nav>
         </header>
 
