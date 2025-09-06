@@ -9,11 +9,22 @@
 </head>
 
 <body class="user">
+
+    <!-- Navigation Bar -->
+    <header>
+        <a class="header-logo"><span>EbFit</span></a>
+        <nav class="nav-bar">
+            <a href="{{ url_for('home') }}" class="nav-items">Home</a>
+            <a href="{{ url_for('login') }}" class="nav-items">Log In</a>
+            <a href="{{ url_for('register') }}" class="nav-items-lines">Sign Up</a>
+        </nav>
+    </header>
+
     <div id="page" class="site">
         <div class="container">
             <div class="login">
                 <div class="hero">
-                    <h1>Welcome <br>to ebFIt.</h1>
+                    <h1>Welcome <br>to ebFit.</h1>
                     <p>
                         If you already have an account,<br>
                         <a href="{{ url_for('login') }}">Login here</a>.
@@ -68,9 +79,6 @@
                         </p>
                     </form>
 
-                    <a href="{{ url_for('home') }}" class="icon-btnreg">
-                        <i class="ri-close-fill"></i>
-                    </a>
                 </div>
             </div>
         </div>
