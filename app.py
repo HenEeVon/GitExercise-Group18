@@ -124,7 +124,7 @@ def login():
             if user.role == "admin":
                 return redirect(url_for("admin_dashboard"))
             else:
-                return redirect(url_for("home"))
+                return redirect(url_for("posts"))
 
         flash("Invalid email or password!")
 
