@@ -205,13 +205,12 @@ form.searchingbar button {
     padding: 10px;
     width: 80px;
     border: none;
-    box-shadow: #007bff 0 10px 30px -10px;
     cursor: pointer;
 }
 
 form.searchingbar button:hover,
 form.searchingdate button:hover {
-    background-color: #1560bd;
+    background-color: #0056b3;
 }
 
 .searchingdate b {
@@ -229,7 +228,6 @@ form.searchingdate button {
     font-weight: 700;
     padding: 10px;
     border: none;
-    box-shadow: #007bff 0 10px 30px -10px;
     cursor: pointer;
 
 }
@@ -244,10 +242,3 @@ form.searchingdate input {
 
 }
 
-.postcard { 
-    background-color: #cccc;
-    padding: 15px;
-    margin: 10px;
-    border-radius: 20px;
-    box-shadow: 0 10px 10px -10px;
-}

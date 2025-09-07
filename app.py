@@ -100,6 +100,7 @@ def search():
     for post in results:
         if post.date_posted:
             utc_time = pytz.utc.localize(post.date_posted)
+            post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
         else:
             post.local_date_posted_value = None
 
@@ -176,45 +177,4 @@ if __name__ == "__main__":
         db.create_all()
     app.run(debug=True)
 
-
-"""""
-app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///FLASKDEMO.db"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-db.init_app(app)
-
-
-@app.route("/", methods = ["GET"])
-def home():
-    sport = (request.args.get("sport") or "" ).strip().lower()
-    dateinpost = request.args.get("date")
-    results =[]
-    searched = False
-
-    if sport and dateinpost:
-        searched =True
-        datechosen = datetime.strptime(dateinpost, "%Y-%m-%d").date()
-        results = Activity.query.filter(func.lower(Activity.category).like(f"%{sport}%"), Activity.date == datechosen).all()
-
-    elif sport:
-        searched = True
-        results = Activity.query.filter(func.lower(Activity.category).like(f"%{sport}%")).all()
-
-    elif dateinpost:
-        searched = True
-        datechosen = datetime.strptime(dateinpost, "%Y-%m-%d").date()
-        results = Activity.query.filter(Activity.date == datechosen).all()
-
-    else:
-        searched = False
-        results = Activity.query.all()
-
-    return render_template("search.html", results=results, searched=searched, sport=sport, date=dateinpost)
-
-    
-if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True)
-"""
 
