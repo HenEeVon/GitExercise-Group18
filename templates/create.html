@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Create Activity Post{% endblock %}
+
+{% block content %}
+
+
+<div class="container">
+    <h1>Create Activity Post</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, msg in messages %}
+            <div class="alert alert-{{ category }}" role="alert">
+                {{ msg }}
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+
+        <p>
+            {{ form.title.label }} <br>
+            {{ form.title() }}
+        </p>
+        <p>
+            {{ form.author.label }} <br>
+            {{ form.author() }}
+        </p>
+        <p>
+            {{ form.content.label }} <br>
+            {{ form.content() }}
+        </p>
+        <p>
+            {{ form.location.label }} <br>
+            {{ form.location() }}
+        </p>
+        <p>
+            {{ form.event_datetime.label }} <br>
+            {{ form.event_datetime() }}
+        </p>
+        <div style="margin-top:1rem;">
+            {{ form.submit(class="btn post-btn") }}
+            <a href="{{ url_for('home') }}" class="btn cancel-btn">Cancel</a>
+        </div>
+            
+    </form>
+</div>
+{% endblock %}

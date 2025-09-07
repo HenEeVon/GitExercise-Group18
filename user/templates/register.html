@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+    <title>Register</title>
+</head>
+
+<body class="register">
+    <div id="page" class="site">
+        <div class="container">
+            <div class="login">
+                <div class="hero">
+                    <h1>Welcome <br>to ebFIt.</h1>
+                    <p>
+                        If you already have an account,<br>
+                        <a href="{{ url_for('login') }}">Login here</a>.
+                    </p>
+                </div>
+
+                <div class="main">
+                    
+                    <form action="{{ url_for('register') }}" method="POST">
+                        <h2 class="form-title">Register User:</h2>
+
+                        {% if message %}
+                        <p class="error1">{{ message }}</p>
+                        {% endif %}
+
+                        <p class="colortext">
+                            <span>
+                                <strong>Email address:</strong> <!--make text bold-->
+                            </span>
+                            <input type="email" name="user_email" required>
+                        </p>
+
+                        <p class="colortext">
+                            <span>
+                                <strong>Full name:</strong> <!--make text bold-->
+                            </span>
+                            <input type="text" name="name" required>
+                        </p>
+
+                        <p class="gender-row">
+                             <span>
+                                <strong>Gender:</strong> <!--make text bold-->
+                            </span>
+                            
+                            <label>
+                                <input type="radio" name="gender" value="Male" required> Male
+                            </label>
+                            <label>
+                                <input type="radio" name="gender" value="Female" required> Female
+                            </label>
+                        </p>
+
+                        <p class="colortext">
+                            <span>
+                                <strong>Password:</strong> <!--make text bold-->
+                            </span>
+                            <input type="password" name="password" required>
+                        </p>
+
+                        <p class="colortext">
+                            <input type="submit" class="submit" value="Register">
+                        </p>
+                    </form>
+
+                    <a href="{{ url_for('home') }}" class="icon-btnreg">
+                        <i class="ri-close-fill"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
