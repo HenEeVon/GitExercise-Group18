@@ -133,7 +133,7 @@ def login():
 
 # User homepage
 @app.route("/")
-def user_home():
+def home():
     return render_template("home.html")
 
 
@@ -197,7 +197,7 @@ def request_admin():
             db.session.commit()
             flash("Your request has been submitted.")
 
-        return redirect(url_for("user_home"))
+        return redirect(url_for("home"))
 
     return render_template("request_admin.html")
 
@@ -238,7 +238,7 @@ def reject_admin(request_id):
 
 # post interface
 @app.route("/index")
-def home():
+def posts():
     posts = Posts.query.order_by(Posts.date_posted.desc()).all()
     for post in posts:
         if post.date_posted:
