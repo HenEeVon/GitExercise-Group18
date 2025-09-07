@@ -275,7 +275,7 @@ def create():
         db.session.add(new_post)
         db.session.commit()
         flash("Post created successfully!","success")
-        return redirect(url_for("home"))
+        return redirect(url_for("posts"))
     return render_template("create.html", form=form)
 
 
@@ -308,7 +308,7 @@ def delete(post_id):
     db.session.delete(post)
     db.session.commit()
     flash("Post deleted successfully!","danger")
-    return redirect(url_for("home"))
+    return redirect(url_for("posts"))
 
 # detail post
 @app.route("/post/<int:post_id>")
