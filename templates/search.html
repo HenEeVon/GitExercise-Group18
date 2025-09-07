@@ -21,10 +21,14 @@
         {% for post in results %}
         <div class="postcard">
             <h3>{{ post.title }}</h3>
-            <p><b>Category:</b> {{ post.category }}</p>
-            <p><b>Date:</b> {{ post.date.day }}/{{ post.date.month }}/{{ post.date.year }}</p>
+            <p><b>Author:</b>{{ post.author }}</p>
             <p><b>Location:</b> {{ post.location }}</p>
-            <p><b>Gender:</b> {{ post.gender }}</p>
+            <p><b>Event:</b> {{ post.event_datetime }}</p>
+            <p><b>Posted: </b>
+                {% if post.local_date_posted_value %}
+            
+            
+            </p>
         </div>
         {% endfor%}
     {% else %}
