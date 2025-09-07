@@ -81,7 +81,6 @@ class ActivityForm(FlaskForm):
     content = TextAreaField("Content", validators=[DataRequired()])
     location = StringField("Location", validators=[DataRequired()])
     event_datetime = StringField("Event Date & Time (e.g. 2025-09-01, 8am - 10am)", validators=[DataRequired()])
-    
     submit = SubmitField("Post")
 
 
