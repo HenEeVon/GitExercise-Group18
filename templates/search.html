@@ -2,6 +2,17 @@
 {% block content %}
 <div class="container">
 
+    <form class="searchingbar" method="GET" action="{{ url_for('search') }}">
+        <input type="text" name="sport" placeholder="Search by Category..." value="{{ request.args.get('sport','')}}">
+        <button type="submit">Search</button>
+    </form>
+
+    <form class="searchingdate" method="GET" action="{{ url_for('search') }}">
+        <label><b>Choose Date: </b></label>
+        <input type="date" name="date" value="{{ request.args.get('date','') }}">
+        <button type="submit">Apply</button>
+    </form>
+
 {% if searched %}
     {% if results %} 
         {% for post in results %}
