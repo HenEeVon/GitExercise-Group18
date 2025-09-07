@@ -286,7 +286,6 @@ def edit_post(post_id):
     form = ActivityForm()
     if form.validate_on_submit():
         post.title = form.title.data
-        post.author = form.author.data
         post.content = form.content.data
         post.location = form.location.data
         post.event_datetime = form.event_datetime.data
@@ -295,7 +294,6 @@ def edit_post(post_id):
         flash("Post Has Been Updated!","info")
         return redirect(url_for("post_detail",post_id=post.id))
     form.title.data = post.title
-    form.author.data = post.author
     form.content.data = post.content
     form.location.data = post.location
     form.event_datetime.data = post.event_datetime

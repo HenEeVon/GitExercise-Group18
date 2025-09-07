@@ -28,10 +28,6 @@
             {{ form.title() }}
         </p>
         <p>
-            {{ form.author.label }} <br>
-            {{ form.author() }}
-        </p>
-        <p>
             {{ form.content.label }} <br>
             {{ form.content() }}
         </p>
@@ -45,7 +41,7 @@
         </p>
         <div style="margin-top:1rem;">
             {{ form.submit(class="btn post-btn") }}
-            <a href="{{ url_for('home') }}" class="btn cancel-btn">Cancel</a>
+            <a href="{{ url_for('posts') }}" class="btn cancel-btn">Cancel</a>
         </div>
             
     </form>
