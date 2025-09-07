@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+    <title>Register</title>
+</head>
+
+<body class="user">
+
+    <!-- Navigation Bar -->
+    <div class="page-container">
+        <header>
+            <a class="header-logo"><span>EbFit</span></a>
+            <nav class="nav-bar">
+                <a href="{{ url_for('home') }}" class="nav-items">Home</a>
+                <a href="{{ url_for('login') }}" class="nav-items">Log In</a>
+                <a href="{{ url_for('register') }}" class="nav-items lines">Register</a>
+            </nav>
+        </header>
+    </div>
+
+    <div id="page" class="site">
+        <div class="container2">
+            <div class="login">
+
+                <!-- Left Hero -->
+                <div class="hero">
+                    <h1>Welcome <br>User.</h1>
+                    <p>
+                        If you already have an account,<br>
+                        <a href="{{ url_for('login') }}">Login here</a>.
+                    </p>
+                </div>
+
+                <!-- Right Register Form -->
+                <div class="main">
+                    <div class="login-box">
+
+                        {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                        {% for message in messages %}
+                        <div class="popup">
+                            <div class="popup-content">
+                                <p>{{ message }}</p>
+                                <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                        {% endwith %}
+                        
+                        <form action="{{ url_for('register') }}" method="POST">
+                            <h2 class="form-title">Register User:</h2>
+
+                            <p class="colortext">
+                                <span><strong>Email address:</strong></span>
+                                <input type="email" name="user_email" required>
+                            </p>
+
+                            <p class="colortext">
+                                <span><strong>Full name:</strong></span>
+                                <input type="text" name="name" required>
+                            </p>
+
+                            <p class="gender-row">
+                                <label><strong>Gender:</strong></label>
+                                <label>
+                                    <input type="radio" name="gender" value="Male" required> Male
+                                </label>
+                                <label>
+                                    <input type="radio" name="gender" value="Female" required> Female
+                                </label>
+                            </p>
+
+                            <p class="colortext">
+                                <span><strong>Password:</strong></span>
+                                <input type="password" name="password" required>
+                            </p>
+
+                            <p class="colortext">
+                                <input type="submit" class="submit" value="Register">
+                            </p>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>

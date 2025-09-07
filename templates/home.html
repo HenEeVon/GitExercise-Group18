@@ -1,32 +1,41 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <section id="herohome" class="page-container">
+        <header>
+            <a class="header-logo"><span>EbFit</span></a>
+            <nav class="nav-bar">
+                <a href="{{ url_for('home') }}" class="nav-items lines">Home</a>
+                <a href="{{ url_for('login') }}" class="nav-items">Log In</a>
+                <a href="{{ url_for('register') }}" class="nav-items ">Register</a>
+            </nav>
+        </header>
 
-{% block content %}
+        <div class="herohome-content">
+            <div class="left-content">
+                <div>
+                    <h1>About <span>ebFit</span></h1>
+                    <p>
+                        Ebfit is designed to be free, simple, and student-focused. 
+                        Instead of confusing users with a wide variety of categories and expensive subscriptions, 
+                        Ebfit allows students to create an account and edit posts, request and join activities, as well as track activities. 
+                        This positions Ebfit as a user-friendly website that helps MMU students find reliable sports activities.
+                    </p>
+                    <a href="{{ url_for('login') }}" class="big-cta-btn">Log In</a>
+                    <a href="{{ url_for('register') }}" class="big-cta-btn">Register</a>
+                </div>
+            </div>
 
-<h2>Activity Category:</h2>
-<div class="mb-4">
-    {% if act %}
-
-        {% for sport in act %}
-            {{ sport }}
-        {% endfor %}
-    {% else %}
-        <p>No matching keywords</p>
-    {% endif %}
-</div>
-
-<h2>Posts:</h2>
-<div class="posts">
-    {% if posts %}
-        {% for post in posts %}
-        <div class="post-card">
-            <h3 class = "post-title">{{post.title}}</h3>
-            <p class ="post-content">{{post.content }}</p>
-            <p class ="post-author">By {{ post.author }}</p>
+            <div class="right-content">
+                <img src="{{ url_for('static', filename='images/run.jpg') }}" class="herohome-img" alt="Running">
+            </div>
         </div>
-        {% endfor %}
-    {% else %}
-        <p>No posts yet.</p>
-    {% endif %}
-</div>
-{% endblock %}
-
+    </section>
+</body>
+</html>

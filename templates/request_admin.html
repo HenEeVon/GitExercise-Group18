@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+    <title>Request to Join Admin</title>
+</head>
+
+<body class="admin">
+    <div id="page" class="site">
+        <div class="container">
+            <div class="login">
+                <div class="hero">
+                    <h1>Welcome <br>Admin</h1>
+                    <p>
+                        If you already have an admin account,<br>
+                        <a href="{{ url_for('login_admin') }}">Login here</a>.
+                    </p>
+                </div>
+
+                <div class="main">
+
+                    {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                    {% for message in messages %}
+                    <div class="popup">
+                        <div class="popup-content">
+                            <p>{{ message }}</p>
+                            <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    {% endwith %}
+                    
+                    <form action="{{ url_for('request_admin') }}" method="POST">
+                        <h2 class="form-title">Request Joining Admin:</h2>
+
+                        <p class="colortext">
+                            <span><strong>Email address:</strong></span>
+                            <input type="email" name="admin_email" required>
+                        </p>
+
+                        <p class="colortext">
+                            <span><strong>Full name:</strong></span>
+                            <input type="text" name="name" required>
+                        </p>
+
+                        <p class="colortext">
+                            <span><strong>Password:</strong></span>
+                            <input type="password" name="password" required>
+                        </p>
+
+                        <p class="colortext">
+                            <span><strong>Join reason:</strong></span>
+                            <input type="text" name="text" required>
+                        </p>
+
+                        <p class="colortext">
+                            <input type="submit" class="submit" value="Request">
+                        </p>
+                    </form>
+
+                    <a href="{{ url_for('home') }}" class="icon-btnreg">
+                        <i class="ri-close-fill"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

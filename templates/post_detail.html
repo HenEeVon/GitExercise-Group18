@@ -10,7 +10,7 @@
     </p>
 
     <p class="meta"> 
-        Posted on: {{ post.local_date_posted_value.strftime('%Y-%m-%d %H:%M') if post.local_date_posted_value else '' }} by {{ post.author }}
+        Posted on: {{ post.local_date_posted_value.strftime('%Y-%m-%d %H:%M') if post.local_date_posted_value else '' }} by {{ post.user.name }}
     </p>
 
     <p>Location: {{ post.location }}</p>
@@ -20,7 +20,7 @@
     </div>
     
 
-    <a href="{{ url_for('home') }}" class="btn">Back to Home</a>
+    <a href="{{ url_for('posts') }}" class="btn">Back to Activity Post</a>
     <a href="{{ url_for('edit_post', post_id=post.id) }}" class="btn">Edit</a>
     <button class="btn chat-btn">Chat with Me</button>
 </div>
