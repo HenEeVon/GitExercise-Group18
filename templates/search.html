@@ -2,20 +2,6 @@
 {% block content %}
 <div class="container">
 
-    <h1>Sports Activity Posts</h1>
-
-    <form class="searchingbar" method ="GET" action="{{ url_for('search') }}">
-        <input type="text" name="sport" placeholder="Search by Category..." value="{{sport or '' }}">
-        <button type="submit">Search</button>
-    </form>
-
-    <form class="searchingdate" method ="GET" action="{{ url_for('search') }}">
-    <label><b>Choose Date: </b></label>
-        <input type="date" name="date" value="{{ date or '' }}">
-        <input type="hidden" name="sport" value="{{ sport or '' }}">
-        <button type="submit">Apply</button>
-    </form>
-
 {% if searched %}
     {% if results %} 
         {% for post in results %}
