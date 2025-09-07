@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
+
 <body>
 <h1>Sports Activity Posts</h1>
+
 <form class="searchingbar" method ="GET" action="{{ url_for('search') }}">
     <input type="text" name="sport" placeholder="Search by Category..." value="{{sport or '' }}">
     <button type="submit">Search</button>
@@ -17,20 +19,24 @@
 
 {% if searched %}
     <h1>Search Result:</h1>
-   {% if results %} 
-        {% for post in results %}
-        <div class="postcard">
-            <h3>{{ post.title }}</h3>
-            <p><b>Author:</b>{{ post.author }}</p>
-            <p><b>Location:</b> {{ post.location }}</p>
-            <p><b>Event:</b> {{ post.event_datetime }}</p>
-            <p><b>Posted: </b>
-                {% if post.local_date_posted_value %}
-                    {{ post.local_date_posted_value.strftime("%d/%m/%Y %I:%M %p")}}
-                {% endif %}
-            </p>
-            <p>{{ post.content }}</p>
-        </div>
+{% else %}
+    <h1>All Posts: </h1>
+{% endif %}
+
+{% if results %} 
+    {% for post in results %}
+    <div class="postcard">
+        <h3>{{ post.title }}</h3>
+        <p><b>Author:</b>{{ post.author }}</p>
+        <p><b>Location:</b> {{ post.location }}</p>
+        <p><b>Event:</b> {{ post.event_datetime }}</p>
+        <p><b>Posted: </b>
+            {% if post.local_date_posted_value %}
+                {{ post.local_date_posted_value.strftime("%d/%m/%Y %I:%M %p")}}
+            {% endif %}
+        </p>
+        <p>{{ post.content }}</p>
+    </div>
     {% endfor%}
 {% else %}
     <p>No posts related to {{ sport }}</p>
