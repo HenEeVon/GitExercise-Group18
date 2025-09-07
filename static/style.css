@@ -1,7 +1,3 @@
-:root{
-    --primary-color: #4460f1;
-}
-
 .activitypost {
     font-family: Arial, sans-serif;
     background: #f9f9f9;
@@ -202,14 +198,14 @@ form.searchingbar input {
 }
 
 form.searchingbar button {
-    background-color: var(--primary-color);
+    background-color: #007bff;
     color: white;
     border-radius: 10px;
     font-weight: 700;
     padding: 10px;
     width: 80px;
     border: none;
-    box-shadow: var(--primary-color) 0 10px 30px -10px;
+    box-shadow: #007bff 0 10px 30px -10px;
     cursor: pointer;
 }
 
@@ -227,13 +223,13 @@ body {
 }
 
 form.searchingdate button {
-    background-color: var(--primary-color);
+    background-color: #007bff;
     color: white;
     border-radius: 10px;
     font-weight: 700;
     padding: 10px;
     border: none;
-    box-shadow: var(--primary-color) 0 10px 30px -10px;
+    box-shadow: #007bff 0 10px 30px -10px;
     cursor: pointer;
 
 }
