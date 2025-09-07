@@ -10,7 +10,7 @@
     </p>
 
     <p class="meta"> 
-        Posted on: {{ post.local_date_posted_value.strftime('%Y-%m-%d %H:%M') if post.local_date_posted_value else '' }} by {{ post.author }}
+        Posted on: {{ post.local_date_posted_value.strftime('%Y-%m-%d %H:%M') if post.local_date_posted_value else '' }} by {{ post.user.name }}
     </p>
 
     <p>Location: {{ post.location }}</p>

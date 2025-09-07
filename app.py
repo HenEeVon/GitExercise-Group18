@@ -52,13 +52,19 @@ class AdminRequest(db.Model):
 
 # posts database model
 class Posts(db.Model):
+    __tablename__ = "posts"
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255))
-    content = db.Column(db.Text)
-    author = db.Column(db.String(255))
-    location = db.Column(db.String(255))
-    event_datetime = db.Column(db.String(255))
+    title = db.Column(db.String(255), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    location = db.Column(db.String(255), nullable=False)
+    event_datetime = db.Column(db.String(255), nullable=False)
     date_posted = db.Column(db.DateTime, default=datetime.utcnow) 
+
+    # Foreign key: link post to user
+    user_email = db.Column(db.String(255), db.ForeignKey("users.user_email"), nullable=False)
+
+    # Relationship: allows post.user to directly access the User object
+    user = db.relationship("User", backref="posts")
 
     def local_date_posted(self):
         if self.date_posted is None:
@@ -75,7 +81,7 @@ class ActivityForm(FlaskForm):
     content = TextAreaField("Content", validators=[DataRequired()])
     location = StringField("Location", validators=[DataRequired()])
     event_datetime = StringField("Event Date & Time (e.g. 2025-09-01, 8am - 10am)", validators=[DataRequired()])
-    author = StringField("Author")
+    
     submit = SubmitField("Post")
 
 
@@ -256,6 +262,7 @@ def page_not_found(e):
 
 # create post form
 @app.route("/create", methods=["GET", "POST"])
+@login_required
 def create():
     form = ActivityForm()
     if form.validate_on_submit():
@@ -264,7 +271,7 @@ def create():
             content=form.content.data,
             location=form.location.data,
             event_datetime=form.event_datetime.data,
-            author=form.author.data if form.author.data else "Anonymous"
+            user_email=current_user.user_email
         )
         db.session.add(new_post)
         db.session.commit()
