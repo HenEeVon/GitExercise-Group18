@@ -300,7 +300,7 @@ def search():
         else:
             post.local_date_posted_value = None
 
-    return render_template("search.html",results=results,searched=searched,sport=sport,date=dateinpost)
+    return render_template("index.html",results=results,searched=searched,sport=sport,date=dateinpost)
 # error page
 @app.errorhandler(404)
 def page_not_found(e):
