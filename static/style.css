@@ -56,7 +56,7 @@ input, textarea {
 }
 
 .join-btn {
-    display:inline-bloock;
+    display:inline-block;
     border:none;
     margin-top: 15px;
     padding: 11.5px 12px;
@@ -230,7 +230,7 @@ form.searchingdate button {
 }
 
 
-form.searchingdate input {
+.searchingdate input {
     background-color:#cccc;
     border-radius: 10px;
     padding: 10px;
