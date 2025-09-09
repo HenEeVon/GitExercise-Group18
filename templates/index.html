@@ -6,16 +6,18 @@
 
 <div class="container">
 
-    <form class="searchingbar" method="GET" action="{{ url_for('search') }}">
-        <input type="text" name="sport" placeholder="Search by Category..." value="{{ request.args.get('sport','')}}">
-        <button type="submit">Search</button>
-    </form>
+    <div class="search-row">
+        <form class="searchingbar" method="GET" action="{{ url_for('search') }}">
+            <input type="text" name="sport" placeholder="Search by Category..." value="{{ request.args.get('sport','')}}">
+            <button type="submit">Search</button>
+        </form>
 
-    <form class="searchingdate" method="GET" action="{{ url_for('search') }}">
-        <label><b>Choose Date: </b></label>
-        <input type="date" name="date" value="{{ request.args.get('date','') }}">
-        <button type="submit">Apply</button>
-    </form>
+        <form class="searchingdate" method="GET" action="{{ url_for('search') }}">
+            <label><b>Choose Date: </b></label>
+            <input type="date" name="date" value="{{ request.args.get('date','') }}">
+            <button type="submit">Apply</button>
+        </form>
+    </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
