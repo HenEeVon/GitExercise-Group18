@@ -56,7 +56,7 @@ input, textarea {
 }
 
 .join-btn {
-    display:inline-bloock;
+    display:inline-block;
     border:none;
     margin-top: 15px;
     padding: 11.5px 12px;
@@ -99,9 +99,21 @@ input, textarea {
     align-items: center;
 }
 
-.post-menu {
+.post-menu details {
     position: relative;
     display: inline-block;
+}
+
+.post-menu summary {
+    list-style: none;      
+    cursor: pointer;
+    font-size: 20px;     
+    border: none;
+    background: none;
+}
+
+.post-menu summary::-webkit-details-marker {
+    display: none;         
 }
 
 .menu-btn {
@@ -112,7 +124,6 @@ input, textarea {
 }
 
 .menu-dropdown {
-    display: none;
     position: absolute;
     top: 25px;
     right: 0;
@@ -121,6 +132,11 @@ input, textarea {
     border-radius: 5px;
     min-width: 100px;
     z-index: 10;
+    display: none;  
+}
+
+details[open] .menu-dropdown {
+    display: block;        
 }
 
 .menu-dropdown a {
@@ -132,10 +148,6 @@ input, textarea {
 
 .menu-dropdown a:hover {
     background: #f0f0f0;
-}
-
-.post-menu:hover .menu-dropdown {
-    display: block;
 }
 
 .chat-btn {
@@ -183,6 +195,50 @@ input, textarea {
 
 .alert {
     animation: fadeIn 0.4s ease-in-out;
+}
+
+.search-row form input {
+    background: #cccc;
+    border-radius: 10px;
+    padding: 15px;
+    width: 300px;
+    line-height: normal;
+    border: none;
+}
+
+form.searchingbar button {
+    background-color: #007bff;
+    color: white;
+    border-radius: 10px;
+    font-weight: 700;
+    padding: 10px;
+    width: 80px;
+    border: none;
+    cursor: pointer;
+}
+
+form.searchingbar button:hover,
+form.searchingdate button:hover {
+    background-color: #0056b3;
+}
+
+.searchingdate b {
+    font-size: 18px;
+}
+
+body {
+    font-family: 'Rubik', sans-serif;
+}
+
+form.searchingdate button {
+    background-color: #007bff;
+    color: white;
+    border-radius: 10px;
+    font-weight: 700;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+
 }
 
 :root{
