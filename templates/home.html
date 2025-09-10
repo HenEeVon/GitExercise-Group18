@@ -1,5 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
+
+{% block title %}Edit Post{% endblock %}
+
+{% block content %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,19 +11,11 @@
 </head>
 <body>
     <section id="herohome" class="page-container">
-        <header>
-            <a class="header-logo"><span>EbFit</span></a>
-            <nav class="nav-bar">
-                <a href="{{ url_for('home') }}" class="nav-items lines">Home</a>
-                <a href="{{ url_for('login') }}" class="nav-items">Log In</a>
-                <a href="{{ url_for('register') }}" class="nav-items ">Register</a>
-            </nav>
-        </header>
 
         <div class="herohome-content">
             <div class="left-content">
                 <div>
-                    <h1>About <span>ebFit</span></h1>
+                    <h1>About <span>EbFit</span></h1>
                     <p>
                         Ebfit is designed to be free, simple, and student-focused. 
                         Instead of confusing users with a wide variety of categories and expensive subscriptions, 
@@ -38,4 +33,5 @@
         </div>
     </section>
 </body>
-</html>
+{% endblock %}
+

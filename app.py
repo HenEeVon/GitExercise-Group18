@@ -142,17 +142,6 @@ def home():
     return render_template("home.html")
 
 
-# Admin dashboard (manage requests)
-@app.route("/admin-dashboard")
-def admin_dashboard():
-    if current_user.role != "admin":
-        flash("Access denied.")
-        return redirect(url_for("home"))
-
-    requests = AdminRequest.query.filter_by(approval="pending").all()
-    return render_template("admin_dashboard.html", requests=requests)
-
-
 # Reset password
 @app.route("/resetpass", methods=["GET", "POST"])
 def resetpass():
@@ -316,6 +305,33 @@ def post_detail(post_id):
     post = Posts.query.get_or_404(post_id)
     post.local_date_posted_value = post.local_date_posted()
     return render_template("post_detail.html", post=post)
+
+# admin dashboard
+@app.route("/admin_dashboard")
+def admin_dashboard():
+    if current_user.role != "admin":
+        flash("Access denied.")
+        return redirect(url_for("home"))
+
+    requests = AdminRequest.query.filter_by(approval="pending").all()
+    return render_template("admin_dashboard.html", requests=requests)
+
+# admin users review
+@app.route("/admin_users")
+def users():
+    return render_template("users.html")
+
+# user notifications
+@app.route("/notifications")
+def notifications():
+    return render_template("notifications.html")
+
+# user profile
+@app.route("/profile")
+def profile():
+    return render_template("profile.html")
+
+
 
 # Run
 if __name__ == "__main__":
