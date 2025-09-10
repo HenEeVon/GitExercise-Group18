@@ -29,12 +29,17 @@
             {{ form.event_datetime(size=40) }}
         </div>
 
+        <div>
+            {{ form.participants.label }}<br>
+            {{ form.participants(size=40) }}
+        </div>
+
 
         <div>
             {{ form.submit(class="btn") }}
         </div>
     </form>
 
-    <a href="{{ url_for('post_detail', post_id=post.id) }}" class="btn">Cancel</a>
+    <a href="{{ url_for('post_detail', post_id=post.post_id) }}" class="btn">Cancel</a>
 </div>
 {% endblock %}
