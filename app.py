@@ -28,7 +28,7 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 
 
-# USer db
+# User database
 class User(UserMixin, db.Model):
     __tablename__ = "users"
     user_email = db.Column(db.String(255), primary_key=True)
@@ -40,7 +40,6 @@ class User(UserMixin, db.Model):
     def get_id(self):
         return self.user_email
 
-
 class AdminRequest(db.Model):
     __tablename__ = "admin_requests"
     id = db.Column(db.Integer, primary_key=True)
@@ -49,7 +48,6 @@ class AdminRequest(db.Model):
     approval = db.Column(db.String(20), default="pending")  # pending / approved / rejected
 
     user = db.relationship("User", backref="admin_requests")
-
 
 class Posts(db.Model):
     __tablename__ = "posts"
@@ -73,16 +71,15 @@ class Posts(db.Model):
         return malaysia_time
 
 
-class JoinRequest(db.Model):
-    __tablename__ = "join_requests"
+class JoinActivity(db.Model):
+    __tablename__ = "join_activities"
     id = db.Column(db.Integer, primary_key=True)
     user_email = db.Column(db.String(255), db.ForeignKey("users.user_email"), nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey("posts.post_id"), nullable=False)
     status = db.Column(db.String(20), default="pending")  # pending / accepted / rejected
 
-    user = db.relationship("User", backref="join_requests")
-    post = db.relationship("Posts", backref="join_requests")
-
+    user = db.relationship("User", backref="join_activities")
+    post = db.relationship("Posts", backref="join_activities")
 
 # Activity Form database
 class ActivityForm(FlaskForm):
@@ -94,17 +91,18 @@ class ActivityForm(FlaskForm):
     submit = SubmitField("Post")
 
 
-# User loader-
+# User loader
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.filter_by(user_email=user_id).first()
 
-# Home, front page
+
+# Home page
 @app.route("/")
 def home():
     return render_template("home.html")
 
-# register page
+# Register page
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -128,6 +126,7 @@ def register():
     return render_template("register.html")
 
 
+# Login page
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -144,7 +143,8 @@ def login():
 
     return render_template("login.html")
 
-
+#route 
+# Logout
 @app.route("/logout")
 @login_required
 def logout():
@@ -152,6 +152,8 @@ def logout():
     flash("Logged out successfully.")
     return redirect(url_for("home"))
 
+
+# Reset password
 @app.route("/resetpass", methods=["GET", "POST"])
 def resetpass():
     if request.method == "POST":
@@ -169,12 +171,12 @@ def resetpass():
             flash("Password updated successfully! Please log in.")
             return redirect(url_for("login"))
         else:
-            flash("Email not found!")
+            flash("Email not found! Please register.")
 
-    return render_template("resetpass.html")
+    return render_template("login.html")
 
 
-
+# Posts page
 @app.route("/index")
 def posts():
     posts = Posts.query.order_by(Posts.date_posted.desc()).all()
@@ -186,8 +188,8 @@ def posts():
             post.local_date_posted_value = None
     return render_template("index.html", posts=posts)
 
-<<<<<<<<< Temporary merge branch 1
-#Search feature
+
+# Search feature
 @app.route("/search", methods=["GET"])
 def search():
     sport = (request.args.get("sport") or "").strip().lower()
@@ -197,15 +199,17 @@ def search():
     results = []
 
     if sport and dateinpost:
-         searched = True
-         results = Posts.query.join(User).filter(
+        searched = True
+        results = Posts.query.join(User).filter(
             or_(
                 func.lower(Posts.title).like(f"%{sport}%"),
                 func.lower(Posts.content).like(f"%{sport}%"),
                 func.lower(Posts.location).like(f"%{sport}%"),
                 func.lower(User.name).like(f"%{sport}%"),
-        ),Posts.event_datetime.like(f"%{dateinpost}%")).order_by(Posts.date_posted.desc()).all()
-    
+            ),
+            Posts.event_datetime.like(f"%{dateinpost}%")
+        ).order_by(Posts.date_posted.desc()).all()
+
     elif sport:
         searched = True
         results = Posts.query.join(User).filter(
@@ -214,12 +218,14 @@ def search():
                 func.lower(Posts.content).like(f"%{sport}%"),
                 func.lower(Posts.location).like(f"%{sport}%"),
                 func.lower(User.name).like(f"%{sport}%"),
-            )).order_by(Posts.date_posted.desc()).all()
-        
+            )
+        ).order_by(Posts.date_posted.desc()).all()
+
     elif dateinpost:
         searched = True
         results = Posts.query.filter(
-            Posts.event_datetime.like(f"%{dateinpost}%")).order_by(Posts.date_posted.desc()).all()
+            Posts.event_datetime.like(f"%{dateinpost}%")
+        ).order_by(Posts.date_posted.desc()).all()
 
     else:
         results = Posts.query.order_by(Posts.date_posted.desc()).all()
@@ -231,14 +237,15 @@ def search():
         else:
             post.local_date_posted_value = None
 
-    return render_template("index.html",posts=results,searched=searched,sport=sport,date=dateinpost)
+    return render_template("index.html", posts=results, searched=searched, sport=sport, date=dateinpost)
 
-# error page
+# Error page
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template("404.html"), 404
 
-# create post form
+
+# Create post form
 @app.route("/create", methods=["GET", "POST"])
 @login_required
 def create():
@@ -259,6 +266,7 @@ def create():
     return render_template("create.html", form=form)
 
 
+# Edit post
 @app.route("/edit/<int:post_id>", methods=["GET", "POST"])
 @login_required
 def edit_post(post_id):
@@ -282,6 +290,7 @@ def edit_post(post_id):
     return render_template("edit_post.html", form=form, post=post)
 
 
+# Delete post
 @app.route("/delete/<int:post_id>", methods=["POST"])
 @login_required
 def delete(post_id):
@@ -292,12 +301,14 @@ def delete(post_id):
     return redirect(url_for("posts"))
 
 
+# Post detail
 @app.route("/post/<int:post_id>")
 def post_detail(post_id):
     post = Posts.query.get_or_404(post_id)
     post.local_date_posted_value = post.local_date_posted()
-    join_requests = JoinRequest.query.filter_by(post_id=post.post_id).all()
-    return render_template("post_detail.html", post=post, join_requests=join_requests)
+    join_activities = JoinActivity.query.filter_by(post_id=post.post_id).all()
+    return render_template("post_detail.html", post=post, join_activities=join_activities)
+
 
 # Join Activity
 @app.route("/activityrequest/<int:post_id>", methods=["POST"])
@@ -310,23 +321,24 @@ def activityrequest(post_id):
         return redirect(url_for("post_detail", post_id=post.post_id))
 
     # Prevent duplicate request
-    existing = JoinRequest.query.filter_by(user_email=current_user.user_email, post_id=post.post_id).first()
+    existing = JoinActivity.query.filter_by(user_email=current_user.user_email, post_id=post.post_id).first()
     if existing:
-        flash("You already requested to join this activity.")
+        flash("You already requested this activity. Please wait for the post owner to approve")
     else:
-        join_req = JoinRequest(user_email=current_user.user_email, post_id=post.post_id)
-        db.session.add(join_req)
+        join_act = JoinActivity(user_email=current_user.user_email, post_id=post.post_id)
+        db.session.add(join_act)
         db.session.commit()
         flash("Your request has been sent to the post owner.")
 
     return redirect(url_for("post_detail", post_id=post.post_id))
 
 
+# Handle Join Activity requests
 @app.route("/handle-request/<int:request_id>/<string:decision>", methods=["POST"])
 @login_required
 def handle_request(request_id, decision):
-    join_request = JoinRequest.query.get_or_404(request_id)
-    post = join_request.post
+    join_activity = JoinActivity.query.get_or_404(request_id)
+    post = join_activity.post
 
     # Only post owner can handle
     if post.user_email != current_user.user_email:
@@ -338,11 +350,11 @@ def handle_request(request_id, decision):
         return redirect(url_for("post_detail", post_id=post.post_id))
 
     if decision == "accept":
-        accepted_count = JoinRequest.query.filter_by(post_id=post.post_id, status="accepted").count()
+        accepted_count = JoinActivity.query.filter_by(post_id=post.post_id, status="accepted").count()
 
         if accepted_count < post.participants:
-            join_request.status = "accepted"
-            flash(f"{join_request.user.name} has been accepted!")
+            join_activity.status = "accepted"
+            flash(f"{join_activity.user.name} has been accepted!")
 
             accepted_count += 1
             if accepted_count >= post.participants:
@@ -352,15 +364,15 @@ def handle_request(request_id, decision):
             flash("This activity already has enough participants.")
 
     elif decision == "reject":
-        join_request.status = "rejected"
-        flash(f"{join_request.user.name} has been rejected.")
+        join_activity.status = "rejected"
+        flash(f"{join_activity.user.name} has been rejected.")
 
     db.session.commit()
     return redirect(url_for("post_detail", post_id=post.post_id))
 
-# Run 
+
+# Run app
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
         app.run(debug=True)
-
