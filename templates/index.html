@@ -9,12 +9,14 @@
     <div class="search-row">
         <form class="searchingbar" method="GET" action="{{ url_for('search') }}">
             <input type="text" name="sport" placeholder="Search by Category..." value="{{ request.args.get('sport','')}}">
+            <input type="hidden" name="date" value="{{ date or request.args.get('date','') }}">
             <button type="submit">Search</button>
         </form>
 
         <form class="searchingdate" method="GET" action="{{ url_for('search') }}">
             <label><b>Choose Date: </b></label>
             <input type="date" name="date" value="{{ request.args.get('date','') }}">
+            <input type="hidden" name="sport" value="{{ sport or request.args.get('sport','') }}">
             <button type="submit">Apply</button>
         </form>
     </div>
