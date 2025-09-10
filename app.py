@@ -186,9 +186,7 @@ def posts():
             post.local_date_posted_value = None
     return render_template("index.html", posts=posts)
 
-<<<<<<< HEAD
 #error page
-=======
 #Search feature
 @app.route("/search", methods=["GET"])
 def search():
@@ -236,7 +234,6 @@ def search():
     return render_template("index.html",posts=results,searched=searched,sport=sport,date=dateinpost)
 
 # error page
->>>>>>> main
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template("404.html"), 404
@@ -366,7 +363,4 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
         app.run(debug=True)
-<<<<<<< HEAD
-=======
 
->>>>>>> main
