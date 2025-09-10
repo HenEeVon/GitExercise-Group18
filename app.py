@@ -12,6 +12,8 @@ from wtforms.validators import DataRequired
 from datetime import datetime
 import pytz
 
+from sqlalchemy import func, or_
+
 MALAYSIA_TZ = pytz.timezone("Asia/Kuala_Lumpur")
 UTC = pytz.utc
 
@@ -242,6 +244,52 @@ def posts():
             post.local_date_posted_value = None
     return render_template("index.html", posts=posts)
 
+#Search feature
+@app.route("/search", methods=["GET"])
+def search():
+    sport = (request.args.get("sport") or "").strip().lower()
+    dateinpost = (request.args.get("date") or "").strip()
+
+    searched = False
+    results = []
+
+    if sport and dateinpost:
+         searched = True
+         results = Posts.query.join(User).filter(
+            or_(
+                func.lower(Posts.title).like(f"%{sport}%"),
+                func.lower(Posts.content).like(f"%{sport}%"),
+                func.lower(Posts.location).like(f"%{sport}%"),
+                func.lower(User.name).like(f"%{sport}%"),
+        ),Posts.event_datetime.like(f"%{dateinpost}%")).order_by(Posts.date_posted.desc()).all()
+    
+    elif sport:
+        searched = True
+        results = Posts.query.join(User).filter(
+            or_(
+                func.lower(Posts.title).like(f"%{sport}%"),
+                func.lower(Posts.content).like(f"%{sport}%"),
+                func.lower(Posts.location).like(f"%{sport}%"),
+                func.lower(User.name).like(f"%{sport}%"),
+            )).order_by(Posts.date_posted.desc()).all()
+        
+    elif dateinpost:
+        searched = True
+        results = Posts.query.filter(
+            Posts.event_datetime.like(f"%{dateinpost}%")).order_by(Posts.date_posted.desc()).all()
+
+    else:
+        results = Posts.query.order_by(Posts.date_posted.desc()).all()
+
+    for post in results:
+        if post.date_posted:
+            utc_time = pytz.utc.localize(post.date_posted)
+            post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
+        else:
+            post.local_date_posted_value = None
+
+    return render_template("index.html",posts=results,searched=searched,sport=sport,date=dateinpost)
+
 # error page
 @app.errorhandler(404)
 def page_not_found(e):
@@ -338,3 +386,4 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
         app.run(debug=True)
+
