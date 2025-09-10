@@ -261,34 +261,33 @@ def search():
     sport = (request.args.get("sport") or "").strip().lower()
     dateinpost = (request.args.get("date") or "").strip()
 
-    results = []
     searched = False
+    results = []
 
     if sport and dateinpost:
-        searched = True
-        results = Posts.query.filter(
+         searched = True
+         results = Posts.query.join(User).filter(
             or_(
                 func.lower(Posts.title).like(f"%{sport}%"),
                 func.lower(Posts.content).like(f"%{sport}%"),
                 func.lower(Posts.location).like(f"%{sport}%"),
-                func.lower(Posts.author).like(f"%{sport}%"),
-                ),
-                Posts.event_datetime.like(f"%{dateinpost}%")).order_by(Posts.date_posted.desc()).all()
-        
+                func.lower(User.name).like(f"%{sport}%"),
+        ),Posts.event_datetime.like(f"%{dateinpost}%")).order_by(Posts.date_posted.desc()).all()
+    
     elif sport:
         searched = True
-        results = Posts.query.filter(
+        results = Posts.query.join(User).filter(
             or_(
                 func.lower(Posts.title).like(f"%{sport}%"),
                 func.lower(Posts.content).like(f"%{sport}%"),
                 func.lower(Posts.location).like(f"%{sport}%"),
-                func.lower(Posts.author).like(f"%{sport}%")
-                )).order_by(Posts.date_posted.desc()).all()
+                func.lower(User.name).like(f"%{sport}%"),
+            )).order_by(Posts.date_posted.desc()).all()
         
     elif dateinpost:
         searched = True
-        results = Posts.query.filter(Posts.event_datetime.like(f"%{dateinpost}%")
-        ).order_by(Posts.date_posted.desc()).all()
+        results = Posts.query.filter(
+            Posts.event_datetime.like(f"%{dateinpost}%")).order_by(Posts.date_posted.desc()).all()
 
     else:
         results = Posts.query.order_by(Posts.date_posted.desc()).all()
@@ -300,7 +299,8 @@ def search():
         else:
             post.local_date_posted_value = None
 
-    return render_template("index.html",results=results,searched=searched,sport=sport,date=dateinpost)
+    return render_template("index.html",posts=results,searched=searched,sport=sport,date=dateinpost)
+
 # error page
 @app.errorhandler(404)
 def page_not_found(e):
