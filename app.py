@@ -186,7 +186,6 @@ def posts():
             post.local_date_posted_value = None
     return render_template("index.html", posts=posts)
 
-<<<<<<<<< Temporary merge branch 1
 #Search feature
 @app.route("/search", methods=["GET"])
 def search():
