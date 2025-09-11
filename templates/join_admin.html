@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Admin Dashboard</h1>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Show logged in admin -->
+    <p>Logged in as: <strong>{{ session['admin_email'] }}</strong> ({{ session['role'] }})</p>
+
+    <h2>Pending Requests</h2>
+    {% if requests %}
+        <table border="1" cellpadding="5">
+            <tr>
+                <th>ID</th>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Reason</th>
+                <th>Action</th>
+            </tr>
+            {% for r in requests %}
+                <tr>
+                    <td>{{ r.approval_id }}</td>
+                    <td>{{ r.admin_email }}</td>
+                    <td>{{ r.admin_name }}</td>
+                    <td>{{ r.join_reason }}</td>
+                    <td>
+                        <!-- Approve form -->
+                        <form method="POST" action="{{ url_for('approval_admin', approval_id=r.approval_id) }}" style="display:inline;">
+                            <input type="hidden" name="decision" value="accept">
+                            <select name="role">
+                                <option value="admin">Admin<

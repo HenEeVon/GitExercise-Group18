@@ -1,0 +1,31 @@
+<html>
+    <body>
+        <p>welcome admin</p>
+        <p>Welcome, {{ session.get('admin_email') }}</p>
+        <h2>Pending Admin Requests</h2>
+<table>
+  <tr>
+    <th>Email</th>
+    <th>Name</th>
+    <th>Reason</th>
+    <th>Status</th>
+    <th>Actions</th>
+  </tr>
+  {% for req in requests %}
+  <tr>
+    <td>{{ req.admin_email }}</td>
+    <td>{{ req.admin_name }}</td>
+    <td>{{ req.join_reason }}</td>
+    <td>{{ req.approval }}</td>
+    <td>
+      <form action="{{ url_for('request_admin', approval_id=req.approval_id) }}" method="POST" style="display:inline;">
+        <button type="submit" name="decision" value="accept">Approve</button>
+        <button type="submit" name="decision" value="reject">Reject</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+    </body>
+</html>

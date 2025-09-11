@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
     LoginManager, UserMixin, login_user, logout_user,
@@ -11,7 +11,6 @@ from wtforms import StringField, SubmitField, TextAreaField, IntegerField
 from wtforms.validators import DataRequired, NumberRange
 from datetime import datetime
 import pytz
-
 from sqlalchemy import func, or_
 
 MALAYSIA_TZ = pytz.timezone("Asia/Kuala_Lumpur")
@@ -32,22 +31,29 @@ login_manager.login_view = "login"
 class User(UserMixin, db.Model):
     __tablename__ = "users"
     user_email = db.Column(db.String(255), primary_key=True)
-    name = db.Column(db.String(255), nullable=False)
+    user_name = db.Column(db.String(255), nullable=False)
     gender = db.Column(db.String(50), nullable=False)
     password = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(20), default="user")  # "user" or "admin"
 
     def get_id(self):
         return self.user_email
 
+class Admin(db.Model):
+    __tablename__ = "admin"
+    admin_email =  db.Column(db.String(255), primary_key=True)
+    admin_name = db.Column(db.String(255), nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+    role = db.Column(db.String(20), default="admin")
+
 class AdminRequest(db.Model):
-    __tablename__ = "admin_requests"
-    id = db.Column(db.Integer, primary_key=True)
-    user_email = db.Column(db.String(255), db.ForeignKey("users.user_email"), nullable=False)
+    __tablename__ = "admin_request"
+    approval_id = db.Column(db.Integer, primary_key=True)
+    admin_email = db.Column(db.String(255), nullable=False)
+    admin_name = db.Column(db.String(255), nullable=False)
+    password = db.Column(db.String(255), nullable=False)
     join_reason = db.Column(db.Text, nullable=False)
     approval = db.Column(db.String(20), default="pending")  # pending / approved / rejected
 
-    user = db.relationship("User", backref="admin_requests")
 
 class Posts(db.Model):
     __tablename__ = "posts"
@@ -107,12 +113,12 @@ def home():
 def register():
     if request.method == "POST":
         user_email = request.form["user_email"].strip().lower()
-        name = request.form["name"]
+        user_name = request.form["user_name"]
         gender = request.form["gender"]
         password = request.form["password"]
 
         hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
-        new_user = User(user_email=user_email, name=name, gender=gender, password=hashed_password)
+        new_user = User(user_email=user_email, user_name=user_name, gender=gender, password=hashed_password)
 
         try:
             db.session.add(new_user)
@@ -136,7 +142,7 @@ def login():
         user = User.query.filter_by(user_email=email).first()
         if user and check_password_hash(user.password, password):
             login_user(user)
-            flash(f"Welcome {user.name}!")
+            flash(f"Welcome {user.user_name}!")
             return redirect(url_for("posts"))
 
         flash("Invalid email or password!")
@@ -205,7 +211,7 @@ def search():
                 func.lower(Posts.title).like(f"%{sport}%"),
                 func.lower(Posts.content).like(f"%{sport}%"),
                 func.lower(Posts.location).like(f"%{sport}%"),
-                func.lower(User.name).like(f"%{sport}%"),
+                func.lower(User.user_name).like(f"%{sport}%"),
             ),
             Posts.event_datetime.like(f"%{dateinpost}%")
         ).order_by(Posts.date_posted.desc()).all()
@@ -217,7 +223,7 @@ def search():
                 func.lower(Posts.title).like(f"%{sport}%"),
                 func.lower(Posts.content).like(f"%{sport}%"),
                 func.lower(Posts.location).like(f"%{sport}%"),
-                func.lower(User.name).like(f"%{sport}%"),
+                func.lower(User.user_name).like(f"%{sport}%"),
             )
         ).order_by(Posts.date_posted.desc()).all()
 
@@ -354,7 +360,7 @@ def handle_request(request_id, decision):
 
         if accepted_count < post.participants:
             join_activity.status = "accepted"
-            flash(f"{join_activity.user.name} has been accepted!")
+            flash(f"{join_activity.user.user_name} has been accepted!")
 
             accepted_count += 1
             if accepted_count >= post.participants:
@@ -365,14 +371,133 @@ def handle_request(request_id, decision):
 
     elif decision == "reject":
         join_activity.status = "rejected"
-        flash(f"{join_activity.user.name} has been rejected.")
+        flash(f"{join_activity.user.user_name} has been rejected.")
 
     db.session.commit()
     return redirect(url_for("post_detail", post_id=post.post_id))
+
+#admin interface
+#owner of the website
+def create_owner():
+    if not Admin.query.first():
+        owner = Admin(
+            admin_email="eewen@gmail.com",
+            admin_name="Lee Ee Wen",
+            password=generate_password_hash("aaaa", method="pbkdf2:sha256"),
+            role="owner"
+        )
+        db.session.add(owner)
+        db.session.commit()
+
+# request to join admin
+@app.route("/login_admin", methods=["GET", "POST"])
+def login_admin():
+    if request.method == "POST":
+        email = request.form["admin_email"].strip().lower()
+        password = request.form["password"]
+
+        admin_instance = Admin.query.filter_by(admin_email=email).first()
+        if admin_instance and check_password_hash(admin_instance.password, password):
+            session["admin_email"] = admin_instance.admin_email
+            session["role"] = admin_instance.role
+            flash(f"Welcome {admin_instance.admin_name}!")
+            return redirect(url_for("owner_approval"))
+        else:
+            flash("Invalid email or you are NOT admin !")
+
+    return render_template("login_admin.html")
+
+
+@app.route("/request_admin", methods=["GET", "POST"])
+def request_admin():
+    if request.method == "POST":
+        email = request.form.get("admin_email", "").strip().lower()
+        admin_name = request.form.get("admin_name", "")
+        password = request.form.get("password", "")
+        join_reason = request.form.get("join_reason", "")
+
+        existing = AdminRequest.query.filter_by(admin_email=email).first()
+        if existing:
+            flash("You already submitted a request. Please wait for approval.")
+        else:
+            new_request = AdminRequest(
+                admin_email=email,
+                admin_name=admin_name,
+                password=generate_password_hash(password, method="pbkdf2:sha256"),
+                join_reason=join_reason,
+                approval="pending"
+            )
+            db.session.add(new_request)
+            db.session.commit()
+            flash("Your request has been submitted and is pending approval.")
+
+        return redirect(url_for("login_admin"))
+
+    return render_template("request_admin.html")
+
+@app.route("/handle-request/<int:approval_id>", methods=["GET", "POST"])
+def handle_request_admin(approval_id):
+    # Must be logged in
+    if "admin_email" not in session:
+        flash("You must log in first.")
+        return redirect(url_for("login_admin"))
+
+    # Only owner can approve
+    current_admin = Admin.query.get(session["admin_email"])
+    if not current_admin or current_admin.role != "owner":
+        flash("You do not have permission to approve requests.")
+        return redirect(url_for("owner_approval"))
+
+    join_request = AdminRequest.query.get_or_404(approval_id)
+
+    if request.method == "POST":
+        decision = request.form.get("decision")
+        if decision == "accept":
+            join_request.approval = "accepted"
+            if not Admin.query.get(join_request.admin_email):
+                new_admin = Admin(
+                    admin_email=join_request.admin_email,
+                    admin_name=join_request.admin_name,
+                    password=join_request.password,
+                    role="admin"
+                )
+                db.session.add(new_admin)
+            flash(f"{join_request.admin_name} has been approved as admin.")
+        elif decision == "reject":
+            join_request.approval = "rejected"
+            flash(f"Request from {join_request.admin_name} has been rejected.")
+
+        db.session.commit()
+        return redirect(url_for("owner_approval"))
+
+    # GET → show details
+    return render_template("join_admin.html", request=join_request)
+
+
+@app.route("/owner_approval")
+def owner_approval():
+    if "admin_email" not in session:
+        flash("You must log in first.")
+        return redirect(url_for("login_admin"))
+
+    # Only show requests if owner is logged in
+    current_admin = Admin.query.get(session["admin_email"])
+    if not current_admin:
+        flash("Invalid session. Please log in again.")
+        return redirect(url_for("login_admin"))
+
+    if current_admin.role == "owner":
+        requests = AdminRequest.query.filter_by(approval="pending").all()
+    else:
+        requests = []  # Normal admins can’t see approval requests
+
+    return render_template("owner_approval.html", admin=current_admin, requests=requests)
+
 
 
 # Run app
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
+        create_owner()
         app.run(debug=True)
