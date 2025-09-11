@@ -11,25 +11,25 @@
 
             {% if current_user.is_authenticated %}
                 {% if current_user.role == "admin" %}
-                    <nav class="navbar admin-navbar">
+                    <nav class="nav-item">
                         <a href="{{ url_for('posts') }}">Posts</a>
                         <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
                         <a href="{{ url_for('users') }}">Users</a>
-                        <a href="{{ url_for('admin_dashboard') }}">Admin Approved</a>
-                        <a href="{{ url_for('logout') }}">Log Out</a>
+                        <a href="{{ url_for('admin_dashboard') }}">Admin&nbsp;Approved</a>
+                        <a href="{{ url_for('logout') }}">Log&nbsp;Out</a>
                     </nav>
                 {% else %}
-                    <nav class="navbar user-navbar">
-                        <a href="{{ url_for('posts') }}">Posts</a>
-                        <a href="{{ url_for('notifications') }}">Notifications</a>
-                        <a href="{{ url_for('profile') }}">My Profile</a>
-                        <a href="{{ url_for('logout') }}">Log Out</a>
+                    <nav class="nav-item">
+                        <a href="{{ url_for('posts') }}" class="nav-item">Posts</a>
+                        <a href="{{ url_for('notifications') }}" class="nav-item">Notifications</a>
+                        <a href="{{ url_for('profile') }}" class="nav-item">My&nbsp;Profile</a>
+                        <a href="{{ url_for('logout') }}" class="nav-item">Log&nbsp;Out</a>
                     </nav>
                 {% endif %}
             {% else %}
-                <nav class="navbar guest-navbar">
+                <nav class="nav-item">
                     <a href="{{ url_for('home') }}" >Home</a>
-                    <a href="{{ url_for('login') }}" >Log In</a>
+                    <a href="{{ url_for('login') }}" >Log&nbsp;In</a>
                     <a href="{{ url_for('register') }}" >Register</a>
                 </nav>
             {% endif %}
