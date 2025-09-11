@@ -9,6 +9,15 @@
 </head>
 
 <body class="admin">
+    <div class="page-container">
+        <header>
+            <a class="header-logo"><span>EbFit</span></a>
+            <nav class="nav-bar">
+                <a href="{{ url_for('login_admin') }}" class="nav-items lines">Log In</a>
+                <a href="{{ url_for('request_admin') }}" class="nav-items">Request admin</a>
+            </nav>
+        </header>
+    </div>
     <div id="popup"></div>
     <div id="page" class="site">
         <div class="container2">
@@ -53,9 +62,6 @@
                         </p>
                     </form>
 
-                    <a href="{{ url_for('home') }}" class="icon-btn">
-                        <i class="ri-close-fill"></i>
-                    </a>
                 </div>
             </div>
         </div>

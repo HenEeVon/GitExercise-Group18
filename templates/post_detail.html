@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}My post{% endblock %}
+{% block title %}My Post{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -8,24 +8,94 @@
     <p class="meta">
         Event Date: {{ post.event_datetime }} | {{ post.location }}
     </p>
-
-    <p class="meta"> 
-        Posted on: {{ post.local_date_posted_value.strftime('%Y-%m-%d %H:%M') if post.local_date_posted_value else '' }} by {{ post.user.name }}
+    <p class="meta">
+        Posted on: {{ post.local_date_posted_value.strftime('%Y-%m-%d %H:%M') if post.local_date_posted_value else '' }} by {{ post.user.user_name }}
     </p>
-
-    <p>Location: {{ post.location }}</p>
 
     <div class="content">
         <p>{{ post.content }}</p>
     </div>
-    
 
-    <a href="{{ url_for('posts') }}" class="btn">Back to Activity Post</a>
-    <a href="{{ url_for('edit_post', post_id=post.id) }}" class="btn">Edit</a>
-    <button class="btn chat-btn">Chat with Me</button>
+    <p>Status: {{ post.post_status }}</p>
+    <p>Required Participants: {{ post.participants }}</p>
+
+    <!-- Flash message popup -->
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="popup">
+                <div class="popup-content">
+                    <p>{{ message }}</p>
+                    <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <!-- Join activity request and current request status -->
+    {% if current_user.is_authenticated and current_user.user_email != post.user_email %}
+        {% set user_request = None %}
+        {% for ja in join_activities %}
+            {% if ja.user_email == current_user.user_email %}
+                {% set user_request = ja %}
+            {% endif %}
+        {% endfor %}
+
+        {% if user_request %}
+            <p>
+                Your request status: 
+                {% if user_request.status == "pending" %}
+                    <span class="text-warning">Pending</span>
+                {% elif user_request.status == "accepted" %}
+                    <span class="text-success">Accepted</span>
+                {% elif user_request.status == "rejected" %}
+                    <span class="text-danger">Rejected</span>
+                {% endif %}
+            </p>
+        {% else %}
+            {% if post.post_status == "open" %}
+                <form action="{{ url_for('activityrequest', post_id=post.post_id) }}" method="post">
+                    <button type="submit" class="btn btn-primary">Request to Join</button>
+                </form>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+
+    <!-- Show join activities (only to post owner) -->
+    {% if current_user.is_authenticated and current_user.user_email == post.user_email %}
+        <hr>
+        <h3>Join Requests</h3>
+        {% if join_activities %}
+            <ul>
+                {% for ja in join_activities %}
+                    <li>
+                        {{ ja.user.user_name }} ({{ ja.user.user_email }}) - Status: {{ ja.status }}
+
+                        {% if ja.status == "pending" %}
+                            <!-- Accept button -->
+                            <form action="{{ url_for('handle_request', request_id=ja.id, decision='accept') }}" method="post" style="display:inline;">
+                                <button type="submit" class="btn btn-success btn-sm">Accept</button>
+                            </form>
+                            <!-- Reject button -->
+                            <form action="{{ url_for('handle_request', request_id=ja.id, decision='reject') }}" method="post" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                            </form>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No join requests yet.</p>
+        {% endif %}
+    {% endif %}
+
+    <hr>
+
+    {% if current_user.is_authenticated and current_user.user_email == post.user_email %}
+        <a href="{{ url_for('posts') }}" class="btn btn-secondary">Back to Activity Post</a>
+        <a href="{{ url_for('edit_post', post_id=post.post_id) }}" class="btn btn-warning">Edit</a>
+    {% endif %}
+    <button class="btn btn-info chat-btn">Chat with Me</button>
 </div>
-
-
-
-
 {% endblock %}

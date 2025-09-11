@@ -9,8 +9,19 @@
 </head>
 
 <body class="admin">
+
+    <!-- Navigation Bar -->
+    <div class="page-container">
+        <header>
+            <a class="header-logo"><span>EbFit</span></a>
+            <nav class="nav-bar">
+                <a href="{{ url_for('login_admin') }}" class="nav-items">Log In</a>
+                <a href="{{ url_for('request_admin') }}" class="nav-items lines">Request admin</a>
+            </nav>
+        </header>
+    </div>
     <div id="page" class="site">
-        <div class="container">
+        <div class="container2">
             <div class="login">
                 <div class="hero">
                     <h1>Welcome <br>Admin</h1>
@@ -36,7 +47,7 @@
                     {% endwith %}
                     
                     <form action="{{ url_for('request_admin') }}" method="POST">
-                        <h2 class="form-title">Request Joining Admin:</h2>
+                        <h2 class="form-title">Request Admin:</h2>
 
                         <p class="colortext">
                             <span><strong>Email address:</strong></span>
@@ -62,10 +73,6 @@
                             <input type="submit" class="submit" value="Request">
                         </p>
                     </form>
-
-                    <a href="{{ url_for('home') }}" class="icon-btnreg">
-                        <i class="ri-close-fill"></i>
-                    </a>
                 </div>
             </div>
         </div>
