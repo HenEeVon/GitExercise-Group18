@@ -1,9 +1,6 @@
-{% extends "base.html" %}
-
-{% block title %}Edit Post{% endblock %}
-
-{% block content %}
-<head>
+<!DOCTYPE html>
+<html lang="en">
+    <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
@@ -11,26 +8,23 @@
 </head>
 <body>
     <section id="herohome" class="page-container">
-<<<<<<< HEAD
-=======
         <header>
             <a class="header-logo"><span>ebFit</span></a>
-            <nav class="nav-bar">
-                <a href="{{ url_for('home') }}" class="nav-items lines">Home</a>
-                <a href="{{ url_for('login') }}" class="nav-items">Log In</a>
-                <a href="{{ url_for('register') }}" class="nav-items ">Register</a>
+            <nav class="nav-item">
+                <a href="{{ url_for('home') }}" class="nav-item lines">Home</a>
+                <a href="{{ url_for('login') }}" class="nav-item ">Log In</a>
+                <a href="{{ url_for('register') }}" class="nav-item ">Register</a>
             </nav>
         </header>
->>>>>>> main
 
         <div class="herohome-content">
             <div class="left-content">
                 <div>
                     <h1>About <span>EbFit</span></h1>
                     <p>
-                        ebFit is designed to be free, simple, and student-focused. 
+                        EbFit is designed to be free, simple, and student-focused. 
                         Instead of confusing users with a wide variety of categories and expensive subscriptions, 
-                        ebFit allows students to create an account and edit posts, request and join activities, as well as track activities. 
+                        EbFit allows students to create an account and edit posts, request and join activities, as well as track activities. 
                         This positions ebFit as a user-friendly website that helps MMU students find reliable sports activities.
                     </p>
                     <a href="{{ url_for('login') }}" class="big-cta-btn">Log In</a>
@@ -44,5 +38,5 @@
         </div>
     </section>
 </body>
-{% endblock %}
+</html>
 

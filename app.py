@@ -150,12 +150,6 @@ def login():
     return render_template("login.html")
 
 
-# User homepage
-@app.route("/")
-def home():
-    return render_template("home.html")
-
-
 # Logout
 @app.route("/logout")
 @login_required

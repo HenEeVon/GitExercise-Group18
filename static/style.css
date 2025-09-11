@@ -692,6 +692,35 @@ h1 span {
 
 /* Nav Bar */
 
+/* Home NavBar */
+.nav-item {
+    font-size: 17px;
+    font-weight: 500;
+    color: #228FEB;
+    cursor: pointer;
+    transition: 0.2s;
+    text-decoration: none;
+    padding-bottom: 5px;
+    margin-right:10px;
+}
+
+.nav-item:hover {
+    color: #ff1a1a;
+}
+
+/* Active page highlight */
+.lines {
+    border-bottom: 2px solid #07519b;
+    color: #3a7bcb;
+    transition: 0.2s;
+}
+
+.lines:hover {
+    border-color: #ff1a1a;
+}
+
+
+
 /* Navbar container */
 .navbar-container {
     display: flex;
