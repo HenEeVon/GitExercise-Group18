@@ -13,6 +13,12 @@ from datetime import datetime
 import pytz
 from sqlalchemy import func, or_
 
+import threading
+import socket
+
+host = '127.0.0.1'
+port = 55555
+
 MALAYSIA_TZ = pytz.timezone("Asia/Kuala_Lumpur")
 UTC = pytz.utc
 
@@ -245,6 +251,21 @@ def search():
             post.local_date_posted_value = None
 
     return render_template("index.html", posts=results, searched=searched, sport=sport, date=dateinpost)
+
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.bind((host, port))
+server.listen()
+
+chatusers = []
+nickname = []
+
+def broadcast(message):
+    for chatuser in chatusers:
+        chatuser.send(message)
+
+def handle(chatuser):
+    while True
+
 
 # Error page
 @app.errorhandler(404)
