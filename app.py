@@ -288,7 +288,7 @@ def receive():
         chatusers.append(chatuser)
 
         print(f'Nickname of the user is (Nickname)!')
-        
+
 
 
 # Error page
