@@ -277,6 +277,19 @@ def handle(chatuser):
             nicknames.remove(nickname)
             break
 
+def receive():
+    while True:
+        chatuser, address = server.accept()
+        print(f"Connected with(str(address))")
+
+        chatuser.send('Xywev',encode('ascii'))
+        nickname = chatuser.recv(1024).decode('ascii')
+        nicknames.append(nickname)
+        chatusers.append(chatuser)
+
+        print(f'Nickname of the user is (Nickname)!')
+        
+
 
 # Error page
 @app.errorhandler(404)
