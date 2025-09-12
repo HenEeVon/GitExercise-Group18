@@ -303,6 +303,18 @@ receive()
 chatuser = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 chatuser.connect(('127.0.0.1',5000))
 
+def receive():
+    while True:
+        try:
+            message = chatuser.recv(1024).decode('ascii')
+            if message == "Xywev":
+                pass
+            else:
+                print(message)
+        except:
+            print("An error occured!")
+            chatuser.close()
+            break
 
 
 # Error page
