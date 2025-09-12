@@ -36,19 +36,43 @@ input, textarea {
     display: inline-block;
     margin-top: 15px;
     padding: 10px 15px;
-    background: #007bff;
+    background-color: #007bff;
     color: white;
     text-decoration: none;
+    border: none;              
     border-radius: 8px;
     text-align: center;
     vertical-align: middle;
-    cursor:pointer;
+    cursor: pointer;
+    font: inherit;            
     transition: background-color 0.3s ease, transform 0.2s ease;
+    appearance: none;          
+    -webkit-appearance: none;
+    -moz-appearance: none;
 }
 
-.btn:hover {
-    background: #0056b3;
+input[type="submit"].btn,
+input[type="submit"].post-btn {
+    background-color: #007bff; 
+    color: white;
+    border: none;  
+    padding: 20px;
 }
+
+input[type="submit"].btn:hover,
+input[type="submit"].post-btn:hover {
+    background-color: #0056b3; 
+}
+
+.cancel-btn {
+    background-color:#007bff;
+}
+
+.cancel-btn:hover {
+    background-color:#0056b3;
+}
+
+
 
 .meta {
     color: #888;
@@ -157,13 +181,6 @@ details[open] .menu-dropdown {
     cursor:pointer;
 }
 
-.cancel-btn {
-    background-color:#007bff;
-}
-
-.cancel-btn:hover {
-    background-color:#0056b3;
-}
 
 
 .alert {
