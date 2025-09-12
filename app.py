@@ -16,10 +16,6 @@ from sqlalchemy import func, or_
 import threading
 import socket
 
-#IP address of web server
-host = '127.0.0.1'
-port = 5000
-
 MALAYSIA_TZ = pytz.timezone("Asia/Kuala_Lumpur")
 UTC = pytz.utc
 
@@ -252,81 +248,6 @@ def search():
             post.local_date_posted_value = None
 
     return render_template("index.html", posts=results, searched=searched, sport=sport, date=dateinpost)
-
-#Chat Feature
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind((host, port))
-server.listen()
-
-chatusers = []
-nicknames = []
-
-def broadcast(message):
-    for chatuser in chatusers:
-        chatuser.send(message)
-
-def handle(chatuser):
-    while True:
-        try:
-            message = chatuser.recv(1024)
-            broadcast(message)
-        except:
-            index = chatusers.index(chatuser)
-            chatusers.remove(chatuser)
-            chatuser.close()
-            nickname = nicknames[index]
-            broadcast(f'(nickname) left the chat!'.encode('ascii'))
-            nicknames.remove(nickname)
-            break
-
-def receive():
-    while True:
-        chatuser, address = server.accept()
-        print(f"Connected with(str(address))")
-
-        chatuser.send('Xywev'.encode('ascii'))
-        nickname = chatuser.recv(1024).decode('ascii')
-        nicknames.append(nickname)
-        chatusers.append(chatuser)
-
-        print(f'Nickname of the user is (Nickname)!')
-        broadcast(f'{nickname} joined the chat!'.encode('ascii'))
-        chatuser.send('Connected to the server!'.encode('ascii'))
-
-        thread = threading.Thread(target=handle, args=(chatuser,))
-        thread.start()
-
-print("Server is listening...")
-receive()
-
-#Chatuser
-nickname = input("Choose a nicknames: ")
-
-chatuser = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-chatuser.connect(('127.0.0.1',5000))
-
-def receive():
-    while True:
-        try:
-            message = chatuser.recv(1024).decode('ascii')
-            if message == "Xywev":
-                chatuser.send(nickname.encode('ascii'))
-            else:
-                print(message)
-        except:
-            print("An error occured!")
-            chatuser.close()
-            break
-
-#Allow user to type new message after one message
-def write():
-    while True:
-        message = f"{nickname}: {input("")}"
-        chatuser.send(message.encode('ascii'))
-
-
-
-
 
 # Error page
 @app.errorhandler(404)
