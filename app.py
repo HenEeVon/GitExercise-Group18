@@ -16,8 +16,9 @@ from sqlalchemy import func, or_
 import threading
 import socket
 
+#IP address of web server
 host = '127.0.0.1'
-port = 55555
+port = 5000
 
 MALAYSIA_TZ = pytz.timezone("Asia/Kuala_Lumpur")
 UTC = pytz.utc
@@ -252,6 +253,7 @@ def search():
 
     return render_template("index.html", posts=results, searched=searched, sport=sport, date=dateinpost)
 
+#Chat Feature
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((host, port))
 server.listen()
