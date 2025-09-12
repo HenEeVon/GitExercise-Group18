@@ -300,6 +300,8 @@ print("Server is listening...")
 receive()
 
 #Chatuser
+nickname = input("Choose a nicknames: ")
+
 chatuser = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 chatuser.connect(('127.0.0.1',5000))
 
@@ -308,13 +310,22 @@ def receive():
         try:
             message = chatuser.recv(1024).decode('ascii')
             if message == "Xywev":
-                pass
+                chatuser.send(nickname.encode('ascii'))
             else:
                 print(message)
         except:
             print("An error occured!")
             chatuser.close()
             break
+
+#Allow user to type new message after one message
+def write():
+    while True:
+        message = f"{nickname}: {input("")}"
+        chatuser.send(message.encode('ascii'))
+
+
+
 
 
 # Error page
