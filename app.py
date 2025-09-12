@@ -257,14 +257,25 @@ server.bind((host, port))
 server.listen()
 
 chatusers = []
-nickname = []
+nicknames = []
 
 def broadcast(message):
     for chatuser in chatusers:
         chatuser.send(message)
 
 def handle(chatuser):
-    while True
+    while True:
+        try:
+            message = chatuser.recv(1024)
+            broadcast(message)
+        except:
+            index = chatusers.index(chatuser)
+            chatusers.remove(chatuser)
+            chatuser.close()
+            nickname = nicknames[index]
+            broadcast(f'(nickname) left the chat!',encode('ascii'))
+            nicknames.remove(nickname)
+            break
 
 
 # Error page
