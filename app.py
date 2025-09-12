@@ -288,6 +288,14 @@ def receive():
         chatusers.append(chatuser)
 
         print(f'Nickname of the user is (Nickname)!')
+        broadcast(f'{nickname} joined the chat!'.encode('ascii'))
+        chatuser.send('Connected to the server!'.encode('ascii'))
+
+        thread = threading.Thread(target=handle, args=(chatuser,))
+        thread.start()
+
+print("Server is listening...")
+receive()
 
 
 
