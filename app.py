@@ -4,6 +4,9 @@ from flask_login import (
     LoginManager, UserMixin, login_user, logout_user,
     login_required, current_user
 )
+from flask_socketio import join_room, leave_room, send, SocketIO
+import random
+from string import ascii_uppercase
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError
 from flask_wtf import FlaskForm
@@ -13,9 +16,6 @@ from datetime import datetime
 import pytz
 from sqlalchemy import func, or_
 
-import threading
-import socket
-
 MALAYSIA_TZ = pytz.timezone("Asia/Kuala_Lumpur")
 UTC = pytz.utc
 
@@ -23,6 +23,7 @@ app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///ebfit.db"
 app.config["SECRET_KEY"] = "060226*"
 db = SQLAlchemy(app)
+socketio = SocketIO(app)
 
 # Flask-Login setup
 login_manager = LoginManager()
@@ -531,4 +532,4 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
         create_owner()
-        app.run(debug=True)
+        socketio.run(app, debug=True)
