@@ -275,7 +275,7 @@ def handle(chatuser):
             chatusers.remove(chatuser)
             chatuser.close()
             nickname = nicknames[index]
-            broadcast(f'(nickname) left the chat!',encode('ascii'))
+            broadcast(f'(nickname) left the chat!'.encode('ascii'))
             nicknames.remove(nickname)
             break
 
@@ -284,7 +284,7 @@ def receive():
         chatuser, address = server.accept()
         print(f"Connected with(str(address))")
 
-        chatuser.send('Xywev',encode('ascii'))
+        chatuser.send('Xywev'.encode('ascii'))
         nickname = chatuser.recv(1024).decode('ascii')
         nicknames.append(nickname)
         chatusers.append(chatuser)
@@ -298,6 +298,10 @@ def receive():
 
 print("Server is listening...")
 receive()
+
+#Chatuser
+chatuser = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+chatuser.connect(('127.0.0.1',5000))
 
 
 
