@@ -320,6 +320,13 @@ def post_detail(post_id):
     join_activities = JoinActivity.query.filter_by(post_id=post.post_id).all()
     return render_template("post_detail.html", post=post, join_activities=join_activities)
 
+#Chat feature
+@app.route("/chat/<int:post_id>")
+def chat(post_id):
+    post = Posts.query.get_or_404(post_id)
+    room = f"post-{post_id}"
+    username = current_user.user_name
+    return render_template("chat.html",post=post, room=room, username=username)
 
 # admin dashboard
 @app.route("/admin_dashboard")
