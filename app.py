@@ -327,14 +327,9 @@ def chat(post_id):
     owner_email = post.user_email
     user_email = current_user.user_email
 
-    if user_email == owner_email:
-        accept_email = owner_email
-    else:
-        accept_email = user_email
-
-    room = "post-{}-{}".format(post_id, "-".join(sorted([owner_email, user_email])))
+    room = f"post-{post_id}-" + "-".join(sorted([owner_email, user_email]))
     username = current_user.user_name
-    return render_template("chat.html",post=post, room=room, username=current_user.user_name)
+    return render_template("chat.html",post=post, room=room, username=current_user.user_name, owner_name=post.user.user_name)
 
 @socketio.on("join")
 def on_join(data):
