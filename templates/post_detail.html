@@ -92,10 +92,33 @@
 
     <hr>
 
-    {% if current_user.is_authenticated and current_user.user_email == post.user_email %}
-        <a href="{{ url_for('posts') }}" class="btn btn-secondary">Back to Activity Post</a>
-        <a href="{{ url_for('edit_post', post_id=post.post_id) }}" class="btn btn-warning">Edit</a>
+    {% if current_user.is_authenticated and current_user.user_email != post.user_email %}
+        <!--Normal user direct message the post owner-->
+        <a href="{{ url_for('chat_with_user', post_id=post.post_id) }}" class="btn btn-info">Chat with Me</a>
+    {% else %}
+        <!--Owner able to open same chat room-->
+        <a href="{{ url_for('chat_with_user', post_id=post.post_id) }}" class="btn btn-info">Open Chat Room</a>
     {% endif %}
-    <button class="btn btn-info chat-btn">Chat with Me</button>
+
+    {% if current_user.is_authenticated and current_user.user_email == post.user_email %}
+        <hr>
+        <h3>Direct Messages</h3>
+
+        {% set requesters = join_activities %}
+        {% if requesters %}
+            <ul>
+                {% for ja in requesters %}
+                <li>
+                    {{ ja.user.user_name }}({{ ja.user.user_email }})
+                    <a class="btn btn-sm btn-info" href="{{ url_for('chat_with_user', post_id=post.post_id, user_email=ja.user_email) }}">
+                        Chat
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No one chat with you yet.</p>
+        {% endif %}
+    {% endif %}
 </div>
 {% endblock %}

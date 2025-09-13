@@ -6,8 +6,13 @@
 <div class="chat-container">
     <h2>Chat with {{ owner_name }}</h2>
 
-    <div id="chat" data-room="{{ room }}" data-username="{{ username }}">
-        <ul id="messages" class="messages"></ul>
+    <div id="chat" data-room="{{ room }}" data-username="{{ username }}" data-postid="{{ post.post_id }}">
+
+        <ul id="messages" class="messages">
+            {% for msg in messages %}
+                <li>{{ msg.sender_name }}: {{ msg.text }}</li>
+            {% endfor %}
+        </ul>
 
         <form id="send-form">
             <input type="text" id="msg" placeholder="Type a message..." autocomplete="off">
@@ -23,6 +28,7 @@
     const chatEl = document.getElementById('chat');
     const ROOM = chatEl.dataset.room;
     const USERNAME = chatEl.dataset.username;
+    const POST_ID = chatEl.dataset.postid;
 
     socket.emit('join', { room:ROOM });
 
@@ -41,13 +47,13 @@
         li.scrollIntoView({ block: "end" });
 });
 
-    document.getElementById('send-form').addEventListener('submit', function
-(e){
+    document.getElementById('send-form').addEventListener('submit', 
+function(e){
     e.preventDefault();
     const input = document.getElementById('msg');
     const text = (input.value || '').trim();
     if(!text) return;
-    socket.emit('send_message', {room:ROOM, message:text });
+    socket.emit('send_message', {room:ROOM, message:text, post_id:POST_ID});
     input.value = "";
     input.focus();
 });
