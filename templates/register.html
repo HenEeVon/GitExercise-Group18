@@ -13,11 +13,9 @@
     <!-- Navigation Bar -->
     <div class="page-container">
         <header>
-            <a class="header-logo"><span>EbFit</span></a>
+            <a class="header-logo"><span>ebFit</span></a>
             <nav class="nav-bar">
                 <a href="{{ url_for('home') }}" class="nav-items">Home</a>
-                <a href="{{ url_for('login') }}" class="nav-items">Log In</a>
-                <a href="{{ url_for('register') }}" class="nav-items lines">Register</a>
             </nav>
         </header>
     </div>
@@ -53,15 +51,15 @@
                         {% endwith %}
                         
                         <form action="{{ url_for('register') }}" method="POST">
-                            <h2 class="form-title">Register User:</h2>
+                            <h2 class="form-title">Register User</h2>
 
                             <p class="colortext">
-                                <span><strong>Email address:</strong></span>
+                                <span><strong>Email address</strong></span>
                                 <input type="email" name="user_email" required>
                             </p>
 
                             <p class="colortext">
-                                <span><strong>Full name:</strong></span>
+                                <span><strong>Full name</strong></span>
                                 <input type="text" name="user_name" required>
                             </p>
 
@@ -76,7 +74,7 @@
                             </p>
 
                             <p class="colortext">
-                                <span><strong>Password:</strong></span>
+                                <span><strong>Password</strong></span>
                                 <input type="password" name="password" required>
                             </p>
 

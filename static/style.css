@@ -388,14 +388,6 @@ body.admin .hero::before {
     position: relative;
 }
 
-.main-text {
-    font-size: 5rem;
-    font-family:'Roboto', sans-serif;
-    font-weight: 800;
-    line-height: 1.2;
-    margin-top: -35px;
-}
-
 form input{
     font: inherit;
     font-size: 14px;
@@ -573,12 +565,6 @@ body.register{
     font-size: 16px;
 }
 
-/* Animation for smooth entry */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
 /* Home Section */
 
 section, .right, .left{
@@ -589,7 +575,7 @@ section, .right, .left{
 
 section {
     height: 100vh;
-    background-image: url("/static/images/bg4.jpg");
+    background-image: url("/static/images/bg1.jpg");
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
@@ -604,6 +590,7 @@ section {
     backdrop-filter: blur(8px);
     border-radius: 30px;
     padding: 50px 100px;
+    overflow: hidden;
     
 }
 
@@ -612,12 +599,28 @@ section {
     flex-direction: column;
     align-items: flex-start;
 }
-
 .right img {
     display: block;
-    max-width: 500px;  
+    max-width: 600px;  
     width: 100%;        
     height: auto;      
+    filter: drop-shadow(0 0 100px #0079fb);
+
+    /* two animations with separate delays */
+    animation: 
+        rightIn 1s ease-out forwards 0.2s,
+        treeScale 20s linear infinite 1s;
+}
+
+.main-text {
+    font-size: 5rem;
+    font-family:'Roboto', sans-serif;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-top: -35px;
+    animation: bottomIn 1s ease-out forwards;
+    animation-delay: 0.2s;
+    opacity:0;
 }
 
 .sub-text{
@@ -626,19 +629,31 @@ section {
     letter-spacing: 0.6px;
     margin-bottom: 60px;
     margin-top: 8px;
+    animation: fadeIn 1s ease-out forwards;
+    animation-delay: 0.6s;
+    opacity:0;
+
 }
 
 .powered {
-  display: block;     /* puts it on its own line */
-  margin-top: -31px;   /* adjust the gap */
-  font-size: 0.9rem;    /* optional: smaller font */
-  color: #000000d6;        /* optional: lighter color */
+  display: block;     
+  margin-top: -31px;   
+  font-size: 0.9rem;    
+  color: #000000d6;   
+  animation: fadeIn 1s ease-out forwards;
+  animation-delay: 0.6s;
+  opacity:0; 
 }
-/* button register or login*/
 
+/* button register or login*/
 .btn-group {
   display: flex;
-  gap: 5px; /* space between buttons */
+  gap: 20px; /*space for buttons */ 
+}
+
+.btn-group .big-cta-btn {
+  position: relative;
+  z-index: 2; /* ensure above images */
 }
 
 .big-cta-btn {
@@ -656,18 +671,24 @@ section {
     animation: bottomIn 1s ease-in-out forwards;
     animation-delay: 0.3s;
     text-decoration: none;
-    margin-right: 20px;
-    margin-top: 50px;
+    margin-right: px;
+    margin-top: 40px;
+    opacity:0;
 }
 
 .big-cta-btn:hover {
     background-color: #08032e;
     color: white;
+    box-shadow: 0 0 100px #0056b3;
 }
+
 .page-container {
     padding: 0 15%;
 }
 
+nav, head-cta{
+    z-index:1;
+}
 header {
     display: flex;
     justify-content: space-between;
@@ -676,6 +697,7 @@ header {
     background-color: rgb(237, 239, 255);
 }
 
+/* ebFit logo*/
 .header-logo {
     font-size: 30px;
     font-weight: 800;
@@ -683,23 +705,10 @@ header {
     margin-left: 30px;
     cursor: pointer;
     color:#012e60;
+    animation: topIn 1s ease-in-out forwards;
+    opacity: 0;
+    animation-delay: 0.2s;
 }
-
-.header-cta-btn {
-    font-size: 17px;
-    font-weight: 600;
-    padding: 10px 25px;
-    background-color: #01B388;
-    color: white;
-    border-radius: 25px;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.header-cta-btn:hover {
-    background-color: #009270;
-}
-
 /* Hero Section Content */
 .herohome-content {
     display: grid;
@@ -710,7 +719,7 @@ header {
 .herohome-img {
   max-width: 100%;
   height: auto;
-  margin-top: 50px;
+  margin-top: 100px;
 }
 
 .left-content h1 {
@@ -743,31 +752,89 @@ h1 span {
     animation-delay: 0.3s;
 }
 
-/* Animations */
-@keyframes zoomIn {
-    from {
-        transform: scale(0.8);
-        opacity: 0;
-    }
-    to {
-        transform: scale(1);
-        opacity: 1;
-    }
+/*About us*/
+.section-tittle{
+    font-size: 3rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 50px;
+    text-align:center;
+    animation: bottomIn 1s ease-in-out forwards;
+    opacity: 0;
+    animation-delay: 1.0s;
 }
 
-@keyframes bottomIn {
-    from {
-        transform: translateY(50px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+#about p{
+    font-size: 1.2rem;
+    line-height: 1.6;
+    margin-bottom: 50px;
+    font-family:'Times New Roman', Times, serif;
+    color: #011d3d;
+    animation: fadeIn 1s ease-in-out forwards;
+    opacity: 0;
+    animation-delay: 1.3s;
+}
+#about .section-wrap {
+  box-shadow: 0 0 100px #4270e6cc; 
+}
+
+.section-tittle span {
+    color: #05448c;
+}
+.big-cta-btn.learn-more {
+  margin-top: -50px; 
+  animation: bottomIn 2s ease-in-out forwards;
+animation-delay: 1.3s;
+}
+
+#about img{
+    position: absolute;
+    width:45%;
+    opacity:0;
+    right: -150px;
+    margin-top: -20px;
+    pointer-events: none;
+    filter: drop-shadow(0 0 100px #5a5a5a5f);
+    animation: rightIn 2s ease-in-out forwards;
+    animation-delay: 1.3s;
+}
+
+/* project-features home*/
+.project-grid{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap:50px;
+}
+
+#project img {
+    width: 80%;
+    border-radius: 10px;
+}
+
+.card {
+    background-color: rgba(1, 86, 175, 0.2);
+    border: 1px solid rgba(5, 11, 124, 0.2) ;
+    padding: 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s; 
+    margin-bottom: 30px;
+    margin-top:15px;    
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.card-title{
+    font-size: 1.2rem;
+    margin: 30px 0 10px;
+}
+
+.card:hover{
+    background-color:rgba(5, 11, 124, 0.38);
+    box-shadow: 0 0 25px hsla(276, 93%, 30%, 0.729);
 }
 
 /* navigation bar*/
-
 .nav-items {
     font-size: 17px;
     font-weight: 500;
@@ -786,4 +853,143 @@ h1 span {
 .nav-items.lines {
     border-bottom: 2px solid #07519b;
     color: #3a7bcb;
+}
+
+footer {
+  background-color: #08032e;  
+  color: white;
+  text-align: center;
+  padding: 20px 0;
+  margin-top: 50px;        
+  font-size: 14px;
+  position: relative;       
+  bottom: 0;
+  width: 100%;
+}
+
+footer p {
+  margin: 0;
+  font-weight: 400;
+  line-height: 25px;
+}
+
+footer strong {
+  color: #e07bff; 
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 50px;
+}
+
+.card {
+  background-color: rgba(1, 86, 175, 0.2);
+  border: 1px solid rgba(5, 11, 124, 0.2);
+  padding: 20px;
+  border-radius: 10px;
+  opacity: 0; /* start hidden */
+  transform: translateY(20px); /* start slightly down */
+  animation: fadeUp 0.6s forwards;
+}
+
+/* Staggered animation delays */
+.card:nth-child(1) { animation-delay: 2.4s; }
+.card:nth-child(2) { animation-delay: 2.6s; }
+.card:nth-child(3) { animation-delay: 2.8s; }
+.card:nth-child(4) { animation-delay: 3.0s; }
+
+@keyframes fadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Card hover effect */
+.card:hover {
+  background-color: rgba(5, 11, 124, 0.38);
+  box-shadow: 0 0 25px hsla(276, 93%, 30%, 0.729);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes treeScale {
+    50% {
+        transform: scale(1.1);
+        filter: drop-shadow(0 0 100px #0056b3);
+    }
+}
+
+@keyframes zoomIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes topIn {
+    from {
+        transform: scale(-200px);
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes bottomIn {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes rightIn {
+    from {
+        transform: translateX(100px); 
+        opacity: 0;                   
+    }
+    to {
+        transform: translateX(0);    
+        opacity: 1;                   
+    }
+}
+
+@keyframes leftIn {
+  from {
+    transform: translateX(-100px); 
+    opacity: 0;                    
+  }
+  to {
+    transform: translateX(0);      
+    opacity: 1;                    
+  }
+}
+
+@keyframes appear{
+    from{
+        opacity:0;
+        scale:0.5s;
+    }
+    to{
+        opacity:1;
+        scale:1;
+    }
 }
