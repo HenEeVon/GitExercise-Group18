@@ -100,6 +100,7 @@ class ActivityForm(FlaskForm):
     participants = IntegerField("Required Participants", validators=[DataRequired(), NumberRange(min=1)])
     submit = SubmitField("Post")
 
+#Chat database
 class ChatMessage(db.Model):
     tablename = "chat_messages"
     id = db.Column(db.Integer, primary_key=True)
@@ -345,20 +346,20 @@ def chat_with_user(post_id, partner_email):
     partner_email = partner_email.lower()
 
     if current_email != owner_email and partner_email != owner_email:
-        return redirect(url_for("chat_with_user", post_id=post_id, user_email=owner_email))
+        return redirect(url_for("chat_with_user", post_id=post_id, partner_email=owner_email))
 
     conv = conversation_key(owner_email, partner_email)
     room = f"post-{post_id}-{conv}"
 
     messages = (ChatMessage.query.filter_by(post_id=post_id, conversation=conv).order_by(asc(ChatMessage.created_at)).all())
 
-    return render_template("chat.html",post=post, room=room, username=current_user.user_name, owner_name=post.user.user_name, messages=messages, post_id=post_id, partner_email=post.user_email)
+    return render_template("chat.html",post=post, room=room, username=current_user.user_name, owner_name=post.user.user_name, messages=messages, post_id=post_id, partner_email=partner_email)
 
 @socketio.on("join")
 def on_join(data):
-    room = (data or {}).get("room")
-    if  not room:
-        return
+    room = data.get("room")
+    if room:
+        print("JOIN ->", current_user.user_email, "to", room)
     join_room(room)
     send(f"{current_user.user_name} joined the chat.", to=room)
 

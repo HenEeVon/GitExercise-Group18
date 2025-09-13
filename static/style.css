@@ -760,3 +760,107 @@ h1 span {
         margin-top: 10px;
     }
 }
+
+/*Chat layout*/
+.chat-container {
+    max-width: 720px;
+    margin: 20px auto;
+    background:#f8f9fb;
+    border: 1px solid #e4e7eb;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    min-height: 500px;
+    box-shadow: 0 6px 18px rgba(0,0 0, 0.06);
+}
+
+.chat-container h2 {
+    font-size: 20px;
+    margin: 0;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e4e7eb;
+    background: #fff;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+#messages {
+    list-style: none;
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    overflow-y: auto;
+    background: #f8f9fb;
+}
+
+#messages li {
+    background: #fff;
+    border: 1px solid #d9dee6;
+    padding: 8px 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .04);
+    word-wrap: break-word;
+    max-width: 500px;
+}
+
+#messages li.system {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    color: #6b7280;
+    font-size: 13px;
+    text-align: center;
+    align-self: center;
+}
+
+#messages li.me {
+    align-self: flex-end;
+    background: #e7f1ff;
+    border-color: #d7e6ff;
+}
+
+#messages li.other {
+    align-self: flex-start;
+}
+
+#send-form {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    border-top: 1px solid #e4e7eb;
+    background: #fff;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+#send-form #msg {
+    flex: 1;
+    border: 1px solid #d9dee6;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    outline: none;
+}
+
+#send-form #msg:focus {
+    border-color: #9ab6ff;
+    box-shadow: 0 0 0 3px rgba(60, 121, 255, .15);
+}
+
+#send-form button {
+    border: 1px solid #2f6bff;
+    background: #2f6bff;
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#send-form button:hover {
+    background-color: #0056b3;
+}

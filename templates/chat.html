@@ -6,7 +6,7 @@
 <div class="chat-container">
     <h2>Chat with {{ owner_name }}</h2>
 
-    <div id="chat" data-room="{{ room }}" data-username="{{ username }}" data-postid="{{ post.post_id }}">
+    <div id="chat" data-room="{{ room }}" data-username="{{ username }}" data-postid="{{ post.post_id }}" data-partner="{{ partner_email }}">
 
         <ul id="messages" class="messages">
             {% for msg in messages %}
@@ -30,30 +30,30 @@
     const USERNAME = chatEl.dataset.username;
     const POST_ID = chatEl.dataset.postid;
 
-    socket.emit('join', { room:ROOM });
+    socket.on('connect', function() {
+        socket.emit('join',{ room:ROOM });
+        console.log('Joined room:', ROOM);
+    });
 
-    socket.on('message', function(data){
+    socket.on('message', function(data) {
         let line;
-        if(typeof data === 'string'){
-            line = data;
-        } else if (data && data.user && data.text){
-            line = data.user + ': '+ data.text;
-        } else {
-            line = JSON.stringify(data);
-        }
+        if(typeof data === 'string') line = data;
+        else if (data && data.user && data.text) line = data.user + ': '+ data.text;
+        else line = JSON.stringify(data);
+
         const li = document.createElement('li');
         li.textContent = line;
         document.getElementById('messages').appendChild(li);
         li.scrollIntoView({ block: "end" });
 });
 
-    document.getElementById('send-form').addEventListener('submit', 
-function(e){
-    e.preventDefault();
-    const input = document.getElementById('msg');
-    const text = (input.value || '').trim();
-    if(!text) return;
-    socket.emit('send_message', {room:ROOM, message:text, post_id:POST_ID});
+    document.getElementById('send-form').addEventListener('submit', function
+    (e) {
+        e.preventDefault();
+        const input = document.getElementById('msg');
+        const text = (input.value || '').trim();
+        if(!text) return;
+        socket.emit('send_message', { room:ROOM, message:text, post_id:POST_ID});
     input.value = "";
     input.focus();
 });
