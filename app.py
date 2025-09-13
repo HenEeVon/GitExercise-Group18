@@ -334,7 +334,7 @@ def chat(post_id):
 
     room = "post-{}-{}".format(post_id, "-".join(sorted([owner_email, user_email])))
     username = current_user.user_name
-    return render_template("chat.html",post=post, room=room, username=current_user.user_name )
+    return render_template("chat.html",post=post, room=room, username=current_user.user_name)
 
 @socketio.on("join")
 def on_join(data):
