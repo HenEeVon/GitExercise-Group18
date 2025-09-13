@@ -324,7 +324,15 @@ def post_detail(post_id):
 @app.route("/chat/<int:post_id>")
 def chat(post_id):
     post = Posts.query.get_or_404(post_id)
-    room = f"post-{post_id}"
+    owner_email = post.user_email
+    chatuser_email = current_user.user_email
+
+    if chatuser_email == owner_email:
+        accept_email = owner_email
+    else:
+        accept_email = chatuser_email
+
+    room = "post-{}-{}".format(post_id, "-".join(sorted([owner_email, chatuser_email])))
     username = current_user.user_name
     return render_template("chat.html",post=post, room=room, username=username)
 

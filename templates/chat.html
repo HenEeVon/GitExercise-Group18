@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <h2>Chat with {{ post.user.name }}</h2>
+
+    <div id="chat" data-room="{{ room }}" data-username="{{ username }}">
+        <ul id="messages" class="messages"></ul>
+
+        <form id="chat-form">
+            <input type="text" id="msg" placeholder="Type a message..." autocomplete="off">
+            <button type="submit" class="btn">Send</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
