@@ -6,7 +6,41 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
 </head>
 <body>
+    <header>
+        <div class="navbar-container">
+            <a class="header-logo" href="{{ url_for('home') }}"><span>EbFit</span></a>
+
+            {% if current_user.is_authenticated %}
+                {% if current_user.role == "admin" %}
+                    <nav class="nav-item">
+                        <a href="{{ url_for('posts') }}">Posts</a>
+                        <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                        <a href="{{ url_for('users') }}">Users</a>
+                        <a href="{{ url_for('admin_dashboard') }}">Admin&nbsp;Approved</a>
+                        <a href="{{ url_for('logout') }}">Log&nbsp;Out</a>
+                    </nav>
+                {% else %}
+                    <nav class="nav-item">
+                        <a href="{{ url_for('posts') }}" class="nav-item">Posts</a>
+                        <a href="{{ url_for('notifications') }}" class="nav-item">Notifications</a>
+                        <a href="{{ url_for('profile') }}" class="nav-item">My&nbsp;Profile</a>
+                        <a href="{{ url_for('logout') }}" class="nav-item">Log&nbsp;Out</a>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <nav class="nav-item">
+                    <a href="{{ url_for('home') }}" >Home</a>
+                    <a href="{{ url_for('login') }}" >Log&nbsp;In</a>
+                    <a href="{{ url_for('register') }}" >Register</a>
+                </nav>
+            {% endif %}
+        </div>
+    
+    </header>
+
+    <main>
         {% block content %}{% endblock %}
+    </main>  
 </body>
 </html>
 
