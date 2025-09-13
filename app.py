@@ -4,7 +4,7 @@ from flask_login import (
     LoginManager, UserMixin, login_user, logout_user,
     login_required, current_user
 )
-from flask_socketio import join_room, leave_room, send, SocketIO
+from flask_socketio import join_room, send, SocketIO
 import random
 from string import ascii_uppercase
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -325,16 +325,30 @@ def post_detail(post_id):
 def chat(post_id):
     post = Posts.query.get_or_404(post_id)
     owner_email = post.user_email
-    chatuser_email = current_user.user_email
+    user_email = current_user.user_email
 
-    if chatuser_email == owner_email:
+    if user_email == owner_email:
         accept_email = owner_email
     else:
-        accept_email = chatuser_email
+        accept_email = user_email
 
-    room = "post-{}-{}".format(post_id, "-".join(sorted([owner_email, chatuser_email])))
+    room = "post-{}-{}".format(post_id, "-".join(sorted([owner_email, user_email])))
     username = current_user.user_name
-    return render_template("chat.html",post=post, room=room, username=username)
+    return render_template("chat.html",post=post, room=room, username=current_user.user_name )
+
+@socketio.on("join")
+def on_join(data):
+    room = data.get("room")
+    if room:
+        join_room(room)
+        send(f"{current_user.user_name} joined the chat.", to=room)
+
+@socketio.on("send_message")
+def on_send_message(data):
+    room = data.get("room")
+    text = (data.get("message") or "").strip()
+    if room and text:
+        send({"user": current_user.user_name, "text": text}, to=room)
 
 # admin dashboard
 @app.route("/admin_dashboard")

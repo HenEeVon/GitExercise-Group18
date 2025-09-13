@@ -18,12 +18,36 @@
 
 <script>
 const socket = io();
-const chatE1 = document.getElementById('chat');
-const ROOM = chatE1.dataset.room;
-const USERNAME = chatE1.dataset.username;
+const chatEl = document.getElementById('chat');
+const ROOM = chatEl.dataset.room;
+const USERNAME = chatEl.dataset.username;
 
+socket.emit('join', { room:ROOM });
 
+socket.on('message', function(data){
+    let line;
+    if(typeof data === 'string'){
+        line = data;
+    }   else if (data && data.user && data.text){
+            line = data.user + ': '+ data.text;
+    }   else {
+        line = JSON.stringify(data);
+    }
+    const li = document.createElement('li');
+    li.textContent = line;
+    document.getElementById('messages').appendChild(li);
 
+    li.scrollIntoView({ block: "end" });
+});
+
+document.getElementById('send-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    const input = document.getElementById('msg');
+    const text = (input.value || '').trim();
+    if(!text) return;
+    socket.emit('send_message', {room:ROOM, message:text });
+    input.value = "";
+    input.focus();
+});
 </script>
-
 {% endblock %}
