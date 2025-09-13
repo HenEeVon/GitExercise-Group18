@@ -29,6 +29,7 @@
     const ROOM = chatEl.dataset.room;
     const USERNAME = chatEl.dataset.username;
     const POST_ID = chatEl.dataset.postid;
+    const PARTNER = chatEl.dataset.partner;
 
     socket.on('connect', function() {
         socket.emit('join',{ room:ROOM });
@@ -53,7 +54,7 @@
         const input = document.getElementById('msg');
         const text = (input.value || '').trim();
         if(!text) return;
-        socket.emit('send_message', { room:ROOM, message:text, post_id:POST_ID});
+        socket.emit('send_message', { room:ROOM, message:text, post_id:POST_ID, partner_email:PARTNER});
     input.value = "";
     input.focus();
 });
