@@ -782,8 +782,30 @@ h1 span {
     flex-shrink: 0;
     margin: 0;
     padding: 16px 20px;
-    border-bottom: 1px solid #e4e7eb;
     background: #fff;
+}
+
+#chat{
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    padding: 10px;
+}
+
+.back-btn {
+    margin-right: 10px;
+    text-decoration: none;
+    color: black;
+    font-size: 40px;
 }
 
 #messages {
@@ -793,7 +815,10 @@ h1 span {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    flex: 1 1 auto;
+    min-height: 0;
     overflow-y: auto;
+    margin: 0;
     background: #f8f9fb;
     scroll-padding-bottom: 72px;
 }
@@ -840,8 +865,9 @@ h1 span {
 #send-form {
     position: sticky;
     bottom: 0;
-    z-index: 5;
+    margin-top: auto;
     display: flex;
+    flex: 0 0 auto;
     gap: 8px;
     padding: 12px;
     border-top: 1px solid #e4e7eb;
@@ -851,7 +877,10 @@ h1 span {
 }
 
 #send-form #msg {
+    display: flex;
+    flex-direction: column;
     flex: 1;
+    min-height: 0;
     border: 1px solid #d9dee6;
     border-radius: 8px;
     padding: 8px 12px;
