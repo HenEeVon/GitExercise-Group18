@@ -21,9 +21,7 @@
                     </nav>
                 {% else %}
                     <nav class="nav-item">
-                        <a href="{{ url_for('posts') }}" class="nav-item">Posts</a>
-                        <a href="{{ url_for('notifications') }}" class="nav-item">Notifications</a>
-                        <a href="{{ url_for('profile') }}" class="nav-item">My&nbsp;Profile</a>
+
                         <a href="{{ url_for('logout') }}" class="nav-item">Log&nbsp;Out</a>
                     </nav>
                 {% endif %}

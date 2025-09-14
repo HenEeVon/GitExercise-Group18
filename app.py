@@ -11,6 +11,7 @@ from wtforms import StringField, SubmitField, TextAreaField, IntegerField
 from wtforms.validators import DataRequired, NumberRange
 from datetime import datetime
 import pytz
+import boto3
 from sqlalchemy import func, or_
 
 MALAYSIA_TZ = pytz.timezone("Asia/Kuala_Lumpur")
@@ -33,6 +34,9 @@ class User(UserMixin, db.Model):
     user_email = db.Column(db.String(255), primary_key=True)
     user_name = db.Column(db.String(255), nullable=False)
     gender = db.Column(db.String(50), nullable=False)
+    sport_level = db.Column(db.String(255), nullable=False)
+    security_question = db.Column(db.String(255), nullable=False)
+    security_answer = db.Column(db.String(255), nullable=False)
     password = db.Column(db.String(255), nullable=False)
     
 
@@ -109,6 +113,17 @@ def load_user(user_id):
 def home():
     return render_template("home.html")
 
+security_question = [
+    "What was your first pet name?",
+    "What was your first car brand?",
+    "What hospital name you born in?",
+    "What city were you born in?",
+    "What was your first ex girlfriend name?",
+    "What was your first ex boyfriend name?",
+    "What was the name of your first school?",
+    "What was your favorite childhood book?",
+]
+
 # Register page
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -116,10 +131,13 @@ def register():
         user_email = request.form["user_email"].strip().lower()
         user_name = request.form["user_name"]
         gender = request.form["gender"]
+        sport_level = request.form["sport_level"]
+        security_question = request.form["security_answer"]
+        security_answer = request.form["security_answer"].strip().lower()
         password = request.form["password"]
-
         hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
-        new_user = User(user_email=user_email, user_name=user_name, gender=gender, password=hashed_password)
+
+        new_user = User(user_email=user_email, user_name=user_name, gender=gender, sport_level=sport_level, security_question=security_question, security_answer=security_answer, password=hashed_password)
 
         try:
             db.session.add(new_user)
@@ -163,14 +181,16 @@ def logout():
 # Reset password
 @app.route("/resetpass", methods=["GET", "POST"])
 def resetpass():
+    
     if request.method == "POST":
         email = request.form.get("email").strip().lower()
+        security_answer = request.form.get("security").strip().lower()
         new_password = request.form.get("new_password")
 
         if not email or not new_password:
             flash("Email and new password are required!")
             return redirect(url_for("resetpass"))
-
+    
         user = User.query.filter_by(user_email=email).first()
         if user:
             user.password = generate_password_hash(new_password, method="pbkdf2:sha256")
