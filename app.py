@@ -348,12 +348,21 @@ def chat_with_user(post_id, partner_email):
     if current_email != owner_email and partner_email != owner_email:
         return redirect(url_for("chat_with_user", post_id=post_id, partner_email=owner_email))
 
-    conv = conversation_key(owner_email, partner_email)
+    conv = conversation_key(current_email, partner_email)
     room = f"post-{post_id}-{conv}"
 
     messages = (ChatMessage.query.filter_by(post_id=post_id, conversation=conv).order_by(asc(ChatMessage.created_at)).all())
 
-    return render_template("chat.html",post=post, room=room, username=current_user.user_name, owner_name=post.user.user_name, messages=messages, post_id=post_id, partner_email=partner_email)
+    partner_user = User.query.get(partner_email)
+    partner_name = partner_user.user_name if partner_user else partner_email
+
+    if current_email == owner_email:
+        header_name = partner_name
+    else:
+        header_name = post.user.user_name
+
+    return render_template("chat.html",post=post, room=room, username=current_user.user_name,header_name=header_name, 
+                           messages=messages, post_id=post_id, partner_email=partner_email)
 
 @socketio.on("join")
 def on_join(data):
