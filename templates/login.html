@@ -1,100 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
-    <title>Login</title>
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+        <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+        <title>Login</title>
+    </head>
 
-<body class="user login-page">
-    <div class="page-container">
+    <body class="user login-page">
+        <div class="page-container">
 
-        <!-- Navigation Bar -->
-        <header>
-            <a class="header-logo"><span>ebFit</span></a>
-        </header>
-    </div>
+            <!-- Navigation Bar -->
+            <header>
+                <a class="header-logo"><span>ebFit</span></a>
+            </header>
+        </div>
 
-    <div id="popup"></div>
-    <div id="page" class="site">
-        <div class="container2">
-            <div class="login">
+        <div id="popup"></div>
+        <div id="page" class="site">
+            <div class="container2">
+                <div class="login">
 
-                <!-- Left side hero -->
-                <div class="hero">
-                    <h1>Welcome <br>User.</h1>
-                    <p>
-                        If you don’t have an account,<br>
-                        <a href="{{ url_for('register') }}">Register Here</a>.
-                    </p>
-                </div>
-
-                <!-- Right side login form -->
-                <div class="main">
-                    <div class="login-box">
-                        {% with messages = get_flashed_messages() %}
-                        {% if messages %}
-                        {% for message in messages %}
-                        <div class="popup">
-                            <div class="popup-content">
-                                <p>{{ message }}</p>
-                                <a href="{{ request.path }}"><button class="submit">OK</button></a>
-                            </div>
-                        </div>
-                        {% endfor %}
-                        {% endif %}
-                        {% endwith %}
-
-                        <form action="{{ url_for('login') }}" method="POST">
-                            <h2 class="form-title">Login User</h2>
-
-                            <p class="colortext">
-                                <span><strong>Email address</strong></span>
-                                <input type="email" name="user_email" required>
-                            </p>
-
-                            <p class="password">
-                                <span><strong>Password</strong></span>
-                                <input type="password" name="password" required>
-                                <br>
-                                <a href="#" onclick="document.getElementById('resetModal').style.display='block'">
-                                    Forgot Password?
-                                </a>
-                            </p>
-
-                            <div class="btn-group">
-                                <input type="submit" class="big-cta-btn" value="Log In">
-                            </div>
-                        </form>
+                    <!-- Left side hero -->
+                    <div class="hero">
+                        <h1>Welcome <br>User.</h1>
+                        <p>
+                            If you don’t have an account,<br>
+                            <a href="{{ url_for('register') }}">Register Here</a>.
+                        </p>
                     </div>
+
+                    <!-- Right side login form -->
+                    <div class="main">
+                        <div class="login-box">
+                            {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                            {% for message in messages %}
+                            <div class="popup">
+                                <div class="popup-content">
+                                    <p>{{ message }}</p>
+                                    <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% endif %}
+                            {% endwith %}
+
+                            <form action="{{ url_for('login') }}" method="POST">
+                                <h2 class="form-title">Login User</h2>
+
+                                <p class="colortext">
+                                    <span><strong>Email address</strong></span>
+                                    <input type="email" name="user_email" required>
+                                </p>
+
+                                <p class="password">
+                                    <span><strong>Password</strong></span>
+                                    <input type="password" name="password" required>
+                                    <br>
+                                    <a href="#" onclick="document.getElementById('resetModal').style.display='block'">
+                                        Forgot Password?
+                                    </a>
+                                </p>
+
+                                <div class="btn-group">
+                                    <input type="submit" class="big-cta-btn" value="Log In">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
                 </div>
+            </div>
+        </div>
+
+        <!-- Reset/Forgot Password Modal -->
+        <div id="resetModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="document.getElementById('resetModal').style.display='none'">&times;</span>
+                <h2>Reset Password</h2>
+                
+                {% if not security_question %} <!-- Step 1: Enter email -->
+                    <form method="POST" action="{{ url_for('resetpass') }}">
+                        <input type="hidden" name="current" value="email">
+                        <label>Email address</label>
+                        <input type="email" name="user_email" required>
+                        <input type="submit" value="Next">
+                    </form>
+                {% else %} <!-- Step 2: Show security question -->
+                    <form method="POST" action="{{ url_for('resetpass') }}">
+                        <input type="hidden" name="current" value="reset">
+                        <input type="hidden" name="user_email" value="{{ user_email }}">
+                        <label>Security Question:</label>
+                        <input type="text" value="{{ security_question }}" disabled>
+                        <label>Answer:</label>
+                        <input type="text" name="security_answer" required>
+                        <label>New Password:</label>
+                        <input type="password" name="new_password" required>
+                        <input type="submit" value="Reset Password">
+                    </form>
+                {% endif %}
 
             </div>
         </div>
-    </div>
 
-    <!-- Reset/Forgot Password Modal -->
-    <div id="resetModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="document.getElementById('resetModal').style.display='none'">&times;</span>
-            <h2>Reset Password</h2>
-            
-            <form action="{{ url_for('resetpass') }}" method="POST">
-                <p class="colortext">
-                    <span><strong>Email address:</strong></span>
-                    <input type="email" name="email" required>
-                </p>
-                <p class="colortext">
-                    <span><strong>New Password:</strong></span>
-                    <input type="password" name="new_password" required>
-                </p>
-                <p>
-                    <input type="submit" class="submit" value="Reset">
-                </p>
-            </form>
-        </div>
-    </div>
-</body>
+    </body>
 </html>

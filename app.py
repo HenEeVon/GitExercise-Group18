@@ -113,17 +113,6 @@ def load_user(user_id):
 def home():
     return render_template("home.html")
 
-security_question = [
-    "What was your first pet name?",
-    "What was your first car brand?",
-    "What hospital name you born in?",
-    "What city were you born in?",
-    "What was your first ex girlfriend name?",
-    "What was your first ex boyfriend name?",
-    "What was the name of your first school?",
-    "What was your favorite childhood book?",
-]
-
 # Register page
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -132,7 +121,7 @@ def register():
         user_name = request.form["user_name"]
         gender = request.form["gender"]
         sport_level = request.form["sport_level"]
-        security_question = request.form["security_answer"]
+        security_question = request.form["security_question"]
         security_answer = request.form["security_answer"].strip().lower()
         password = request.form["password"]
         hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
@@ -155,8 +144,12 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form["user_email"].strip().lower()
-        password = request.form["password"]
+        email = request.form.get("user_email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        if not email or not password:
+            flash("Please enter email and password.")
+            return redirect(url_for("login"))
 
         user = User.query.filter_by(user_email=email).first()
         if user and check_password_hash(user.password, password):
@@ -168,39 +161,69 @@ def login():
 
     return render_template("login.html")
 
-#route 
-# Logout
-@app.route("/logout")
-@login_required
-def logout():
-    logout_user()
-    flash("Logged out successfully.")
-    return redirect(url_for("home"))
-
+question = {
+    "pet": "What was your first pet name?",
+    "car": "What was your first car?",
+    "hospital": "What hospital name were you born in?",
+    "city": "What city were you born in?",
+    "girlfriend": "What was your first ex girlfriend's name?",
+    "boyfriend": "What was your first ex boyfriend's name?",
+    "school": "What was the name of your first school?",
+    "book": "What was your favorite childhood book?"
+}
 
 # Reset password
 @app.route("/resetpass", methods=["GET", "POST"])
 def resetpass():
-    
+    user_email = None
+    security_question = None
+
     if request.method == "POST":
-        email = request.form.get("email").strip().lower()
-        security_answer = request.form.get("security").strip().lower()
-        new_password = request.form.get("new_password")
+        step = request.form.get("current", "email")  # 'email' or 'reset'
 
-        if not email or not new_password:
-            flash("Email and new password are required!")
-            return redirect(url_for("resetpass"))
-    
-        user = User.query.filter_by(user_email=email).first()
-        if user:
-            user.password = generate_password_hash(new_password, method="pbkdf2:sha256")
-            db.session.commit()
-            flash("Password updated successfully! Please log in.")
-            return redirect(url_for("login"))
-        else:
-            flash("Email not found! Please register.")
+        if step == "email":
+            # Step 1: user enters email
+            user_email = request.form.get("user_email", "").strip().lower()   # ✅ changed
+            if not user_email:
+                flash("Please enter your email.")
+                return redirect(url_for("resetpass"))
 
-    return render_template("login.html")
+            user = User.query.filter_by(user_email=user_email).first()
+            if not user:
+                flash("Email not found.")
+                return redirect(url_for("resetpass"))
+
+            # Pass email + security_question to template for Step 2
+            security_question = question.get(user.security_question, user.security_question)
+            return render_template("login.html", user_email=user_email, security_question=security_question)
+
+        elif step == "reset":
+            # Step 2: user submits security answer + new password
+            user_email = request.form.get("user_email", "").strip().lower()   # ✅ changed
+            answer = request.form.get("security_answer", "").strip().lower()
+            new_password = request.form.get("new_password", "")
+
+            if not user_email or not answer or not new_password:
+                flash("Please fill all fields!")
+                return redirect(url_for("resetpass"))
+
+            user = User.query.filter_by(user_email=user_email).first()
+            if not user:
+                flash("Email not found.")
+                return redirect(url_for("resetpass"))
+
+            if user.security_answer.lower() == answer:
+                # Update password
+                user.password = generate_password_hash(new_password, method="pbkdf2:sha256")
+                db.session.commit()
+                flash("Password updated successfully! Please log in.")
+                return redirect(url_for("login"))
+            else:
+                flash("Security answer incorrect.")
+                return redirect(url_for("resetpass"))
+
+    # Default GET request
+    return render_template("login.html", user_email=user_email, security_question=security_question)
 
 
 # Posts page
@@ -513,6 +536,14 @@ def owner_approval():
         requests = []  # Normal admins can’t see approval requests
 
     return render_template("owner_approval.html", admin=current_admin, requests=requests)
+
+# Logout
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    flash("Logged out successfully.")
+    return redirect(url_for("home"))
 
 
 
