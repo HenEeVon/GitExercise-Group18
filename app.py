@@ -102,6 +102,26 @@ class ActivityForm(FlaskForm):
 def load_user(user_id):
     return User.query.filter_by(user_email=user_id).first()
 
+@app.template_filter("datetimeformat")
+def datetimeformat(value, format="%d/%m/%Y"):
+    """Convert YYYY-MM-DD or datetime into DD/MM/YYYY"""
+    if not value:
+        return ""
+    try:
+        # If value is a datetime
+        if isinstance(value, datetime):
+            return value.strftime(format)
+
+        # If stored as string (like event_datetime)
+        if isinstance(value, str):
+            try:
+                return datetime.strptime(value, "%Y-%m-%d").strftime(format)
+            except ValueError:
+                return value  # return raw if it’s not in date format
+    except Exception:
+        return value
+
+
 
 # Home page
 @app.route("/")
@@ -207,6 +227,12 @@ def search():
 
     if sport and dateinpost:
         searched = True
+        try:
+            # Convert from YYYY-MM-DD (input) to DD/MM/YYYY
+            formatted_date = datetime.strptime(dateinpost, "%Y-%m-%d").strftime("%d/%m/%Y")
+        except ValueError:
+            formatted_date = dateinpost  # fallback
+
         results = Posts.query.join(User).filter(
             or_(
                 func.lower(Posts.title).like(f"%{sport}%"),
@@ -214,7 +240,7 @@ def search():
                 func.lower(Posts.location).like(f"%{sport}%"),
                 func.lower(User.user_name).like(f"%{sport}%"),
             ),
-            Posts.event_datetime.like(f"%{dateinpost}%")
+            Posts.event_datetime.like(f"%{formatted_date}%")
         ).order_by(Posts.date_posted.desc()).all()
 
     elif sport:
@@ -230,8 +256,13 @@ def search():
 
     elif dateinpost:
         searched = True
+        try:
+            formatted_date = datetime.strptime(dateinpost, "%Y-%m-%d").strftime("%d/%m/%Y")
+        except ValueError:
+            formatted_date = dateinpost
+
         results = Posts.query.filter(
-            Posts.event_datetime.like(f"%{dateinpost}%")
+            Posts.event_datetime.like(f"%{formatted_date}%")
         ).order_by(Posts.date_posted.desc()).all()
 
     else:
@@ -245,6 +276,7 @@ def search():
             post.local_date_posted_value = None
 
     return render_template("index.html", posts=results, searched=searched, sport=sport, date=dateinpost)
+
 
 # Error page
 @app.errorhandler(404)

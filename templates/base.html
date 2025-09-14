@@ -9,6 +9,19 @@
         <div class="navbar-container">
             <a class="header-logo" href="{{ url_for('home') }}"><span>EbFit</span></a>
 
+            <div class="navbar-search">
+                <details>
+                    <summary class="search-toggle">Search</summary>
+                    <form method="GET" action="{{ url_for('search') }}">
+                        <input type="text" name="sport" placeholder="Search by category..."
+                            value="{{ request.args.get('sport','')}}">
+                        <input type="date" name="date" value="{{ request.args.get('date','') }}">
+                        <button type="submit" class="search-btn">Search</button>
+                    </form>
+                </details>
+            </div>
+
+
             {% if current_user.is_authenticated %}
                 {% if current_user.role == "admin" %}
                     <nav class="nav-item">
