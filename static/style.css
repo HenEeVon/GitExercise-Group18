@@ -770,8 +770,11 @@ h1 span {
     border-radius: 12px;
     display: flex;
     flex-direction: column;
-    min-height: 500px;
-    box-shadow: 0 6px 18px rgba(0,0 0, 0.06);
+    height: 500px;
+    min-height: 420px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0,0, 0, 0.06);
+    padding: 0;
 }
 
 .chat-container h2 {
@@ -782,6 +785,7 @@ h1 span {
     background: #fff;
     border-top-left-radius: 12px;
     border-top-right-radius: 12px;
+    flex-shrink: 0;
 }
 
 #messages {
@@ -793,7 +797,6 @@ h1 span {
     gap: 8px;
     flex: 1;
     overflow-y: auto;
-    max-height: 400px;
     background: #f8f9fb;
 }
 
@@ -809,7 +812,7 @@ h1 span {
 
 #messages li.system {
     background: transparent;
-    border: 0;
+    border: none;
     box-shadow: none;
     color: #6b7280;
     font-size: 13px;
@@ -819,12 +822,20 @@ h1 span {
 
 #messages li.me {
     align-self: flex-end;
-    background: #e7f1ff;
-    border-color: #d7e6ff;
+    background: #2f6bff;
+    border-color: #2f6bff;
+    color: #fff;
+    border-radius: 12px 12px 0 12px;
+    max-width: 70%;
 }
 
 #messages li.other {
     align-self: flex-start;
+    background: #f1f1f1;
+    border-color: #ddd;
+    color: #000;
+    border-radius: 12px 12px 12px 0;
+    max-width: 70%;
 }
 
 #send-form {
@@ -835,6 +846,9 @@ h1 span {
     background: #fff;
     border-bottom-left-radius: 12px;
     border-bottom-right-radius: 12px;
+    flex-shrink: 0;
+    height: 60px;
+    align-items: center;
 }
 
 #send-form #msg {
@@ -844,6 +858,7 @@ h1 span {
     padding: 8px 12px;
     font-size: 14px;
     outline: none;
+    height: 40px;
 }
 
 #send-form #msg:focus {
