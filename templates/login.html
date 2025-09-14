@@ -13,12 +13,7 @@
 
         <!-- Navigation Bar -->
         <header>
-            <a class="header-logo"><span>EbFit</span></a>
-            <nav class="nav-item">
-                <a href="{{ url_for('home') }}" class="nav-item">Home</a>
-                <a href="{{ url_for('login') }}" class="nav-item lines">Log&nbsp;In</a>
-                <a href="{{ url_for('register') }}" class="nav-item">Register</a>
-            </nav>
+            <a class="header-logo"><span>ebFit</span></a>
         </header>
     </div>
 
@@ -53,15 +48,15 @@
                         {% endwith %}
 
                         <form action="{{ url_for('login') }}" method="POST">
-                            <h2 class="form-title">Login User:</h2>
+                            <h2 class="form-title">Login User</h2>
 
                             <p class="colortext">
-                                <span><strong>Email address:</strong></span>
+                                <span><strong>Email address</strong></span>
                                 <input type="email" name="user_email" required>
                             </p>
 
                             <p class="password">
-                                <span><strong>Password:</strong></span>
+                                <span><strong>Password</strong></span>
                                 <input type="password" name="password" required>
                                 <br>
                                 <a href="#" onclick="document.getElementById('resetModal').style.display='block'">

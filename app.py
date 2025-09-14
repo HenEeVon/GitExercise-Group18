@@ -38,6 +38,7 @@ class User(UserMixin, db.Model):
     user_name = db.Column(db.String(255), nullable=False)
     gender = db.Column(db.String(50), nullable=False)
     password = db.Column(db.String(255), nullable=False)
+    
 
     def get_id(self):
         return self.user_email
@@ -167,7 +168,7 @@ def login():
 
     return render_template("login.html")
 
-
+#route 
 # Logout
 @app.route("/logout")
 @login_required
@@ -175,7 +176,6 @@ def logout():
     logout_user()
     flash("Logged out successfully.")
     return redirect(url_for("home"))
-
 
 
 # Reset password
@@ -399,33 +399,6 @@ def on_send_message(data):
     db.session.commit()
 
     send({"user": msg.sender_name, "text": msg.text}, to=room)
-
-
-
-# admin dashboard
-@app.route("/admin_dashboard")
-def admin_dashboard():
-    if current_user.role != "admin":
-        flash("Access denied.")
-        return redirect(url_for("home"))
-
-    requests = AdminRequest.query.filter_by(approval="pending").all()
-    return render_template("admin_dashboard.html", requests=requests)
-
-# admin users review
-@app.route("/admin_users")
-def users():
-    return render_template("users.html")
-
-# user notifications
-@app.route("/notifications")
-def notifications():
-    return render_template("notifications.html")
-
-# user profile
-@app.route("/profile")
-def profile():
-    return render_template("profile.html")
 
 
 
