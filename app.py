@@ -400,7 +400,14 @@ def on_send_message(data):
 
     send({"user": msg.sender_name, "text": msg.text}, to=room)
 
+# Notifications
+@app.route("/notifications")
+def notifications():
+    return render_template("notifications.html")
 
+@app.route("/profile")
+def profile():
+    return render_template("profile.html")
 
 # Join Activity
 @app.route("/activityrequest/<int:post_id>", methods=["POST"])
