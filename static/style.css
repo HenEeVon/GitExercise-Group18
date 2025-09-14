@@ -879,3 +879,8 @@ h1 span {
 #send-form button:hover {
     background-color: #0056b3;
 }
+
+.direct-messages {
+    list-style: none;
+    padding-left: 0;
+}

@@ -74,10 +74,6 @@
             </form>
         {% endif %}
 
-        <!-- Chat with post owner -->
-         {% if current_user.is_authenticated and current_user.user_email != post.user_email %}
-            <a href="{{ url_for('chat', post_id=post.post_id) }}" class="btn">Chat with me</a>
-        {% endif %}
     </div>
     {% else %}
         <p>No activity posts yet.</p>
