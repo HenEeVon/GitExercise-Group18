@@ -9,7 +9,7 @@
                     "module":"flask",
 
                         "env":{
-                                "FLASK_APP":"user/app.py",
+                                "FLASK_APP":"app.py",
                                 "FLASK_DEBUG":"1"
                             },
                         "args": [
