@@ -793,6 +793,7 @@ h1 span {
     gap: 8px;
     flex: 1;
     overflow-y: auto;
+    max-height: 400px;
     background: #f8f9fb;
 }
 

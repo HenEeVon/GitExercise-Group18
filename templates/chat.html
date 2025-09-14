@@ -16,7 +16,7 @@
 
         <form id="send-form">
             <input type="text" id="msg" placeholder="Type a message..." autocomplete="off">
-            <button type="submit" class="btn">Send</button>
+            <button type="submit" id="send-btn" class="btn">Send</button>
         </form>
     </div>
 </div>
@@ -37,19 +37,35 @@
     });
 
     socket.on('message', function(data) {
-        let line;
-        if(typeof data === 'string') line = data;
-        else if (data && data.user && data.text) line = data.user + ': '+ data.text;
-        else line = JSON.stringify(data);
+        let text, user;
+        if(typeof data === 'string') {
+            text = data;
+            user = "system";
+        } else {
+            user = data.user;
+            if (user === USERNAME) {
+                text = data.text;
+            } else {
+                text = `${data.user}: ${data.text}`
+            }
+        }
 
         const li = document.createElement('li');
-        li.textContent = line;
+        li.textContent = text;
+
+        if (user === USERNAME) {
+            li.classList.add("me");
+        } else if (user === "system") {
+            li.classList.add("system");
+        } else {
+            li.classList.add("other")
+        }
+
         document.getElementById('messages').appendChild(li);
         li.scrollIntoView({ block: "end" });
 });
 
-    document.getElementById('send-form').addEventListener('submit', function
-    (e) {
+    document.getElementById('send-form').addEventListener('submit', function(e) {
         e.preventDefault();
         const input = document.getElementById('msg');
         const text = (input.value || '').trim();
