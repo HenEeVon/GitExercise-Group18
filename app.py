@@ -34,6 +34,7 @@ class User(UserMixin, db.Model):
     user_name = db.Column(db.String(255), nullable=False)
     gender = db.Column(db.String(50), nullable=False)
     password = db.Column(db.String(255), nullable=False)
+    
 
     def get_id(self):
         return self.user_email
