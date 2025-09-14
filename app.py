@@ -332,7 +332,16 @@ def post_detail(post_id):
     post = Posts.query.get_or_404(post_id)
     post.local_date_posted_value = post.local_date_posted()
     join_activities = JoinActivity.query.filter_by(post_id=post.post_id).all()
-    return render_template("post_detail.html", post=post, join_activities=join_activities)
+
+    owner_conversations = []
+    if current_user.is_authenticated and current_user.user_email.lower() == post.user_email.lower():
+        partners = db.session.query(ChatMessage.sender_email).filter_by(post_id=post.post_id).distinct()
+        for (email,) in partners:
+            if email.lower() != post.user_email.lower():
+                user = User.query.get(email)
+                owner_conversations.append({"email": email, "name":user.user_name if user else email})
+
+    return render_template("post_detail.html", post=post, join_activities=join_activities, owner_conversations=owner_conversations)
 
 #Chat feature
 def conversation_key(a_email: str, b_email: str) -> str:
