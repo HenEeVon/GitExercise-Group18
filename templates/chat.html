@@ -4,20 +4,28 @@
 
 {% block content %}
 <div class="chat-container">
-    <h2>Chat with {{ owner_name }}</h2>
+    <div class="chat-header">
+        <a href="{{ url_for('post_detail', post_id=post.post_id) }}" class="back-btn">&lsaquo;</a>
+    <h2>Chat with {{ header_name }}</h2>
+    </div>
 
     <div id="chat" data-room="{{ room }}" data-username="{{ username }}" data-postid="{{ post.post_id }}" data-partner="{{ partner_email }}">
 
         <ul id="messages" class="messages">
+            {% set my_email = current_user.user_email|lower %}
             {% for msg in messages %}
-                <li>{{ msg.sender_name }}: {{ msg.text }}</li>
+                {% if msg.sender_email|lower == my_email %}
+                    <li class="me">{{ msg.text }}</li>
+                {% else %}
+                    <li class="other">{{ msg.sender_name }}: {{ msg.text }}</li>
+                {% endif %}
             {% endfor %}
         </ul>
 
-        <form id="send-form">
+        <div id="send-form">
             <input type="text" id="msg" placeholder="Type a message..." autocomplete="off">
             <button type="submit" id="send-btn" class="btn">Send</button>
-        </form>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -31,48 +39,54 @@
     const POST_ID = chatEl.dataset.postid;
     const PARTNER = chatEl.dataset.partner;
 
-    socket.on('connect', function() {
+    const inputEl = document.getElementById('msg');
+    const messagesEl = document.getElementById('messages');
+    const sendBtn = document.getElementById('send-btn')
+
+    function scrollToBottom() {
+        messagesEl.lastElementChild?.scrollIntoView({block:'end'});
+    }
+
+    socket.on('connect', () => {
         socket.emit('join',{ room:ROOM });
-        console.log('Joined room:', ROOM);
+        scrollToBottom();
     });
 
-    socket.on('message', function(data) {
-        let text, user;
+    socket.on('message', (data) => {
+        let user, text;
         if(typeof data === 'string') {
+            user = 'system';
             text = data;
-            user = "system";
         } else {
             user = data.user;
-            if (user === USERNAME) {
-                text = data.text;
-            } else {
-                text = `${data.user}: ${data.text}`
-            }
+            text = (user === USERNAME) ? data.text: `${data.user}: ${data.text}`;
         }
 
         const li = document.createElement('li');
         li.textContent = text;
+        if (user === 'system') li.classList.add('system');
+        else if (user === USERNAME) li.classList.add('me');
+        else li.classList.add('other');
 
-        if (user === USERNAME) {
-            li.classList.add("me");
-        } else if (user === "system") {
-            li.classList.add("system");
-        } else {
-            li.classList.add("other")
-        }
-
-        document.getElementById('messages').appendChild(li);
-        li.scrollIntoView({ block: "end" });
+        messagesEl.appendChild(li);
+        scrollToBottom();
 });
 
-    document.getElementById('send-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const input = document.getElementById('msg');
-        const text = (input.value || '').trim();
+        function sendCurrentMessage() {
+        const text = (inputEl.value || '').trim();
         if(!text) return;
         socket.emit('send_message', { room:ROOM, message:text, post_id:POST_ID, partner_email:PARTNER});
-    input.value = "";
-    input.focus();
-});
+        inputEl.value = "";
+        inputEl.focus();
+        }
+
+        sendBtn.addEventListener('click', sendCurrentMessage);
+
+        inputEl.addEventListener('keydown', function(e) {
+            if(e.key === 'Enter') {
+                e.preventDefault();
+                sendCurrentMessage();
+        }
+    });
 </script>
 {% endblock %}
