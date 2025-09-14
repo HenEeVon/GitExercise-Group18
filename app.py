@@ -1,9 +1,12 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
     LoginManager, UserMixin, login_user, logout_user,
     login_required, current_user
 )
+from flask_socketio import join_room, send, SocketIO
+import random
+from string import ascii_uppercase
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError
 from flask_wtf import FlaskForm
@@ -11,7 +14,7 @@ from wtforms import StringField, SubmitField, TextAreaField, IntegerField
 from wtforms.validators import DataRequired, NumberRange
 from datetime import datetime
 import pytz
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, asc
 
 MALAYSIA_TZ = pytz.timezone("Asia/Kuala_Lumpur")
 UTC = pytz.utc
@@ -20,6 +23,7 @@ app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///ebfit.db"
 app.config["SECRET_KEY"] = "060226*"
 db = SQLAlchemy(app)
+socketio = SocketIO(app)
 
 # Flask-Login setup
 login_manager = LoginManager()
@@ -96,6 +100,20 @@ class ActivityForm(FlaskForm):
     event_datetime = StringField("Event Date & Time (e.g. 2025-09-01, 8am - 10am)", validators=[DataRequired()])
     participants = IntegerField("Required Participants", validators=[DataRequired(), NumberRange(min=1)])
     submit = SubmitField("Post")
+
+#Chat database
+class ChatMessage(db.Model):
+    tablename = "chat_messages"
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, nullable=False, index=True)
+
+    conversation = db.Column(db.String(600), nullable=False, index=True)
+
+    sender_email = db.Column(db.String(255), nullable=False)
+    sender_name = db.Column(db.String(255), nullable=False)
+    text = db.Column(db.Text, nullable=False)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
 
 # User loader
@@ -314,7 +332,74 @@ def post_detail(post_id):
     post = Posts.query.get_or_404(post_id)
     post.local_date_posted_value = post.local_date_posted()
     join_activities = JoinActivity.query.filter_by(post_id=post.post_id).all()
-    return render_template("post_detail.html", post=post, join_activities=join_activities)
+
+    owner_conversations = []
+    if current_user.is_authenticated and current_user.user_email.lower() == post.user_email.lower():
+        partners = db.session.query(ChatMessage.sender_email).filter_by(post_id=post.post_id).distinct()
+        for (email,) in partners:
+            if email.lower() != post.user_email.lower():
+                user = User.query.get(email)
+                owner_conversations.append({"email": email, "name":user.user_name if user else email})
+
+    return render_template("post_detail.html", post=post, join_activities=join_activities, owner_conversations=owner_conversations)
+
+#Chat feature
+def conversation_key(a_email: str, b_email: str) -> str:
+    return "|".join(sorted([a_email.lower(), b_email.lower()]))
+
+@app.route("/chat/<int:post_id>/<partner_email>")
+def chat_with_user(post_id, partner_email):
+    post = Posts.query.get_or_404(post_id)
+    owner_email = post.user_email.lower()
+    current_email = current_user.user_email.lower()
+    partner_email = partner_email.lower()
+
+    if current_email != owner_email and partner_email != owner_email:
+        return redirect(url_for("chat_with_user", post_id=post_id, partner_email=owner_email))
+
+    conv = conversation_key(current_email, partner_email)
+    room = f"post-{post_id}-{conv}"
+
+    messages = (ChatMessage.query.filter_by(post_id=post_id, conversation=conv).order_by(asc(ChatMessage.created_at)).all())
+
+    partner_user = User.query.get(partner_email)
+    partner_name = partner_user.user_name if partner_user else partner_email
+
+    if current_email == owner_email:
+        header_name = partner_name
+    else:
+        header_name = post.user.user_name
+
+    return render_template("chat.html",post=post, room=room, username=current_user.user_name,header_name=header_name, 
+                           messages=messages, post_id=post_id, partner_email=partner_email)
+
+@socketio.on("join")
+def on_join(data):
+    room = data.get("room")
+    if room:
+        print("JOIN ->", current_user.user_email, "to", room)
+    join_room(room)
+    send(f"{current_user.user_name} joined the chat.", to=room)
+
+@socketio.on("send_message")
+def on_send_message(data):
+    room = (data or {}).get("room")
+    text = ((data or {}).get("message") or "").strip()
+    post_id = (data or {}).get("post_id")
+    partner = ((data or {}).get("partner_email")or "").lower().strip()
+
+    if not (room and text and post_id and partner):
+        return
+
+    current_email = current_user.user_email.lower()
+    conv = conversation_key(current_email,partner)
+
+    msg = ChatMessage(post_id=int(post_id), conversation=conv, sender_email=current_user.user_email, sender_name=current_user.user_name, text=text)
+    db.session.add(msg)
+    db.session.commit()
+
+    send({"user": msg.sender_name, "text": msg.text}, to=room)
+
 
 
 # Join Activity
@@ -501,4 +586,4 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
         create_owner()
-        app.run(debug=True)
+        socketio.run(app, debug=True)

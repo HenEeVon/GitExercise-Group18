@@ -105,10 +105,24 @@
 
     <hr>
 
-    {% if current_user.is_authenticated and current_user.user_email == post.user_email %}
-        <a href="{{ url_for('posts') }}" class="btn btn-secondary">Back to Activity Post</a>
-        <a href="{{ url_for('edit_post', post_id=post.post_id) }}" class="btn btn-warning">Edit</a>
+    {% if current_user.is_authenticated and current_user.user_email != post.user_email %}
+        <!--Normal user direct message the post owner-->
+        <a href="{{ url_for('chat_with_user', post_id=post.post_id, partner_email =post.user_email) }}" class="btn btn-info">Chat with Me</a>
+    {% elif current_user.is_authenticated and current_user.user_email == post.user_email %}
+        <!--Owner able to open same chat room-->
+        {% if owner_conversations %}
+            <h3>Direct Messages</h3>
+            <div class="direct-messages">
+                {% for conv in owner_conversations %}
+                    <div class="dm-item">
+                        <span class="dm-name">{{ conv.name }}</span>
+                    <a href="{{ url_for('chat_with_user', post_id=post.post_id, partner_email=conv.email) }}" class="btn btn-sm btn-info">Chat</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <P>No direct messages yet.</P>
+        {% endif %}
     {% endif %}
-    <button class="btn btn-info chat-btn">Chat with Me</button>
 </div>
 {% endblock %}
