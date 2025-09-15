@@ -38,6 +38,7 @@ class User(UserMixin, db.Model):
     user_name = db.Column(db.String(255), nullable=False)
     gender = db.Column(db.String(50), nullable=False)
     password = db.Column(db.String(255), nullable=False)
+    image_file = db.Column(db.String(255), nullable=True, default="default.png")
     
 
     def get_id(self):
@@ -407,7 +408,8 @@ def notifications():
 
 @app.route("/profile")
 def profile():
-    return render_template("profile.html")
+    image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
+    return render_template("profile.html", title='Profile', image_file=image_file)
 
 # Join Activity
 @app.route("/activityrequest/<int:post_id>", methods=["POST"])
