@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Edit Profile</h1>
+
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+
+        <div>
+            {{ form.full_name.label }}<br>
+            {{ form.full_name(size=40) }}
+        </div>
+
+        <div>
+            {{ form.gender.label }}<br>
+            {{ form.gender() }}
+        </div>
+
+        <div>
+            {{ form.bio.label }}<br>
+            {{ form.bio(rows=5, cols=40) }}
+        </div>
+
+        <div>
+            {{ form.picture.label }}<br>
+            {{ form.picture() }}
+        </div>
+
+        <div>
+            {{ form.submit(class="btn") }}
+        </div>
+    </form>
+
+    <a href="{{ url_for('profile') }}" class="btn">Cancel</a>
+</div>
+{% endblock %}
