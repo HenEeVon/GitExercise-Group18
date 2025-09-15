@@ -331,7 +331,28 @@ body.login-page .container2 {
 body.login-page .big-cta-btn {
     margin-top: 2px;
     padding: 0px 30px;
+    line-height: 50px;
     
+}
+
+#resetModal .big-cta-btn {
+    margin-top: 15px;
+    width: auto;
+    line-height: 45px;
+}
+
+#resetModal label {
+  display: block;        
+  line-height: 30px;
+  font-weight: bold;    
+}
+
+#resetModal .security-question {
+  background-color: var(--light-bg-color); /* light blue background */
+  padding: 20px 15px;        /* space inside */
+  border-radius: 6px;
+  color: #000;
+  font-size: 15px;
 }
 
 .hero{
@@ -482,7 +503,8 @@ form input:not(.submit){
     margin: 10% auto;
     padding: 20px;
     border-radius: 10px;
-    width: 300px;
+    width: 300px;    
+    color:#605d5d;
 }
 
 .modal-content p {
@@ -519,7 +541,7 @@ body.register-page .container2 {
 body.register-page .big-cta-btn {
     margin-top: 2px;
     padding: 0px 30px;
-    
+    line-height: 45px;
 }
 
 .gender-row {

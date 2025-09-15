@@ -10,7 +10,6 @@
 
     <body class="user login-page">
         <div class="page-container">
-
             <!-- Navigation Bar -->
             <header>
                 <a class="header-logo"><span>ebFit</span></a>
@@ -21,7 +20,6 @@
         <div id="page" class="site">
             <div class="container2">
                 <div class="login">
-
                     <!-- Left side hero -->
                     <div class="hero">
                         <h1>Welcome <br>User.</h1>
@@ -80,30 +78,47 @@
             <div class="modal-content">
                 <span class="close" onclick="document.getElementById('resetModal').style.display='none'">&times;</span>
                 <h2>Reset Password</h2>
-                
-                {% if not security_question %} <!-- Step 1: Enter email -->
-                    <form method="POST" action="{{ url_for('resetpass') }}">
-                        <input type="hidden" name="current" value="email">
-                        <label>Email address</label>
-                        <input type="email" name="user_email" required>
-                        <input type="submit" value="Next">
-                    </form>
-                {% else %} <!-- Step 2: Show security question -->
-                    <form method="POST" action="{{ url_for('resetpass') }}">
-                        <input type="hidden" name="current" value="reset">
-                        <input type="hidden" name="user_email" value="{{ user_email }}">
-                        <label>Security Question:</label>
-                        <input type="text" value="{{ security_question }}" disabled>
-                        <label>Answer:</label>
-                        <input type="text" name="security_answer" required>
-                        <label>New Password:</label>
-                        <input type="password" name="new_password" required>
-                        <input type="submit" value="Reset Password">
-                    </form>
-                {% endif %}
 
+                {% if not security_question %}
+                <!-- check email validity -->
+                <form method="POST" action="{{ url_for('resetpass') }}">
+                    <input type="hidden" name="current" value="email">
+                    <label>Email address</label>
+                    <input type="email" name="user_email" required>
+                    <div class="btn-group">
+                        <input type="submit" class="big-cta-btn" value="Next">
+                    </div>
+                </form>
+                {% else %}
+
+                <!-- Show security question -->
+                <form method="POST" action="{{ url_for('resetpass') }}">
+                    <input type="hidden" name="current" value="reset">
+                    <input type="hidden" name="user_email" value="{{ user_email }}">
+                    <label>Security Question</label>
+                    <p class ="security-question">{{ security_question }}</p>
+                    
+                    <label>Security Answer</label>
+                    <input type="text" name="security_answer" required>
+                    <label>New Password:</label>
+                    <input type="password" name="new_password" required>
+
+                    <div class="btn-group">
+                        <input type="submit" class="big-cta-btn" value="Submit">
+                    </div>
+                </form>
+                {% endif %}
             </div>
         </div>
 
+        <!-- Auto-open modal when Flask sets flag -->
+        {% if open_reset_modal %}
+        <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("resetModal").style.display = "block";
+        });
+        </script>
+        {% endif %}
     </body>
 </html>
+                

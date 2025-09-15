@@ -13,6 +13,20 @@
     <a class="header-logo"><span>ebFit</span></a>
   </header>
 
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+          <div class="popup">
+            <div class="popup-content">
+              <p>{{ message }}</p>
+              <a href="{{ request.path }}"><button class="submit">OK</button></a>
+            </div>
+          </div>
+        {% endfor %}
+      {%endif %}
+    {% endwith %}
+    
   <section id="herohome">
     <div class="section-wrap">
       <div class="herohome-content">

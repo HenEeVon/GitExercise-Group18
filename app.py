@@ -169,13 +169,18 @@ def login():
             return redirect(url_for("login"))
 
         user = User.query.filter_by(user_email=email).first()
-        if user and check_password_hash(user.password, password):
+        if not user:
+            flash("Invalid email !")
+            return redirect(url_for("login"))
+        
+        if check_password_hash(user.password, password):
             login_user(user)
             flash(f"Welcome {user.user_name}!")
             return redirect(url_for("posts"))
-
-        flash("Invalid email or password!")
-
+        else:
+            flash("Wrong password. Please type again.")
+            return redirect(url_for("login"))
+        
     return render_template("login.html")
 
 question = {
@@ -189,45 +194,48 @@ question = {
     "book": "What was your favorite childhood book?"
 }
 
-# Reset password
 @app.route("/resetpass", methods=["GET", "POST"])
 def resetpass():
     user_email = None
     security_question = None
 
     if request.method == "POST":
-        step = request.form.get("current", "email")  # 'email' or 'reset'
-
+        step = request.form.get("current")
+        # check email validity
         if step == "email":
-            # Step 1: user enters email
-            user_email = request.form.get("user_email", "").strip().lower()   # ✅ changed
+            user_email = request.form.get("user_email", "").strip().lower()
             if not user_email:
                 flash("Please enter your email.")
-                return redirect(url_for("resetpass"))
+                return render_template("login.html", open_reset_modal=True)
 
             user = User.query.filter_by(user_email=user_email).first()
             if not user:
                 flash("Email not found.")
-                return redirect(url_for("resetpass"))
+                return render_template("login.html", open_reset_modal=True)
 
-            # Pass email + security_question to template for Step 2
-            security_question = question.get(user.security_question, user.security_question)
-            return render_template("login.html", user_email=user_email, security_question=security_question)
+            # Map security question ket to get the sentence
+            security_question = question.get(user.security_question, "Security question not found")
+            return render_template(
+                "login.html",
+                open_reset_modal=True,
+                user_email=user_email,
+                security_question=security_question
+            )
 
+        # answer security answers so can reset password
         elif step == "reset":
-            # Step 2: user submits security answer + new password
-            user_email = request.form.get("user_email", "").strip().lower()   # ✅ changed
+            user_email = request.form.get("user_email", "").strip().lower()
             answer = request.form.get("security_answer", "").strip().lower()
             new_password = request.form.get("new_password", "")
 
             if not user_email or not answer or not new_password:
-                flash("Please fill all fields!")
-                return redirect(url_for("resetpass"))
+                flash("Please fill all fields.")
+                return render_template("login.html", open_reset_modal=True)
 
             user = User.query.filter_by(user_email=user_email).first()
             if not user:
                 flash("Email not found.")
-                return redirect(url_for("resetpass"))
+                return render_template("login.html", open_reset_modal=True)
 
             if user.security_answer.lower() == answer:
                 # Update password
@@ -237,10 +245,15 @@ def resetpass():
                 return redirect(url_for("login"))
             else:
                 flash("Security answer incorrect.")
-                return redirect(url_for("resetpass"))
+                return render_template(
+                    "login.html",
+                    open_reset_modal=True,
+                    user_email=user_email,
+                    security_question=question.get(user.security_question, "Security question not found")
+                )
 
-    # Default GET request
-    return render_template("login.html", user_email=user_email, security_question=security_question)
+    return render_template("login.html", open_reset_modal=True)
+
 
 
 # Posts page
@@ -441,7 +454,6 @@ def on_send_message(data):
     db.session.commit()
 
     send({"user": msg.sender_name, "text": msg.text}, to=room)
-
 
 
 # Join Activity
