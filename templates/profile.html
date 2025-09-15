@@ -1,13 +1,42 @@
 {% extends "base.html" %}
+
+{% block title %}My Profile{% endblock %}
+
 {% block content %}
-    <div class="container">
-        <div class="media">
-            <img class="rounded_circle profile-img" src="{{ image_file }}">
-            <div class="media-body">
-                <h2 class="profile-heading">{{ current_user.user_name }}</h2>
-                <p class="text-secondary">{{ current_user.user_email }}</p>
-            </div>
-        </div>
-        <!-- FORM HERE -->
+<div class="profile">
+
+    <!-- Profile picture and Name -->
+    <div class="profile-header">
+        <img class="avatar" src="{{ url_for('static', filename='profile_pics/' + current_user.image_file or 'default.png')}}">
+        <h1>{{ current_user.user_name }}</h1>
+        <p class="email">{{ current_user.user_email }}</p>
+        <a href="{{ url_for('profile_edit') }}" class="btn">Edit Profile</a>
     </div>
+
+    <!-- Profile Info -->
+    <div class="profile-info">
+        <h3>Account Info</h3>
+        <p><strong>Full name:</strong>{{ current_user.user_name }}</p>
+        <p><strong>Gender:</strong>{{ current_user.gender }}</p>
+        <p><strong>Bio:</strong>{{ current_user.bio or "-" }}</p>
+    </div>
+
+    <!-- Recent Posts -->
+     <div class="profile-posts">
+        <h3>Recent Posts</h3>
+        {% if recent_posts %}
+                {% for post in recent_posts %}
+                    <li>
+                        <a href="{{ url_for('post_detail', post_id=post.post_id) }}">{{ post.title }}</a>
+                        <span class="meta">
+                            {% if post.local_date_posted_value %}
+                                {{ post.local_date_posted_value.strftime('%Y-%m-%d %H:%M') }}
+                            {% else %}
+                                No date
+                            {% endif %}
+                        </span>
+                    </li>
+                {% endfor %}
+        {% endif %}
+     </div>
 {% endblock %}
