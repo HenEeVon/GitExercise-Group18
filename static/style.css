@@ -524,7 +524,7 @@ form input:not(.submit){
     color: #000;
 }
 
-/register page/
+/*register page*/
 body.register{
     font-family:'Rubik', sans-serif;
     font-size:16px;
@@ -570,7 +570,7 @@ body.register-page .big-cta-btn {
     color:rgb(213, 0, 0);
 }
 
-/security question box/
+/*security question box*/
 .form-select {
     padding: 18px;
     border-radius: 12px;
@@ -794,7 +794,7 @@ h1 span {
     animation-delay: 0.3s;
 }
 
-/About us/
+/*About us*/
 .section-tittle{
     font-size: 3rem;
     text-transform: uppercase;
