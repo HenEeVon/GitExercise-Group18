@@ -15,6 +15,8 @@ from wtforms.validators import DataRequired, NumberRange
 from datetime import datetime
 import pytz
 from sqlalchemy import func, or_, asc
+import requests
+import urllib.parse
 
 MALAYSIA_TZ = pytz.timezone("Asia/Kuala_Lumpur")
 UTC = pytz.utc
@@ -24,6 +26,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///ebfit.db"
 app.config["SECRET_KEY"] = "060226*"
 db = SQLAlchemy(app)
 socketio = SocketIO(app)
+API_KEY ="AIzaSyB68DLCQYpAq40KaRfMKWaGyj5oRU5Na8c"
 
 # Flask-Login setup
 login_manager = LoginManager()
@@ -330,20 +333,38 @@ def page_not_found(e):
 @login_required
 def create():
     form = ActivityForm()
+    similar_locations = []  # store results for template
+
     if form.validate_on_submit():
+        location_query = form.location.data
+
+        # Call Google Places API if a location is entered
+        if location_query:
+            url = f"https://maps.googleapis.com/maps/api/place/textsearch/json?query={urllib.parse.quote(location_query)}&key={API_KEY}"
+            response = requests.get(url).json()
+            similar_locations = response.get("results", [])
+
+            # Optionally pick the first result as the chosen location
+            if similar_locations:
+                chosen_location = similar_locations[0]['name']
+                form.location.data = chosen_location
+
+        # Create new post
         new_post = Posts(
             title=form.title.data,
             content=form.content.data,
-            location=form.location.data,
+            location_query=form.location.data,
             event_datetime=form.event_datetime.data,
             participants=form.participants.data,
             user_email=current_user.user_email
         )
+
         db.session.add(new_post)
         db.session.commit()
         flash("Post created successfully!", "success")
         return redirect(url_for("posts"))
-    return render_template("create.html", form=form)
+
+    return render_template("create.html", form=form, similar_locations=similar_locations)
 
 
 # Edit post

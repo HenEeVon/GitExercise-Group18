@@ -32,9 +32,19 @@
             {{ form.content() }}
         </p>
         <p>
-            {{ form.location.label }} <br>
-            {{ form.location() }}
-        </p>
+    {{ form.location.label }} <br>
+    {{ form.location() }}
+</p>
+
+{% if similar_locations %}
+    <p>Did you mean:</p>
+    <ul>
+        {% for place in similar_locations %}
+            <li>{{ place['name'] }} - {{ place.get('formatted_address', '') }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
         <p>
             {{ form.event_datetime.label }} <br>
             {{ form.event_datetime() }}
