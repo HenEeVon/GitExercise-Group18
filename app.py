@@ -10,8 +10,9 @@ from string import ascii_uppercase
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, TextAreaField, IntegerField
-from wtforms.validators import DataRequired, NumberRange
+from flask_wtf.file import FileField, FileAllowed
+from wtforms import StringField, SubmitField, SelectField, TextAreaField, IntegerField
+from wtforms.validators import DataRequired, NumberRange, Length, Optional
 from datetime import datetime
 import pytz
 from sqlalchemy import func, or_, asc
@@ -39,6 +40,7 @@ class User(UserMixin, db.Model):
     gender = db.Column(db.String(50), nullable=False)
     password = db.Column(db.String(255), nullable=False)
     image_file = db.Column(db.String(255), nullable=True, default="default.png")
+    bio = db.Column(db.Text, nullable=True)
     
 
     def get_id(self):
@@ -116,6 +118,14 @@ class ChatMessage(db.Model):
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
+#Update Profile
+class UpdateProfileForm(FlaskForm):
+    full_name = StringField("Full name", validators=[DataRequired(), Length(min=5, max=20)])
+    gender = SelectField("Gender", choices=[("male","Male"),("female","Female"), ("other","Other")], 
+                         validators=[DataRequired()])
+    bio = TextAreaField("Bio", validators=[Optional(), Length(max=1000)])
+    picture = FileField("Profile picture", validators=[FileAllowed(["jpg","png"])])
+    submit = SubmitField("Save changes")
 
 # User loader
 @login_manager.user_loader
