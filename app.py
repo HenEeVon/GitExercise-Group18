@@ -123,7 +123,7 @@ class ChatMessage(db.Model):
 #Update Profile
 class UpdateProfileForm(FlaskForm):
     full_name = StringField("Full name", validators=[DataRequired(), Length(min=5, max=20)])
-    gender = SelectField("Gender", choices=[("male","Male"),("female","Female"), ("other","Other")], 
+    gender = SelectField("Gender", choices=[("male","Male"),("female","Female")], 
                          validators=[DataRequired()])
     bio = TextAreaField("Bio", validators=[Optional(), Length(max=1000)])
     picture = FileField("Profile picture", validators=[FileAllowed(["jpg","png"])])
