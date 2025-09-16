@@ -16,7 +16,7 @@
 
         <div>
             {{ form.gender.label }}<br>
-            {{ form.gender() }}
+            {{ form.gender(class="form-select") }}
         </div>
 
         <div>
@@ -26,7 +26,10 @@
 
         <div>
             {{ form.picture.label }}<br>
-            {{ form.picture() }}
+            <div class="custom-file">
+                {{ form.picture() }}
+                <span class="custom-file-label">Choose file</span>
+            </div>
         </div>
 
         <div>
