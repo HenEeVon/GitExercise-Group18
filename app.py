@@ -418,46 +418,22 @@ def on_send_message(data):
 def notifications():
     return render_template("notifications.html")
 
-#My Profiled
-@app.route("/profile")
-@login_required
-def profile():
-    image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
-    return render_template("profile.html", title='Profile', image_file=image_file)
-
-def save_picture(form_picture):
-    random_hex = secrets.token_hex(8)
-    _, f_ext = os.path.splitext(form_picture.filename)
-    picture_fn = random_hex + f_ext
-    picture_path = os.path.join(app.root_path, "static/profile_pics", picture_fn)
-    form_picture.save(picture_path)
-    return picture_fn
-
-#View profile
+#My profile
 @app.route("/profile")
 @login_required
 def profile():
     recent_posts = (Posts.query.filter_by(user_email=current_user.user_email).order_by(Posts.date_posted.desc()).all())
 
-    if current_user.image_file:
-        image_url = url_for("static", filename=f"profile_pics/{current_user.image_file}")
-    else:
-        image_url = url_for("static", filename="profile_pics/default.png")
-
     for post in recent_posts:
-        if post.date_posted:
-            utc_time = pytz.utc.localize(post.date_posted)
-            post.local_date_posted_value = utc_time.time.astimezone(MALAYSIA_TZ)
-        else:
-            post.local_date_posted_value = None
+        post.local_date_posted_value = post.local_date_posted()
+
+    image_url = url_for("static", filename=f"profile_pics/{current_user.image_file or "default.png"}")
 
     return render_template("profile.html", user=current_user, image_url=image_url, recent_posts=recent_posts)
 
 @app.route("/profile/edit", methods=["GET", "POST"])
 @login_required
 def profile_edit():
-    from forms import UpdateProfileForm
-
     form = UpdateProfileForm()
 
     if form.validate_on_submit():
@@ -466,20 +442,19 @@ def profile_edit():
         current_user.bio = form.bio.data or None
 
         if form.picture.data:
-            filename = save_profile_picture(form.picture.data)
+            filename = save_picture(form.picture.data)
             current_user.image_file = filename
 
         db.session.commit()
         flash("Profile updated.", "success")
         return redirect(url_for("profile"))
     
-    if not form.is_submitted():
+    if request.method == "GET":
         form.full_name.data = current_user.user_name
         form.gender.data = current_user.gender
         form.bio.data = current_user.bio
 
-    image_url = (url_for("static", filename=f"profile_pics/{current_user.image_file}"))
-    if current_user.image_file 
+    image_url = (url_for("static", filename=f"profile_pics/{current_user.image_file or "default.png"}"))
     else url_for("static", filename="profile_pics/default.png")
 
     return render_template("edit_profile.html",form=form, image_url=image_url)
