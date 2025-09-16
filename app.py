@@ -455,10 +455,22 @@ def profile_edit():
         form.bio.data = current_user.bio
 
     image_url = (url_for("static", filename=f"profile_pics/{current_user.image_file or "default.png"}"))
-    else url_for("static", filename="profile_pics/default.png")
 
     return render_template("edit_profile.html",form=form, image_url=image_url)
 
+
+def save_picture(form_picture):
+    random_hex = secrets.token_hex(8)
+    _, f_ext = os.path.splitext(form_picture.filename)
+    picture_fn = random_hex + f_ext.lower()
+    picture_path = os.path.join(app.root_path, "static/profile_pics", picture_fn)
+
+    #Resize picture
+    img = Image.open(form_picture)
+    img.thumbnail((256, 256))
+    img.save(picture_path, optimize=True)
+
+    return picture_fn
 
 # Join Activity
 @app.route("/activityrequest/<int:post_id>", methods=["POST"])
