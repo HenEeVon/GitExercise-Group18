@@ -25,6 +25,7 @@
      <div class="profile-posts">
         <h3>Recent Posts</h3>
         {% if recent_posts %}
+            <ul>
                 {% for post in recent_posts %}
                     <li>
                         <a href="{{ url_for('post_detail', post_id=post.post_id) }}">{{ post.title }}</a>
@@ -37,6 +38,10 @@
                         </span>
                     </li>
                 {% endfor %}
+            </ul>
+        {% else %}
+            <p>No posts yet.</p>
         {% endif %}
      </div>
+</div>
 {% endblock %}
