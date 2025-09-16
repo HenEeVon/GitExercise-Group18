@@ -418,8 +418,9 @@ def on_send_message(data):
 def notifications():
     return render_template("notifications.html")
 
-#My Profile
+#My Profiled
 @app.route("/profile")
+@login_required
 def profile():
     image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
     return render_template("profile.html", title='Profile', image_file=image_file)
@@ -434,6 +435,7 @@ def save_picture(form_picture):
 
 #View profile
 @app.route("/profile")
+@login_required
 def profile():
     recent_posts = (Posts.query.filter_by(user_email=current_user.user_email).order_by(Posts.date_posted.desc()).all())
 
@@ -450,6 +452,37 @@ def profile():
             post.local_date_posted_value = None
 
     return render_template("profile.html", user=current_user, image_url=image_url, recent_posts=recent_posts)
+
+@app.route("/profile/edit", methods=["GET", "POST"])
+@login_required
+def profile_edit():
+    from forms import UpdateProfileForm
+
+    form = UpdateProfileForm()
+
+    if form.validate_on_submit():
+        current_user.user_name = form.full_name.data
+        current_user.gender = form.gender.data
+        current_user.bio = form.bio.data or None
+
+        if form.picture.data:
+            filename = save_profile_picture(form.picture.data)
+            current_user.image_file = filename
+
+        db.session.commit()
+        flash("Profile updated.", "success")
+        return redirect(url_for("profile"))
+    
+    if not form.is_submitted():
+        form.full_name.data = current_user.user_name
+        form.gender.data = current_user.gender
+        form.bio.data = current_user.bio
+
+    image_url = (url_for("static", filename=f"profile_pics/{current_user.image_file}"))
+    if current_user.image_file 
+    else url_for("static", filename="profile_pics/default.png")
+
+    return render_template("edit_profile.html",form=form, image_url=image_url)
 
 
 # Join Activity
