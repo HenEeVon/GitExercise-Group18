@@ -14,7 +14,9 @@ from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, SubmitField, SelectField, TextAreaField, IntegerField
 from wtforms.validators import DataRequired, NumberRange, Length, Optional
 from datetime import datetime
+from PIL import Image
 import pytz
+import os, secrets
 from sqlalchemy import func, or_, asc
 
 MALAYSIA_TZ = pytz.timezone("Asia/Kuala_Lumpur")
@@ -416,10 +418,39 @@ def on_send_message(data):
 def notifications():
     return render_template("notifications.html")
 
+#My Profile
 @app.route("/profile")
 def profile():
     image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
     return render_template("profile.html", title='Profile', image_file=image_file)
+
+def save_picture(form_picture):
+    random_hex = secrets.token_hex(8)
+    _, f_ext = os.path.splitext(form_picture.filename)
+    picture_fn = random_hex + f_ext
+    picture_path = os.path.join(app.root_path, "static/profile_pics", picture_fn)
+    form_picture.save(picture_path)
+    return picture_fn
+
+#View profile
+@app.route("/profile")
+def profile():
+    recent_posts = (Posts.query.filter_by(user_email=current_user.user_email).order_by(Posts.date_posted.desc()).all())
+
+    if current_user.image_file:
+        image_url = url_for("static", filename=f"profile_pics/{current_user.image_file}")
+    else:
+        image_url = url_for("static", filename="profile_pics/default.png")
+
+    for post in recent_posts:
+        if post.date_posted:
+            utc_time = pytz.utc.localize(post.date_posted)
+            post.local_date_posted_value = utc_time.time.astimezone(MALAYSIA_TZ)
+        else:
+            post.local_date_posted_value = None
+
+    return render_template("profile.html", user=current_user, image_url=image_url, recent_posts=recent_posts)
+
 
 # Join Activity
 @app.route("/activityrequest/<int:post_id>", methods=["POST"])
