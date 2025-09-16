@@ -465,11 +465,17 @@ def save_picture(form_picture):
     picture_fn = random_hex + f_ext.lower()
     picture_path = os.path.join(app.root_path, "static/profile_pics", picture_fn)
 
-    #Resize picture
-    img = Image.open(form_picture)
-    img.thumbnail((256, 256))
-    img.save(picture_path, optimize=True)
+    try:
+        img = Image.open(form_picture)
+        img.thumbnail((256, 256))
 
+        if f_ext.lower() in [".jpg", ".png"]:
+            img.save(picture_path, optimize=True)
+        else:
+            img.save(picture_path, optimize=True)
+    except Exception as e:
+        raise ValueError("Invalid image file") from e
+    
     return picture_fn
 
 # Join Activity
