@@ -10,14 +10,13 @@ from string import ascii_uppercase
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, TextAreaField, IntegerField
+from wtforms import StringField, SubmitField, TextAreaField, IntegerField, SelectField, DateTimeField
 from wtforms.validators import DataRequired, NumberRange
 from datetime import datetime
 import pytz
 from sqlalchemy import func, or_, asc
-import requests
-import urllib.parse
-
+import csv 
+import os
 MALAYSIA_TZ = pytz.timezone("Asia/Kuala_Lumpur")
 UTC = pytz.utc
 
@@ -26,9 +25,6 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///ebfit.db"
 app.config["SECRET_KEY"] = "060226*"
 db = SQLAlchemy(app)
 socketio = SocketIO(app)
-API_KEY ="AIzaSyB68DLCQYpAq40KaRfMKWaGyj5oRU5Na8c"
-
-# Flask-Login setup
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
@@ -54,7 +50,6 @@ class Admin(db.Model):
     admin_email =  db.Column(db.String(255), primary_key=True)
     admin_name = db.Column(db.String(255), nullable=False)
     password = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(20), default="admin")
 
 class AdminRequest(db.Model):
     __tablename__ = "admin_request"
@@ -98,11 +93,30 @@ class JoinActivity(db.Model):
     user = db.relationship("User", backref="join_activities")
     post = db.relationship("Posts", backref="join_activities")
 
+def load_locations():
+    csv_path = os.path.join("instance", "locations.csv")
+    choices = []
+    
+    if not os.path.exists(csv_path):
+        # Return default choices if file doesn't exist
+        return [("https://maps.app.goo.gl/BVDJU9KfrB7Q43oz9", "Default Location")]
+    
+    try:
+        with open(csv_path, "r", encoding="utf-8") as f:
+            csv_reader = csv.DictReader(f, delimiter='\t')
+            for row in csv_reader:
+                choices.append((row["google_maps_url"], row["name"]))
+    except Exception as e:
+        print(f"Error loading locations: {e}")
+        choices = [("https://maps.app.goo.gl/BVDJU9KfrB7Q43oz9", "Error Loading Locations")]
+    
+    return choices
+    
 # Activity Form database
 class ActivityForm(FlaskForm):
     title = StringField("Title", validators=[DataRequired()])
     content = TextAreaField("Content", validators=[DataRequired()])
-    location = StringField("Location", validators=[DataRequired()])
+    location = SelectField("Location", choices=[])
     event_datetime = StringField("Event Date & Time (e.g. 2025-09-01, 8am - 10am)", validators=[DataRequired()])
     participants = IntegerField("Required Participants", validators=[DataRequired(), NumberRange(min=1)])
     submit = SubmitField("Post")
@@ -120,7 +134,6 @@ class ChatMessage(db.Model):
     text = db.Column(db.Text, nullable=False)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-
 
 # User loader
 @login_manager.user_loader
@@ -329,43 +342,30 @@ def page_not_found(e):
 
 
 # Create post form
-@app.route("/create", methods=["GET", "POST"])
+@app.route('/create', methods=['GET', 'POST'])
 @login_required
 def create():
     form = ActivityForm()
-    similar_locations = []  # store results for template
-
+    
+    # Force reload of locations for this form instance
+    form.location.choices = load_locations()
+    
     if form.validate_on_submit():
-        location_query = form.location.data
-
-        # Call Google Places API if a location is entered
-        if location_query:
-            url = f"https://maps.googleapis.com/maps/api/place/textsearch/json?query={urllib.parse.quote(location_query)}&key={API_KEY}"
-            response = requests.get(url).json()
-            similar_locations = response.get("results", [])
-
-            # Optionally pick the first result as the chosen location
-            if similar_locations:
-                chosen_location = similar_locations[0]['name']
-                form.location.data = chosen_location
-
-        # Create new post
+        # Process form data
         new_post = Posts(
             title=form.title.data,
             content=form.content.data,
-            location_query=form.location.data,
+            location=form.location.data,
             event_datetime=form.event_datetime.data,
             participants=form.participants.data,
-            user_email=current_user.user_email
+            user_email=current_user.user_email,
         )
-
         db.session.add(new_post)
         db.session.commit()
-        flash("Post created successfully!", "success")
-        return redirect(url_for("posts"))
-
-    return render_template("create.html", form=form, similar_locations=similar_locations)
-
+        flash('Post created successfully!', 'success')
+        return redirect(url_for('posts'))
+    
+    return render_template('create.html', form=form)
 
 # Edit post
 @app.route("/edit/<int:post_id>", methods=["GET", "POST"])
@@ -547,36 +547,41 @@ def handle_request(request_id, decision):
 
 #admin interface
 #owner of the website
-def create_owner():
+# Create default first admin
+def create_first_admin():
     if not Admin.query.first():
-        owner = Admin(
-            admin_email="eewen@gmail.com",
+        admin = Admin(
+            admin_email="eewen@gmail.com".lower(),
             admin_name="Lee Ee Wen",
             password=generate_password_hash("aaaa", method="pbkdf2:sha256"),
-            role="owner"
         )
-        db.session.add(owner)
+        db.session.add(admin)
         db.session.commit()
 
-# request to join admin
+
+# LOGIN ADMIN
 @app.route("/login_admin", methods=["GET", "POST"])
 def login_admin():
     if request.method == "POST":
         email = request.form["admin_email"].strip().lower()
         password = request.form["password"]
 
-        admin_instance = Admin.query.filter_by(admin_email=email).first()
-        if admin_instance and check_password_hash(admin_instance.password, password):
+        admin_instance = Admin.query.get(email)
+        if not admin_instance:
+            flash("No admin found with this email.")
+            return redirect(url_for("login_admin"))
+
+        if check_password_hash(admin_instance.password, password):
             session["admin_email"] = admin_instance.admin_email
-            session["role"] = admin_instance.role
             flash(f"Welcome {admin_instance.admin_name}!")
-            return redirect(url_for("owner_approval"))
+            return redirect(url_for("admin_approval"))
         else:
-            flash("Invalid email or you are NOT admin !")
+            flash("Password incorrect.")
 
     return render_template("login_admin.html")
 
 
+# REQUEST ADMIN ACCESS
 @app.route("/request_admin", methods=["GET", "POST"])
 def request_admin():
     if request.method == "POST":
@@ -585,7 +590,13 @@ def request_admin():
         password = request.form.get("password", "")
         join_reason = request.form.get("join_reason", "")
 
-        existing = AdminRequest.query.filter_by(admin_email=email).first()
+        # already an admin?
+        if Admin.query.get(email):
+            flash("You are already an admin. Please log in instead.")
+            return redirect(url_for("login_admin"))
+
+        # already requested?
+        existing = AdminRequest.query.filter_by(admin_email=email, approval="pending").first()
         if existing:
             flash("You already submitted a request. Please wait for approval.")
         else:
@@ -604,77 +615,75 @@ def request_admin():
 
     return render_template("request_admin.html")
 
+
+# HANDLE REQUEST (any logged-in admin can approve/reject)
 @app.route("/handle-request/<int:approval_id>", methods=["GET", "POST"])
 def handle_request_admin(approval_id):
-    # Must be logged in
     if "admin_email" not in session:
         flash("You must log in first.")
         return redirect(url_for("login_admin"))
 
-    # Only owner can approve
-    current_admin = Admin.query.get(session["admin_email"])
-    if not current_admin or current_admin.role != "owner":
-        flash("You do not have permission to approve requests.")
-        return redirect(url_for("owner_approval"))
-
-    join_request = AdminRequest.query.get_or_404(approval_id)
-
-    if request.method == "POST":
-        decision = request.form.get("decision")
-        if decision == "accept":
-            join_request.approval = "accepted"
-            if not Admin.query.get(join_request.admin_email):
-                new_admin = Admin(
-                    admin_email=join_request.admin_email,
-                    admin_name=join_request.admin_name,
-                    password=join_request.password,
-                    role="admin"
-                )
-                db.session.add(new_admin)
-            flash(f"{join_request.admin_name} has been approved as admin.")
-        elif decision == "reject":
-            join_request.approval = "rejected"
-            flash(f"Request from {join_request.admin_name} has been rejected.")
-
-        db.session.commit()
-        return redirect(url_for("owner_approval"))
-
-    # GET → show details
-    return render_template("join_admin.html", request=join_request)
-
-
-@app.route("/owner_approval")
-def owner_approval():
-    if "admin_email" not in session:
-        flash("You must log in first.")
-        return redirect(url_for("login_admin"))
-
-    # Only show requests if owner is logged in
     current_admin = Admin.query.get(session["admin_email"])
     if not current_admin:
         flash("Invalid session. Please log in again.")
         return redirect(url_for("login_admin"))
 
-    if current_admin.role == "owner":
-        requests = AdminRequest.query.filter_by(approval="pending").all()
-    else:
-        requests = []  # Normal admins can’t see approval requests
+    join_request = AdminRequest.query.get_or_404(approval_id)
 
-    return render_template("owner_approval.html", admin=current_admin, requests=requests)
+    if request.method == "POST":
+        decision = request.form.get("decision")
 
-# Logout
+        if decision == "accept":
+            if not Admin.query.get(join_request.admin_email):
+                new_admin = Admin(
+                    admin_email=join_request.admin_email.lower(),
+                    admin_name=join_request.admin_name,
+                    password=join_request.password,  # already hashed
+                )
+                db.session.add(new_admin)
+
+            db.session.delete(join_request)
+            db.session.commit()
+            flash(f"{join_request.admin_name} has been approved as admin.")
+
+        elif decision == "reject":
+            db.session.delete(join_request)
+            db.session.commit()
+            flash(f"Request from {join_request.admin_name} has been rejected.")
+
+        return redirect(url_for("admin_approval"))
+
+    return render_template("join_admin.html", request=join_request)
+
+
+# ADMIN APPROVAL PAGE
+@app.route("/admin_approval")
+def admin_approval():
+    email = session.get("admin_email")
+    if not email:
+        flash("You must log in first.")
+        return redirect(url_for("login_admin"))
+
+    current_admin = Admin.query.get(email)
+    if not current_admin:
+        session.clear()
+        flash("Session expired. Please log in again.")
+        return redirect(url_for("login_admin"))
+
+    requests = AdminRequest.query.filter_by(approval="pending").all()
+
+    return render_template("admin_approval.html", admin=current_admin, requests=requests)
+
+# LOGOUT
 @app.route("/logout")
-@login_required
 def logout():
-    logout_user()
+    session.clear()
     flash("Logged out successfully.")
     return redirect(url_for("home"))
 
-
-
-# Run app
+# RUN APP
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
-        create_owner()
-        socketio.run(app, debug=True)
+        create_first_admin()
+    app.run(debug=True)
