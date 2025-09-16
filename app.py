@@ -12,8 +12,13 @@ from sqlalchemy.exc import IntegrityError
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, TextAreaField, IntegerField, SelectField, DateTimeField
 from wtforms.validators import DataRequired, NumberRange
+from flask_wtf.file import FileField, FileAllowed
+from wtforms import StringField, SubmitField, SelectField, TextAreaField, IntegerField
+from wtforms.validators import DataRequired, NumberRange, Length, Optional
 from datetime import datetime
+from PIL import Image
 import pytz
+import os, secrets
 from sqlalchemy import func, or_, asc
 import csv 
 import os
@@ -40,6 +45,8 @@ class User(UserMixin, db.Model):
     security_question = db.Column(db.String(255), nullable=False)
     security_answer = db.Column(db.String(255), nullable=False)
     password = db.Column(db.String(255), nullable=False)
+    image_file = db.Column(db.String(255), nullable=True, default="default.png")
+    bio = db.Column(db.Text, nullable=True)
     
 
     def get_id(self):
@@ -134,6 +141,16 @@ class ChatMessage(db.Model):
     text = db.Column(db.Text, nullable=False)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+
+#Update Profile
+class UpdateProfileForm(FlaskForm):
+    full_name = StringField("Full name", validators=[DataRequired(), Length(min=5, max=20)])
+    gender = SelectField("Gender", choices=[("male","Male"),("female","Female")], 
+                         validators=[DataRequired()])
+    bio = TextAreaField("Bio", validators=[Optional(), Length(max=1000)])
+    picture = FileField("Profile picture", validators=[FileAllowed(["jpg","png"])])
+    submit = SubmitField("Save changes")
 
 # User loader
 @login_manager.user_loader
@@ -481,9 +498,65 @@ def on_send_message(data):
 def notifications():
     return render_template("notifications.html")
 
+#My profile
 @app.route("/profile")
+@login_required
 def profile():
-    return render_template("profile.html")
+    recent_posts = (Posts.query.filter_by(user_email=current_user.user_email).order_by(Posts.date_posted.desc()).all())
+
+    for post in recent_posts:
+        post.local_date_posted_value = post.local_date_posted()
+
+    image_url = url_for("static", filename=f"profile_pics/{current_user.image_file or "default.png"}")
+
+    return render_template("profile.html", user=current_user, image_url=image_url, recent_posts=recent_posts)
+
+@app.route("/profile/edit", methods=["GET", "POST"])
+@login_required
+def profile_edit():
+    form = UpdateProfileForm()
+
+    if form.validate_on_submit():
+        current_user.user_name = form.full_name.data
+        current_user.gender = form.gender.data
+        current_user.bio = form.bio.data or None
+
+        if form.picture.data:
+            filename = save_picture(form.picture.data)
+            current_user.image_file = filename
+
+        db.session.commit()
+        flash("Profile updated.", "success")
+        return redirect(url_for("profile"))
+    
+    if request.method == "GET":
+        form.full_name.data = current_user.user_name
+        form.gender.data = current_user.gender
+        form.bio.data = current_user.bio
+
+    image_url = (url_for("static", filename=f"profile_pics/{current_user.image_file or "default.png"}"))
+
+    return render_template("edit_profile.html",form=form, image_url=image_url)
+
+
+def save_picture(form_picture):
+    random_hex = secrets.token_hex(8)
+    _, f_ext = os.path.splitext(form_picture.filename)
+    picture_fn = random_hex + f_ext.lower()
+    picture_path = os.path.join(app.root_path, "static/profile_pics", picture_fn)
+
+    try:
+        img = Image.open(form_picture)
+        img.thumbnail((256, 256))
+
+        if f_ext.lower() in [".jpg", ".png"]:
+            img.save(picture_path, optimize=True)
+        else:
+            img.save(picture_path, optimize=True)
+    except Exception as e:
+        raise ValueError("Invalid image file") from e
+    
+    return picture_fn
 
 # Join Activity
 @app.route("/activityrequest/<int:post_id>", methods=["POST"])
