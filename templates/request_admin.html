@@ -20,6 +20,7 @@
             </nav>
         </header>
     </div>
+
     <div id="page" class="site">
         <div class="container2">
             <div class="login">
@@ -32,17 +33,16 @@
                 </div>
 
                 <div class="main">
-
                     {% with messages = get_flashed_messages() %}
                     {% if messages %}
-                    {% for message in messages %}
-                    <div class="popup">
-                        <div class="popup-content">
-                            <p>{{ message }}</p>
-                            <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                        {% for message in messages %}
+                        <div class="popup">
+                            <div class="popup-content">
+                                <p>{{ message }}</p>
+                                <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                            </div>
                         </div>
-                    </div>
-                    {% endfor %}
+                        {% endfor %}
                     {% endif %}
                     {% endwith %}
                     
@@ -56,7 +56,7 @@
 
                         <p class="colortext">
                             <span><strong>Full name:</strong></span>
-                            <input type="text" name="name" required>
+                            <input type="text" name="admin_name" required>
                         </p>
 
                         <p class="colortext">
@@ -66,7 +66,7 @@
 
                         <p class="colortext">
                             <span><strong>Join reason:</strong></span>
-                            <input type="text" name="text" required>
+                            <input type="text" name="join_reason" required>
                         </p>
 
                         <p class="colortext">
