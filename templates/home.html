@@ -9,32 +9,35 @@
 </head>
 
 <body>
+  <!-- navigation bar -->
   <header>
     <a class="header-logo"><span>ebFit</span></a>
+    <nav class="nav-item">
+      <a href="#user-section" class="nav-item">User</a>
+      <a href="#admin-section" class="nav-item">Admin</a>
+    </nav>
   </header>
 
-    <!-- Flash messages -->
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        {% for message in messages %}
-          <div class="popup">
-            <div class="popup-content">
-              <p>{{ message }}</p>
-              <a href="{{ request.path }}"><button class="submit">OK</button></a>
-            </div>
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      {% for message in messages %}
+        <div class="popup">
+          <div class="popup-content">
+            <p>{{ message }}</p>
+            <a href="{{ request.path }}"><button class="submit">OK</button></a>
           </div>
-        {% endfor %}
-      {%endif %}
-    {% endwith %}
-    
-  <section id="herohome">
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- USER SECTION -->
+  <section id="user-section">
     <div class="section-wrap">
       <div class="herohome-content">
-
         <div class="left">
-          <h1 class="main-text">
-            <span><br>ebFit.</span>
-          </h1>
+          <h1 class="main-text"><span><br>ebFit.</span></h1>
           <h2 class="sub-text">
             Find and join the best sports activities<br>
             near you.
@@ -48,56 +51,69 @@
         </div>
 
         <div class="right">
-          <img src="{{ url_for('static', filename='images/img10.png') }}"class="herohome-img" alt="Running">
-          <img src="{{ url_for('static', filename='images/img8.png') }}"class="herohome-img" alt="Running">
+          <img src="{{ url_for('static', filename='images/img10.png') }}" class="herohome-img" alt="Running">
+          <img src="{{ url_for('static', filename='images/img8.png') }}" class="herohome-img" alt="Running">
         </div>
-
       </div>
     </div>
   </section>
 
-  <!-- About us-->
-  <section id ="about">
-    <div class = "section-wrap">
-        <div class ="block">
-            <h3 class="section-tittle"><span>About </span>us</h3>
-            <p>
-                ebFit is designed to be free, simple, and student-focused. 
-                Instead of confusing users with a wide variety of categories and expensive subscription, 
-                ebFit allows students to create an account and edit posts, request and 
-                join activities, as well as track activities. 
-                This positions Ebfit as a user-friendly website that helps students to find reliable sports activities.
-            </p>
-            <a href="#project" class="big-cta-btn learn-more">Learn More</a>
-            <img src="{{ url_for('static', filename='images/img13.png') }}">
-        </div>
+  <!-- About us -->
+  <section id="about">
+    <div class="section-wrap">
+      <div class="block">
+        <h3 class="section-tittle"><span>About </span>us</h3>
+        <p>
+          ebFit is designed to be free, simple, and student-focused.
+          Instead of confusing users with a wide variety of categories and expensive subscription,
+          ebFit allows students to create an account and edit posts, request and
+          join activities, as well as track activities.
+          This positions Ebfit as a user-friendly website that helps students to find reliable sports activities.
+        </p>
+        <a href="#project" class="big-cta-btn learn-more">Learn More</a>
+        <img src="{{ url_for('static', filename='images/img13.png') }}">
+      </div>
     </div>
   </section>
 
-   <section id="project">
-  <div class="section-wrap">
-    <h3 class="section-tittle">Features</h3>
-    <div class="project-grid">
-      <div class="card crd-1">
-        <img src="{{ url_for('static', filename='images/img11.png') }}" class="herohome-img" alt="Running">
-        <h4 class="card-title">Create and Post</h4>
-      </div>
-      <div class="card crd-2">
-        <img src="{{ url_for('static', filename='images/img11.png') }}" class="herohome-img" alt="Running">
-        <h4 class="card-title">Search and Filter</h4>
-      </div>
-      <div class="card crd-3">
-        <img src="{{ url_for('static', filename='images/img11.png') }}" class="herohome-img" alt="Running">
-        <h4 class="card-title">Chat with me</h4>
-      </div>
-      <div class="card crd-4">
-        <img src="{{ url_for('static', filename='images/img11.png') }}" class="herohome-img" alt="Running">
-        <h4 class="card-title">Track Location</h4>
+  <!-- Features -->
+  <section id="project">
+    <div class="section-wrap">
+      <h3 class="section-tittle">Features</h3>
+      <div class="project-grid">
+        <div class="card crd-1">
+          <img src="{{ url_for('static', filename='images/img11.png') }}" class="herohome-img" alt="Running">
+          <h4 class="card-title">Create and Post</h4>
+        </div>
+        <div class="card crd-2">
+          <img src="{{ url_for('static', filename='images/img11.png') }}" class="herohome-img" alt="Running">
+          <h4 class="card-title">Search and Filter</h4>
+        </div>
+        <div class="card crd-3">
+          <img src="{{ url_for('static', filename='images/img11.png') }}" class="herohome-img" alt="Running">
+          <h4 class="card-title">Chat with me</h4>
+        </div>
+        <div class="card crd-4">
+          <img src="{{ url_for('static', filename='images/img11.png') }}" class="herohome-img" alt="Running">
+          <h4 class="card-title">Track Location</h4>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
+  <!-- ADMIN SECTION -->
+  <section id="admin-section">
+    <div class="section-wrap admin-wrap">
+      <h2>Admin Portal</h2>
+      <p>Login if you already have an admin account or request to become an admin.</p>
+      <div class="btn-group">
+        <a href="{{ url_for('login_admin') }}" class="big-cta-btn">Admin Log In</a>
+        <a href="{{ url_for('request_admin') }}" class="big-cta-btn">Request Admin</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
   <footer>
     <div class="footer-wrap">
       <p>© 2025 ebFit.</p>
@@ -105,16 +121,14 @@
     </div>
   </footer>
 
-  <!--start at top when refresh the page-->
+  <!-- Start at top when refresh -->
   <script>
-  window.onload = function() {
-    if (window.location.hash) {
-      window.location.hash = '';
-      window.scrollTo(0, 0);
-    }
-  };
-</script>
-
+    window.onload = function() {
+      if (window.location.hash) {
+        window.location.hash = '';
+        window.scrollTo(0, 0);
+      }
+    };
+  </script>
 </body>
 </html>
-
