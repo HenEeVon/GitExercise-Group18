@@ -1137,3 +1137,12 @@ h1 span {
     background-color: #f0f0f0;
     border-color: #228FEB;
 }
+
+.flash-messages {
+    margin: 20px auto;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-size: 500;
+    text-align: center;
+}
