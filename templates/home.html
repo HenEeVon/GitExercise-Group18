@@ -101,17 +101,31 @@
     </div>
   </section>
 
-  <!-- ADMIN SECTION -->
-  <section id="admin-section">
-    <div class="section-wrap admin-wrap">
-      <h2>Admin Portal</h2>
-      <p>Login if you already have an admin account or request to become an admin.</p>
+<!-- ADMIN SECTION -->
+<section id="admin-section">
+  <div class="section-wrap admin-wrap">
+    <h2>Admin Portal</h2>
+    <p>Want to become an admin? Submit a request below.</p>
+
+    <div class="mindmap-container">
+      <!-- Mindmap aligned right -->
+      <div class="mindmap-wrapper">
+        <div class="mindmap">
+          <div class="center">Admin Features</div>
+          <div class="node node1">Suspend Reported Users</div>
+          <div class="node node2">View Applications for Admin Request</div>
+          <div class="node node3">Update Location from CSV File</div>
+
+      <!-- Buttons below mindmap -->
       <div class="btn-group">
         <a href="{{ url_for('login_admin') }}" class="big-cta-btn">Admin Log In</a>
-        <a href="{{ url_for('request_admin') }}" class="big-cta-btn">Request Admin</a>
+        <a href="{{ url_for('request_admin') }}" class="big-cta-btn">Request Admin Access</a>
       </div>
     </div>
-  </section>
+  </div>        </div>
+      </div>
+
+</section>
 
   <!-- Footer -->
   <footer>

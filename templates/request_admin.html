@@ -13,11 +13,7 @@
     <!-- Navigation Bar -->
     <div class="page-container">
         <header>
-            <a class="header-logo"><span>EbFit</span></a>
-            <nav class="nav-item">
-                <a href="{{ url_for('login_admin') }}" class="nav-item">Log&nbsp;In</a>
-                <a href="{{ url_for('request_admin') }}" class="nav-item lines">Request&nbsp;admin</a>
-            </nav>
+            <a class="header-logo"><span>ebFit</span></a>
         </header>
     </div>
 
@@ -69,9 +65,9 @@
                             <input type="text" name="join_reason" required>
                         </p>
 
-                        <p class="colortext">
-                            <input type="submit" class="submit" value="Request">
-                        </p>
+                        <div class="btn-group">
+                            <input type="submit" class="big-cta-btn" value="Request">
+                        </div>
                     </form>
                 </div>
             </div>

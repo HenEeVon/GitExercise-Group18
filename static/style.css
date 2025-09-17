@@ -1209,6 +1209,11 @@ html {
 }
 
 /*admin*/
+.admin .big-cta-btn  {
+    margin-top: 2px;
+    padding: 0px 30px;
+    line-height: 42px;
+}
 /* Flash messages */
 .flash-messages {
     list-style: none;
@@ -1291,7 +1296,15 @@ html {
     text-decoration: underline;
 }
 
-/* Admin section styling */
+#admin-section .big-cta-btn {
+    display: flex;
+    margin-top: 1px;
+    width: auto;
+    justify-content: center; 
+    gap: 15px;  
+    line-height: 13px;
+    
+}
 #admin-section {
     background: #f8f9fa;
     padding: 60px 20px;
@@ -1301,10 +1314,65 @@ html {
     margin-bottom: 20px;
     font-size: 2rem;
 }
-.admin-wrap .btn-group {
-    margin-top: 15px;
+
+.mindmap-wrapper {
+  display: flex;
+  justify-content: center; 
+  margin: 20px 0;
 }
 
+/* Mindmap container */
+.mindmap {
+  position: relative;
+  width: 400px;
+  height: 400px;
+}
+
+/* Center node */
+.center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #2a7ae2;
+  color: #fff;
+  padding: 20px 25px;
+  border-radius: 50%;
+  text-align: center;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transition: transform 0.3s ease;
+}
+
+.center:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* Feature nodes */
+.node {
+  position: absolute;
+  background: #fff;
+  border: 2px solid #2a7ae2;
+  border-radius: 20px;
+  padding: 10px 15px;
+  text-align: center;
+  font-size: 14px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  transition: transform 0.3s ease, background 0.3s ease;
+  cursor: pointer;
+}
+
+/* Hover animation for nodes */
+.node:hover {
+  transform: scale(1.2);
+  background: #eaf2ff;
+}
+
+/* Position nodes around center */
+.node1 { top: 15%; left: 50%; transform: translateX(-50%); }
+.node2 { bottom: 20%; right: 10%; }
+.node3 { bottom: 20%; left: 10%; }
+    
 /* Animations */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
