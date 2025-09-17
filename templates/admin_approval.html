@@ -14,11 +14,14 @@
         <!-- Flash messages -->
         {% with messages = get_flashed_messages() %}
             {% if messages %}
-                <ul class="flash-messages">
-                    {% for message in messages %}
-                        <li>{{ message }}</li>
-                    {% endfor %}
-                </ul>
+                {% for message in messages %}
+                    <div class="popup">
+                        <div class="popup-content">
+                            <p>{{ message }}</p>
+                                <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                        </div>
+                    </div>
+                {% endfor %}
             {% endif %}
         {% endwith %}
 
