@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>{% block title %}My App{% endblock %}</title>
+    <meta charset="UTF-8" />
+        <title>{% block title %}My App{% endblock %}</title>
     <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
 </head>
 <body>
     <header>
@@ -33,9 +35,7 @@
                     </nav>
                 {% else %}
                     <nav class="nav-item">
-                        <a href="{{ url_for('posts') }}" class="nav-item">Posts</a>
-                        <a href="{{ url_for('notifications') }}" class="nav-item">Notifications</a>
-                        <a href="{{ url_for('profile') }}" class="nav-item">My&nbsp;Profile</a>
+
                         <a href="{{ url_for('logout') }}" class="nav-item">Log&nbsp;Out</a>
                     </nav>
                 {% endif %}
@@ -52,7 +52,12 @@
 
     <main>
         {% block content %}{% endblock %}
-    </main>  
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" 
+            integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" 
+            crossorigin="anonymous">
+    </script>
+    {% block page_scripts %}{% endblock %}
 </body>
 </html>
 

@@ -8,16 +8,14 @@
     <title>Register</title>
 </head>
 
-<body class="user">
+<body class="user register-page">
 
     <!-- Navigation Bar -->
     <div class="page-container">
         <header>
-            <a class="header-logo"><span>EbFit</span></a>
-            <nav class="nav-item">
-                <a href="{{ url_for('home') }}" class="nav-item">Home</a>
-                <a href="{{ url_for('login') }}" class="nav-item">Log&nbsp;In</a>
-                <a href="{{ url_for('register') }}" class="nav-item lines">Register</a>
+            <a class="header-logo"><span>ebFit</span></a>
+            <nav class="nav-bar">
+                <a href="{{ url_for('home') }}" class="nav-items">Home</a>
             </nav>
         </header>
     </div>
@@ -53,20 +51,20 @@
                         {% endwith %}
                         
                         <form action="{{ url_for('register') }}" method="POST">
-                            <h2 class="form-title">Register User:</h2>
+                            <h2 class="form-title">Register User</h2>
 
                             <p class="colortext">
-                                <span><strong>Email address:</strong></span>
+                                <span><strong>Email address</strong></span>
                                 <input type="email" name="user_email" required>
                             </p>
 
                             <p class="colortext">
-                                <span><strong>Full name:</strong></span>
+                                <span><strong>Full name</strong></span>
                                 <input type="text" name="user_name" required>
                             </p>
 
                             <p class="gender-row">
-                                <label><strong>Gender:</strong></label>
+                                <label>Gender</label>
                                 <label>
                                     <input type="radio" name="gender" value="Male" required> Male
                                 </label>
@@ -75,14 +73,45 @@
                                 </label>
                             </p>
 
+                             <p class="colortext">
+                                <span><strong>Fitness Level</strong></span>
+                                <select name="sport_level" class="form-select" required>
+                                    <option value="">-- Select Fitness Level --</option>
+                                    <option value="newbie">Newbie</option>
+                                    <option value="intermediate">Intermediate</option>
+                                    <option value="advanced">Advanced</option>
+                                </select>
+                            </p>
+
                             <p class="colortext">
-                                <span><strong>Password:</strong></span>
+                                <span><strong>Password</strong></span>
                                 <input type="password" name="password" required>
                             </p>
 
                             <p class="colortext">
-                                <input type="submit" class="submit" value="Register">
+                                <span><strong>Security Question (For Reset Password)</strong></span>
+                                <select name="security_question" class="form-select" required>
+                                    <option value="">-- Select a security question --</option>
+                                    <option value="pet">What was your first pet name?</option>
+                                    <option value="car">What was your first car?</option>
+                                    <option value="hospital">What hospital name were you born in?</option>
+                                    <option value="city">What city were you born in?</option>
+                                    <option value="girlfriend">What was your first ex girlfriend's name?</option>
+                                    <option value="boyfriend">What was your first ex boyfriend's name?</option>
+                                    <option value="school">What was the name of your first school?</option>
+                                    <option value="book">What was your favorite childhood book?</option>
+                                </select>
                             </p>
+
+
+                            <p class="colortext">
+                                <span><strong>Security Answer (For Reset Password)</strong></span>
+                                <input type="text" name="security_answer" required>
+                            </p>
+
+                            <div class="btn-group">
+                                <input type="submit" class="big-cta-btn" value="Register">
+                            </div>
                         </form>
                     </div>
                 </div>

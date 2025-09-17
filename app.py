@@ -1,17 +1,23 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
     LoginManager, UserMixin, login_user, logout_user,
     login_required, current_user
 )
+from flask_socketio import join_room, send, SocketIO
+import random
+from string import ascii_uppercase
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, TextAreaField, IntegerField, DateField, TimeField
-from wtforms.validators import DataRequired, NumberRange
+from wtforms import StringField, SubmitField, TextAreaField, IntegerField, DateField, TimeField,  SelectField
+from wtforms.validators import DataRequired, NumberRange, Length, Optional
+from flask_wtf.file import FileField, FileAllowed
 from datetime import datetime
+from PIL import Image
 import pytz
-from sqlalchemy import func, or_
+import os, secrets
+from sqlalchemy import func, or_, asc
 
 MALAYSIA_TZ = pytz.timezone("Asia/Kuala_Lumpur")
 UTC = pytz.utc
@@ -20,6 +26,7 @@ app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///ebfit.db"
 app.config["SECRET_KEY"] = "060226*"
 db = SQLAlchemy(app)
+socketio = SocketIO(app)
 
 # Flask-Login setup
 login_manager = LoginManager()
@@ -33,7 +40,13 @@ class User(UserMixin, db.Model):
     user_email = db.Column(db.String(255), primary_key=True)
     user_name = db.Column(db.String(255), nullable=False)
     gender = db.Column(db.String(50), nullable=False)
+    sport_level = db.Column(db.String(255), nullable=False)
+    security_question = db.Column(db.String(255), nullable=False)
+    security_answer = db.Column(db.String(255), nullable=False)
     password = db.Column(db.String(255), nullable=False)
+    image_file = db.Column(db.String(255), nullable=True, default="default.png")
+    bio = db.Column(db.Text, nullable=True)
+    
 
     def get_id(self):
         return self.user_email
@@ -98,6 +111,29 @@ class ActivityForm(FlaskForm):
     participants = IntegerField("Required Participants", validators=[DataRequired(), NumberRange(min=1)])
     submit = SubmitField("Post")
 
+#Chat database
+class ChatMessage(db.Model):
+    tablename = "chat_messages"
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, nullable=False, index=True)
+
+    conversation = db.Column(db.String(600), nullable=False, index=True)
+
+    sender_email = db.Column(db.String(255), nullable=False)
+    sender_name = db.Column(db.String(255), nullable=False)
+    text = db.Column(db.Text, nullable=False)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+#Update Profile
+class UpdateProfileForm(FlaskForm):
+    user_name = StringField("Full Name", validators=[DataRequired(), Length(min=2, max=50)])
+    gender = SelectField("Gender", choices=[("Male", "Male"), ("Female", "Female"), ("Other", "Other")])
+    bio = TextAreaField("Bio", validators=[Length(max=200)])
+    picture = FileField("Update Profile Picture", validators=[FileAllowed(["jpg", "png"])])
+    submit = SubmitField("Update")
+
+
 # User loader
 @login_manager.user_loader
 def load_user(user_id):
@@ -136,10 +172,13 @@ def register():
         user_email = request.form["user_email"].strip().lower()
         user_name = request.form["user_name"]
         gender = request.form["gender"]
+        sport_level = request.form["sport_level"]
+        security_question = request.form["security_question"]
+        security_answer = request.form["security_answer"].strip().lower()
         password = request.form["password"]
-
         hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
-        new_user = User(user_email=user_email, user_name=user_name, gender=gender, password=hashed_password)
+
+        new_user = User(user_email=user_email, user_name=user_name, gender=gender, sport_level=sport_level, security_question=security_question, security_answer=security_answer, password=hashed_password)
 
         try:
             db.session.add(new_user)
@@ -157,51 +196,99 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form["user_email"].strip().lower()
-        password = request.form["password"]
+        email = request.form.get("user_email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        if not email or not password:
+            flash("Please enter email and password.")
+            return redirect(url_for("login"))
 
         user = User.query.filter_by(user_email=email).first()
-        if user and check_password_hash(user.password, password):
+        if not user:
+            flash("Invalid email !")
+            return redirect(url_for("login"))
+        
+        if check_password_hash(user.password, password):
             login_user(user)
             flash(f"Welcome {user.user_name}!")
             return redirect(url_for("posts"))
-
-        flash("Invalid email or password!")
-
+        else:
+            flash("Wrong password. Please type again.")
+            return redirect(url_for("login"))
+        
     return render_template("login.html")
 
+question = {
+    "pet": "What was your first pet name?",
+    "car": "What was your first car?",
+    "hospital": "What hospital name were you born in?",
+    "city": "What city were you born in?",
+    "girlfriend": "What was your first ex girlfriend's name?",
+    "boyfriend": "What was your first ex boyfriend's name?",
+    "school": "What was the name of your first school?",
+    "book": "What was your favorite childhood book?"
+}
 
-# Logout
-@app.route("/logout")
-@login_required
-def logout():
-    logout_user()
-    flash("Logged out successfully.")
-    return redirect(url_for("home"))
-
-
-
-# Reset password
 @app.route("/resetpass", methods=["GET", "POST"])
 def resetpass():
+    user_email = None
+    security_question = None
+
     if request.method == "POST":
-        email = request.form.get("email").strip().lower()
-        new_password = request.form.get("new_password")
+        step = request.form.get("current")
+        # check email validity
+        if step == "email":
+            user_email = request.form.get("user_email", "").strip().lower()
+            if not user_email:
+                flash("Please enter your email.")
+                return render_template("login.html", open_reset_modal=True)
 
-        if not email or not new_password:
-            flash("Email and new password are required!")
-            return redirect(url_for("resetpass"))
+            user = User.query.filter_by(user_email=user_email).first()
+            if not user:
+                flash("Email not found.")
+                return render_template("login.html", open_reset_modal=True)
 
-        user = User.query.filter_by(user_email=email).first()
-        if user:
-            user.password = generate_password_hash(new_password, method="pbkdf2:sha256")
-            db.session.commit()
-            flash("Password updated successfully! Please log in.")
-            return redirect(url_for("login"))
-        else:
-            flash("Email not found! Please register.")
+            # Map security question ket to get the sentence
+            security_question = question.get(user.security_question, "Security question not found")
+            return render_template(
+                "login.html",
+                open_reset_modal=True,
+                user_email=user_email,
+                security_question=security_question
+            )
 
-    return render_template("login.html")
+        # answer security answers so can reset password
+        elif step == "reset":
+            user_email = request.form.get("user_email", "").strip().lower()
+            answer = request.form.get("security_answer", "").strip().lower()
+            new_password = request.form.get("new_password", "")
+
+            if not user_email or not answer or not new_password:
+                flash("Please fill all fields.")
+                return render_template("login.html", open_reset_modal=True)
+
+            user = User.query.filter_by(user_email=user_email).first()
+            if not user:
+                flash("Email not found.")
+                return render_template("login.html", open_reset_modal=True)
+
+            if user.security_answer.lower() == answer:
+                # Update password
+                user.password = generate_password_hash(new_password, method="pbkdf2:sha256")
+                db.session.commit()
+                flash("Password updated successfully! Please log in.")
+                return redirect(url_for("login"))
+            else:
+                flash("Security answer incorrect.")
+                return render_template(
+                    "login.html",
+                    open_reset_modal=True,
+                    user_email=user_email,
+                    security_question=question.get(user.security_question, "Security question not found")
+                )
+
+    return render_template("login.html", open_reset_modal=True)
+
 
 
 # Posts page
@@ -369,35 +456,157 @@ def post_detail(post_id):
         post.local_date_posted_value = None
 
     join_activities = JoinActivity.query.filter_by(post_id=post.post_id).all()
-    return render_template("post_detail.html", post=post, join_activities=join_activities)
 
+    owner_conversations = []
+    if current_user.is_authenticated and current_user.user_email.lower() == post.user_email.lower():
+        partners = db.session.query(ChatMessage.sender_email).filter_by(post_id=post.post_id).distinct()
+        for (email,) in partners:
+            if email.lower() != post.user_email.lower():
+                user = User.query.get(email)
+                owner_conversations.append({"email": email, "name":user.user_name if user else email})
 
-# admin dashboard
-@app.route("/admin_dashboard")
-def admin_dashboard():
-    if current_user.role != "admin":
-        flash("Access denied.")
-        return redirect(url_for("home"))
+    return render_template("post_detail.html", post=post, join_activities=join_activities, owner_conversations=owner_conversations)
 
-    requests = AdminRequest.query.filter_by(approval="pending").all()
-    return render_template("admin_dashboard.html", requests=requests)
+#Chat feature
+def conversation_key(a_email: str, b_email: str) -> str:
+    return "|".join(sorted([a_email.lower(), b_email.lower()]))
 
-# admin users review
-@app.route("/admin_users")
-def users():
-    return render_template("users.html")
+@app.route("/chat/<int:post_id>/<partner_email>")
+def chat_with_user(post_id, partner_email):
+    post = Posts.query.get_or_404(post_id)
+    owner_email = post.user_email.lower()
+    current_email = current_user.user_email.lower()
+    partner_email = partner_email.lower()
 
-# user notifications
+    if current_email != owner_email and partner_email != owner_email:
+        return redirect(url_for("chat_with_user", post_id=post_id, partner_email=owner_email))
+
+    conv = conversation_key(current_email, partner_email)
+    room = f"post-{post_id}-{conv}"
+
+    messages = (ChatMessage.query.filter_by(post_id=post_id, conversation=conv).order_by(asc(ChatMessage.created_at)).all())
+
+    partner_user = User.query.get(partner_email)
+    partner_name = partner_user.user_name if partner_user else partner_email
+
+    if current_email == owner_email:
+        header_name = partner_name
+    else:
+        header_name = post.user.user_name
+
+    return render_template("chat.html",post=post, room=room, username=current_user.user_name,header_name=header_name, 
+                           messages=messages, post_id=post_id, partner_email=partner_email)
+
+@socketio.on("join")
+def on_join(data):
+    room = data.get("room")
+    if room:
+        print("JOIN ->", current_user.user_email, "to", room)
+    join_room(room)
+    send(f"{current_user.user_name} joined the chat.", to=room)
+
+@socketio.on("send_message")
+def on_send_message(data):
+    room = (data or {}).get("room")
+    text = ((data or {}).get("message") or "").strip()
+    post_id = (data or {}).get("post_id")
+    partner = ((data or {}).get("partner_email")or "").lower().strip()
+
+    if not (room and text and post_id and partner):
+        return
+
+    current_email = current_user.user_email.lower()
+    conv = conversation_key(current_email,partner)
+
+    msg = ChatMessage(post_id=int(post_id), conversation=conv, sender_email=current_user.user_email, sender_name=current_user.user_name, text=text)
+    db.session.add(msg)
+    db.session.commit()
+
+    send({"user": msg.sender_name, "text": msg.text}, to=room)
+
+# Notifications
 @app.route("/notifications")
 def notifications():
     return render_template("notifications.html")
 
-# user profile
+#My profile
 @app.route("/profile")
+@login_required
 def profile():
-    return render_template("profile.html")
+    recent_posts = (
+        Posts.query.filter_by(user_email=current_user.user_email)
+        .order_by(Posts.date_posted.desc())
+        .all()
+    )
+
+    for post in recent_posts:
+        if post.date_posted:
+            utc_time = pytz.utc.localize(post.date_posted)
+            post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
+        else:
+            post.local_date_posted_value = None
+
+    image_url = url_for(
+        "static",
+        filename=f"profile_pics/{current_user.image_file or 'default.png'}"
+    )
+
+    return render_template(
+        "profile.html", 
+        user=current_user, 
+        image_url=image_url, 
+        recent_posts=recent_posts
+    )
+
+@app.route("/profile/edit", methods=["GET", "POST"])
+@login_required
+def profile_edit():
+    form = UpdateProfileForm()
+
+    if form.validate_on_submit():
+        current_user.user_name = form.user_name.data   # ✅ use user_name
+        current_user.gender = form.gender.data
+        current_user.bio = form.bio.data or None
+
+        if form.picture.data:
+            filename = save_picture(form.picture.data)
+            current_user.image_file = filename
+
+        db.session.commit()
+        flash("Profile updated.", "success")
+        return redirect(url_for("profile"))
+    
+    if request.method == "GET":
+        form.user_name.data = current_user.user_name   # ✅
+        form.gender.data = current_user.gender
+        form.bio.data = current_user.bio
+
+    image_url = url_for(
+        "static", 
+        filename=f"profile_pics/{current_user.image_file or 'default.png'}"
+    )
+
+    return render_template("edit_profile.html", form=form, image_url=image_url)
 
 
+def save_picture(form_picture):
+    random_hex = secrets.token_hex(8)
+    _, f_ext = os.path.splitext(form_picture.filename)
+    picture_fn = random_hex + f_ext.lower()
+    picture_path = os.path.join(app.root_path, "static/profile_pics", picture_fn)
+
+    try:
+        img = Image.open(form_picture)
+        img.thumbnail((256, 256))
+
+        if f_ext.lower() in [".jpg", ".png"]:
+            img.save(picture_path, optimize=True)
+        else:
+            img.save(picture_path, optimize=True)
+    except Exception as e:
+        raise ValueError("Invalid image file") from e
+    
+    return picture_fn
 
 # Join Activity
 @app.route("/activityrequest/<int:post_id>", methods=["POST"])
@@ -576,6 +785,14 @@ def owner_approval():
 
     return render_template("owner_approval.html", admin=current_admin, requests=requests)
 
+# Logout
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    flash("Logged out successfully.")
+    return redirect(url_for("home"))
+
 
 
 # Run app
@@ -583,4 +800,4 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
         create_owner()
-        app.run(debug=True)
+        socketio.run(app, debug=True)
