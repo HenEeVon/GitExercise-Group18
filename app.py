@@ -7,7 +7,7 @@ from flask_login import (
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, TextAreaField, IntegerField
+from wtforms import StringField, SubmitField, TextAreaField, IntegerField, DateField, TimeField
 from wtforms.validators import DataRequired, NumberRange
 from datetime import datetime
 import pytz
@@ -61,7 +61,11 @@ class Posts(db.Model):
     title = db.Column(db.String(255), nullable=False)
     content = db.Column(db.Text, nullable=False)
     location = db.Column(db.String(255), nullable=False)
-    event_datetime = db.Column(db.String(255), nullable=False)
+
+    event_date = db.Column(db.Date, nullable=False)
+    start_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False)
+
     date_posted = db.Column(db.DateTime, default=datetime.utcnow)
     post_status = db.Column(db.String(20), default="open")
     participants = db.Column(db.Integer, nullable=False, default=1)
@@ -69,12 +73,6 @@ class Posts(db.Model):
     user_email = db.Column(db.String(255), db.ForeignKey("users.user_email"), nullable=False)
     user = db.relationship("User", backref="posts")
 
-    def local_date_posted(self):
-        if self.date_posted is None:
-            return None
-        utc_time = UTC.localize(self.date_posted)
-        malaysia_time = utc_time.astimezone(MALAYSIA_TZ)
-        return malaysia_time
 
 
 class JoinActivity(db.Model):
@@ -92,10 +90,13 @@ class ActivityForm(FlaskForm):
     title = StringField("Title", validators=[DataRequired()])
     content = TextAreaField("Content", validators=[DataRequired()])
     location = StringField("Location", validators=[DataRequired()])
-    event_datetime = StringField("Event Date & Time (e.g. 2025-09-01, 8am - 10am)", validators=[DataRequired()])
+
+    event_date = DateField("Activity Date", format="%Y-%m-%d", validators=[DataRequired()])
+    start_time = TimeField("Start Time", format="%H:%M", validators=[DataRequired()])
+    end_time = TimeField("End Time", format="%H:%M", validators=[DataRequired()])
+
     participants = IntegerField("Required Participants", validators=[DataRequired(), NumberRange(min=1)])
     submit = SubmitField("Post")
-
 
 # User loader
 @login_manager.user_loader
@@ -294,15 +295,20 @@ def create():
             title=form.title.data,
             content=form.content.data,
             location=form.location.data,
-            event_datetime=form.event_datetime.data,
+            event_date=form.event_date.data,   
+            start_time=form.start_time.data,  
+            end_time=form.end_time.data,       
             participants=form.participants.data,
             user_email=current_user.user_email
         )
         db.session.add(new_post)
         db.session.commit()
         flash("Post created successfully!", "success")
-        return redirect(url_for("posts"))
+        return redirect(url_for("posts"))  
+
     return render_template("create.html", form=form)
+
+
 
 
 # Edit post
@@ -311,22 +317,34 @@ def create():
 def edit_post(post_id):
     post = Posts.query.get_or_404(post_id)
     form = ActivityForm()
+
     if form.validate_on_submit():
         post.title = form.title.data
         post.content = form.content.data
         post.location = form.location.data
-        post.event_datetime = form.event_datetime.data
+        post.event_date = form.event_date.data
+        post.start_time = form.start_time.data
+        post.end_time = form.end_time.data
         post.participants = form.participants.data
+
         db.session.commit()
         flash("Post has been updated!", "info")
         return redirect(url_for("post_detail", post_id=post.post_id))
 
-    form.title.data = post.title
-    form.content.data = post.content
-    form.location.data = post.location
-    form.event_datetime.data = post.event_datetime
-    form.participants.data = post.participants
+    # Pre-fill form (only if GET or form not valid)
+    if request.method == "GET":
+        form.title.data = post.title
+        form.content.data = post.content
+        form.location.data = post.location
+        form.event_date.data = post.event_date
+        form.start_time.data = post.start_time
+        form.end_time.data = post.end_time
+        form.participants.data = post.participants
+
+    # ✅ Always return something here
     return render_template("edit_post.html", form=form, post=post)
+
+
 
 
 # Delete post
@@ -339,12 +357,17 @@ def delete(post_id):
     flash("Post deleted successfully!", "danger")
     return redirect(url_for("posts"))
 
-
 # Post detail
 @app.route("/post/<int:post_id>")
 def post_detail(post_id):
     post = Posts.query.get_or_404(post_id)
-    post.local_date_posted_value = post.local_date_posted()
+
+    if post.date_posted:
+        utc_time = pytz.utc.localize(post.date_posted)
+        post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
+    else:
+        post.local_date_posted_value = None
+
     join_activities = JoinActivity.query.filter_by(post_id=post.post_id).all()
     return render_template("post_detail.html", post=post, join_activities=join_activities)
 

@@ -14,6 +14,7 @@
             {{ form.title(size=40) }}
         </div>
 
+
         <div>
             {{ form.content.label }}<br>
             {{ form.content(rows=5, cols=40) }}
@@ -25,15 +26,25 @@
         </div>
 
         <div>
-            {{ form.event_datetime.label }}<br>
-            {{ form.event_datetime(size=40) }}
+            {{ form.event_date.label }}<br>
+            {{ form.event_date(class="form-control", type="date") }}
         </div>
 
+        <div>
+            {{ form.start_time.label }}<br>
+            {{ form.start_time(class="form-control", placeholder="start time (24-hour format)") }}
+        </div>
+
+        <div>
+            {{ form.end_time.label }}<br>
+            {{ form.end_time(class="form-control", placeholder="end time (24-hour format)") }}
+        </div>
+
+        
         <div>
             {{ form.participants.label }}<br>
             {{ form.participants(size=40) }}
         </div>
-
 
         <div>
             {{ form.submit(class="btn") }}

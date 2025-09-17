@@ -5,17 +5,28 @@
 {% block content %}
 <div class="container">
     <h1>{{ post.title }}</h1>
+
+    <!-- Event date and location -->
     <p class="meta">
-        Event Date: {{ post.event_datetime }} | {{ post.location }}
-    </p>
-    <p class="meta">
-        Posted on: {{ post.local_date_posted_value.strftime('%Y-%m-%d %H:%M') if post.local_date_posted_value else '' }} by {{ post.user.user_name }}
+        Event Date: {{ post.event_date.strftime('%d/%m/%Y') }} |
+        {{ post.start_time.strftime('%H:%M') }} - {{ post.end_time.strftime('%H:%M') }} |
+        {{ post.location }}
     </p>
 
+
+    <!-- Posted date and author -->
+    <p class="meta">
+        Posted on:
+        {{ post.local_date_posted_value.strftime('%d/%m/%Y %H:%M') if post.local_date_posted_value else '' }}
+        by {{ post.user.user_name }}
+    </p>
+
+    <!-- Post content -->
     <div class="content">
         <p>{{ post.content }}</p>
     </div>
 
+    <!-- Post status and participants -->
     <p>Status: {{ post.post_status }}</p>
     <p>Required Participants: {{ post.participants }}</p>
 
@@ -33,7 +44,7 @@
     {% endif %}
     {% endwith %}
 
-    <!-- Join activity request and current request status -->
+    <!-- Join activity request and status -->
     {% if current_user.is_authenticated and current_user.user_email != post.user_email %}
         {% set user_request = None %}
         {% for ja in join_activities %}
@@ -62,7 +73,7 @@
         {% endif %}
     {% endif %}
 
-    <!-- Show join activities (only to post owner) -->
+    <!-- Join requests (visible only to post owner) -->
     {% if current_user.is_authenticated and current_user.user_email == post.user_email %}
         <hr>
         <h3>Join Requests</h3>
@@ -73,11 +84,9 @@
                         {{ ja.user.user_name }} ({{ ja.user.user_email }}) - Status: {{ ja.status }}
 
                         {% if ja.status == "pending" %}
-                            <!-- Accept button -->
                             <form action="{{ url_for('handle_request', request_id=ja.id, decision='accept') }}" method="post" style="display:inline;">
                                 <button type="submit" class="btn btn-success btn-sm">Accept</button>
                             </form>
-                            <!-- Reject button -->
                             <form action="{{ url_for('handle_request', request_id=ja.id, decision='reject') }}" method="post" style="display:inline;">
                                 <button type="submit" class="btn btn-danger btn-sm">Reject</button>
                             </form>
@@ -92,6 +101,7 @@
 
     <hr>
 
+    <!-- Actions -->
     {% if current_user.is_authenticated and current_user.user_email == post.user_email %}
         <a href="{{ url_for('posts') }}" class="btn btn-secondary">Back to Activity Post</a>
         <a href="{{ url_for('edit_post', post_id=post.post_id) }}" class="btn btn-warning">Edit</a>

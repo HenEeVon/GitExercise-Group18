@@ -35,10 +35,13 @@
         </div>
 
         <p class="meta">
-            Date: {{ post.event_datetime | datetimeformat }} | {{ post.location }}
+            Event Date: {{ post.event_date.strftime('%d/%m/%Y') }} |
+            {{ post.start_time.strftime('%H:%M') }} - {{ post.end_time.strftime('%H:%M') }} |
+            {{ post.location }}
         </p>
+
         <p class="meta">
-            Posted: {{ post.local_date_posted_value | datetimeformat }}
+            Posted on: {{ post.local_date_posted_value | datetimeformat }}
         </p>
 
         <!-- Owner of post and user can see -->

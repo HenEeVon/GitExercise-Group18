@@ -1,55 +1,51 @@
 {% extends "base.html" %}
-
-{% block title %}Create Activity Post{% endblock %}
+{% block title %}Create Post{% endblock %}
 
 {% block content %}
-
-
 <div class="container">
-    <h1>Create Activity Post</h1>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, msg in messages %}
-            <div class="alert alert-{{ category }}" role="alert">
-                {{ msg }}
-            </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
-    
+    <h1>Create Post</h1>
 
     <form method="POST">
         {{ form.hidden_tag() }}
 
-        <p>
-            {{ form.title.label }} <br>
-            {{ form.title() }}
-        </p>
-        <p>
-            {{ form.content.label }} <br>
-            {{ form.content() }}
-        </p>
-        <p>
-            {{ form.location.label }} <br>
-            {{ form.location() }}
-        </p>
-        <p>
-            {{ form.event_datetime.label }} <br>
-            {{ form.event_datetime() }}
-        </p>
-
-        <p>
-            {{ form.participants.label }} <br>
-            {{ form.participants() }}
-        </p>
-
-        <div style="margin-top:1rem;">
-            {{ form.submit(class="btn post-btn") }}
-            <a href="{{ url_for('posts') }}" class="btn cancel-btn">Cancel</a>
+        <div>
+            {{ form.title.label }}<br>
+            {{ form.title(size=40, placeholder="Enter a short title") }}
         </div>
-            
+
+        <div>
+            {{ form.content.label }}<br>
+            {{ form.content(rows=5, cols=40, placeholder="Describe your activity...") }}
+        </div>
+
+        <div>
+            {{ form.location.label }}<br>
+            {{ form.location(size=40) }}
+        </div>
+
+        <div>
+            {{ form.event_date.label }}<br>
+            {{ form.event_date(class="form-control") }}
+        </div>
+
+        <div>
+            {{ form.start_time.label }}<br>
+            {{ form.start_time(class="form-control", placeholder="start time (24-hour format)") }}
+        </div>
+
+        <div>
+            {{ form.end_time.label }}<br>
+            {{ form.end_time(class="form-control", placeholder="end time (24-hour format)") }}
+        </div>
+
+        <div>
+            {{ form.participants.label }}<br>
+            {{ form.participants(size=40, placeholder="Number of required participants") }}
+        </div>
+
+        <div>
+            {{ form.submit(class="btn btn-primary") }}
+        </div>
     </form>
 </div>
 {% endblock %}
