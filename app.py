@@ -46,6 +46,7 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(255), nullable=False)
     image_file = db.Column(db.String(255), nullable=True, default="default.png")
     bio = db.Column(db.Text, nullable=True)
+    role = db.Column(db.String(20), default="user") 
     
 
     def get_id(self):
@@ -794,6 +795,56 @@ def logout():
     return redirect(url_for("home"))
 
 
+
+# Admin dashboard
+@app.route("/admin/dashboard")
+@login_required
+def admin_dashboard():
+    if current_user.role != "admin":
+        abort(403)
+
+    users = User.query.all()
+    posts = Posts.query.all()
+    join_requests = JoinActivity.query.all()
+
+    return render_template(
+        "admin_dashboard.html",
+        users=users,
+        posts=posts,
+        join_requests=join_requests
+    )
+
+
+# admin delete user
+@app.route("/admin/delete_user/<string:user_email>", methods=["POST", "GET"])
+@login_required
+def delete_user(user_email):
+    if current_user.role != "admin":
+        abort(403)
+    user = User.query.get_or_404(user_email)
+    db.session.delete(user)
+    db.session.commit()
+    flash("User deleted.", "success")
+    return redirect(url_for("admin_dashboard"))
+
+
+# admin reports
+@app.route("/admin/reports")
+@login_required
+def admin_reports():
+    if current_user.role != "admin":
+        abort(403)
+
+    users = User.query.all()
+    posts = Posts.query.all()
+    join_requests = JoinActivity.query.all()  
+
+    return render_template(
+        "admin_reports.html",
+        users=users,
+        posts=posts,
+        join_requests=join_requests
+    )
 
 # Run app
 if __name__ == "__main__":

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Admin Dashboard</h1>
+
+    <h2>📊 Overview</h2>
+    <ul>
+        <li>Total Users: {{ users|length }}</li>
+        <li>Total Posts: {{ posts|length }}</li>
+        <li>Pending Join Requests: {{ join_requests|selectattr('status', 'equalto', 'pending')|list|length }}</li>
+    </ul>
+
+    <h2>👤 User Management</h2>
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>Email</th>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Actions</th>
+        </tr>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.user_email }}</td>
+            <td>{{ user.user_name }}</td>
+            <td>{{ user.role }}</td>
+            <td>
+                <a href="{{ url_for('delete_user', user_id=user.user_id) }}" class="btn delete-btn">Delete</a>
+                {% if user.role != "admin" %}
+                    <a href="{{ url_for('promote_user', user_id=user.user_id) }}" class="btn">Promote to Admin</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>📌 Posts Management</h2>
+    <ul>
+        {% for post in posts %}
+        <li>
+            {{ post.title }} ({{ post.post_status }}) by {{ post.user_email }}
+            <a href="{{ url_for('delete', post_id=post.post_id) }}" class="btn delete-btn">Delete</a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
