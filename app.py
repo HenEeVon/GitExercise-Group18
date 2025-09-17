@@ -564,7 +564,7 @@ def profile_edit():
     form = UpdateProfileForm()
 
     if form.validate_on_submit():
-        current_user.user_name = form.user_name.data   # ✅ use user_name
+        current_user.user_name = form.user_name.data   
         current_user.gender = form.gender.data
         current_user.bio = form.bio.data or None
 
@@ -577,7 +577,7 @@ def profile_edit():
         return redirect(url_for("profile"))
     
     if request.method == "GET":
-        form.user_name.data = current_user.user_name   # ✅
+        form.user_name.data = current_user.user_name  
         form.gender.data = current_user.gender
         form.bio.data = current_user.bio
 
