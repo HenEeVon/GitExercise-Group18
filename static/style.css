@@ -923,6 +923,7 @@ animation-delay: 1.3s;
 
 /* Navbar links (for logged in users) */
 .nav-item {
+    margin-left:50px;
     display: flex;
     gap: 20px;
 }
@@ -942,6 +943,7 @@ animation-delay: 1.3s;
 
 /* Search dropdown */
 .navbar-search {
+    margin-left:1100px;
     position: relative;
 }
 
