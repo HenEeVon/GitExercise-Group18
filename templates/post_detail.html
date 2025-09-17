@@ -6,29 +6,34 @@
 {% block content %}
 <div class="container">
     <h1>{{ post.title }}</h1>
-     <p class="meta">
-            <i class="fa-solid fa-calendar"></i>
-            <span>Event:</span>
-            {{ post.event_datetime }} 
-        </p>
+
+    <!-- Event date and location -->
+    <p class="meta">
+        Event Date: {{ post.event_date.strftime('%d/%m/%Y') }} |
+        {{ post.start_time.strftime('%H:%M') }} - {{ post.end_time.strftime('%H:%M') }}
+    </p>
+        
     <p class="meta">
         <i class="fa-solid fa-location-dot"></i>
         <span>Location: </span>
         <a href="https://www.google.com/maps/search/?api=1&query={{ post.location | urlencode }}" target="_blank">
-        {{ post.location }}
+            {{ post.location }}
         </a>
     </p>
 
-
-    </p>
+    <!-- Posted date and author -->
     <p class="meta">
-        Posted on: {{ post.local_date_posted_value.strftime('%Y-%m-%d %H:%M') if post.local_date_posted_value else '' }} by {{ post.user.user_name }}
+        Posted on:
+        {{ post.local_date_posted_value.strftime('%d/%m/%Y %H:%M') if post.local_date_posted_value else '' }}
+        by {{ post.user.user_name }}
     </p>
 
+    <!-- Post content -->
     <div class="content">
         <p>{{ post.content }}</p>
     </div>
 
+    <!-- Post status and participants -->
     <p>Status: {{ post.post_status }}</p>
     <p>Required Participants: {{ post.participants }}</p>
 
@@ -46,7 +51,7 @@
     {% endif %}
     {% endwith %}
 
-    <!-- Join activity request and current request status -->
+    <!-- Join activity request and status -->
     {% if current_user.is_authenticated and current_user.user_email != post.user_email %}
         {% set user_request = None %}
         {% for ja in join_activities %}
@@ -75,7 +80,7 @@
         {% endif %}
     {% endif %}
 
-    <!-- Show join activities (only to post owner) -->
+    <!-- Join requests (visible only to post owner) -->
     {% if current_user.is_authenticated and current_user.user_email == post.user_email %}
         <hr>
         <h3>Join Requests</h3>
@@ -86,11 +91,9 @@
                         {{ ja.user.user_name }} ({{ ja.user.user_email }}) - Status: {{ ja.status }}
 
                         {% if ja.status == "pending" %}
-                            <!-- Accept button -->
                             <form action="{{ url_for('handle_request', request_id=ja.id, decision='accept') }}" method="post" style="display:inline;">
                                 <button type="submit" class="btn btn-success btn-sm">Accept</button>
                             </form>
-                            <!-- Reject button -->
                             <form action="{{ url_for('handle_request', request_id=ja.id, decision='reject') }}" method="post" style="display:inline;">
                                 <button type="submit" class="btn btn-danger btn-sm">Reject</button>
                             </form>
@@ -105,9 +108,16 @@
 
     <hr>
 
+
+    <!-- Actions -->
+    {% if current_user.is_authenticated and current_user.user_email == post.user_email %}
+        <a href="{{ url_for('posts') }}" class="btn btn-secondary">Back to Activity Post</a>
+        <a href="{{ url_for('edit_post', post_id=post.post_id) }}" class="btn btn-warning">Edit</a>
+    {% endif %}   {# <-- close the first IF before starting new one #}
+
     {% if current_user.is_authenticated and current_user.user_email != post.user_email %}
         <!--Normal user direct message the post owner-->
-        <a href="{{ url_for('chat_with_user', post_id=post.post_id, partner_email =post.user_email) }}" class="btn btn-info">Chat with Me</a>
+        <a href="{{ url_for('chat_with_user', post_id=post.post_id, partner_email=post.user_email) }}" class="btn btn-info">Chat with Me</a>
     {% elif current_user.is_authenticated and current_user.user_email == post.user_email %}
         <!--Owner able to open same chat room-->
         {% if owner_conversations %}
@@ -116,13 +126,14 @@
                 {% for conv in owner_conversations %}
                     <div class="dm-item">
                         <span class="dm-name">{{ conv.name }}</span>
-                    <a href="{{ url_for('chat_with_user', post_id=post.post_id, partner_email=conv.email) }}" class="btn btn-sm btn-info">Chat</a>
+                        <a href="{{ url_for('chat_with_user', post_id=post.post_id, partner_email=conv.email) }}" class="btn btn-sm btn-info">Chat</a>
                     </div>
                 {% endfor %}
             </div>
         {% else %}
-            <P>No direct messages yet.</P>
+            <p>No direct messages yet.</p>
         {% endif %}
     {% endif %}
+
 </div>
 {% endblock %}

@@ -10,11 +10,9 @@ from string import ascii_uppercase
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, TextAreaField, IntegerField, SelectField, DateTimeField
-from wtforms.validators import DataRequired, NumberRange
-from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, SubmitField, SelectField, TextAreaField, IntegerField
+from wtforms import StringField, SubmitField, TextAreaField, IntegerField, DateField, TimeField,  SelectField
 from wtforms.validators import DataRequired, NumberRange, Length, Optional
+from flask_wtf.file import FileField, FileAllowed
 from datetime import datetime
 from PIL import Image
 import pytz
@@ -74,7 +72,11 @@ class Posts(db.Model):
     title = db.Column(db.String(255), nullable=False)
     content = db.Column(db.Text, nullable=False)
     location = db.Column(db.String(255), nullable=False)
-    event_datetime = db.Column(db.String(255), nullable=False)
+
+    event_date = db.Column(db.Date, nullable=False)
+    start_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False)
+
     date_posted = db.Column(db.DateTime, default=datetime.utcnow)
     post_status = db.Column(db.String(20), default="open")
     participants = db.Column(db.Integer, nullable=False, default=1)
@@ -82,12 +84,6 @@ class Posts(db.Model):
     user_email = db.Column(db.String(255), db.ForeignKey("users.user_email"), nullable=False)
     user = db.relationship("User", backref="posts")
 
-    def local_date_posted(self):
-        if self.date_posted is None:
-            return None
-        utc_time = UTC.localize(self.date_posted)
-        malaysia_time = utc_time.astimezone(MALAYSIA_TZ)
-        return malaysia_time
 
 
 class JoinActivity(db.Model):
@@ -123,8 +119,12 @@ def load_locations():
 class ActivityForm(FlaskForm):
     title = StringField("Title", validators=[DataRequired()])
     content = TextAreaField("Content", validators=[DataRequired()])
-    location = SelectField("Location", choices=[])
-    event_datetime = StringField("Event Date & Time (e.g. 2025-09-01, 8am - 10am)", validators=[DataRequired()])
+    location = StringField("Location", validators=[DataRequired()])
+
+    event_date = DateField("Activity Date", format="%Y-%m-%d", validators=[DataRequired()])
+    start_time = TimeField("Start Time", format="%H:%M", validators=[DataRequired()])
+    end_time = TimeField("End Time", format="%H:%M", validators=[DataRequired()])
+
     participants = IntegerField("Required Participants", validators=[DataRequired(), NumberRange(min=1)])
     submit = SubmitField("Post")
 
@@ -145,17 +145,37 @@ class ChatMessage(db.Model):
 
 #Update Profile
 class UpdateProfileForm(FlaskForm):
-    full_name = StringField("Full name", validators=[DataRequired(), Length(min=5, max=20)])
-    gender = SelectField("Gender", choices=[("male","Male"),("female","Female")], 
-                         validators=[DataRequired()])
-    bio = TextAreaField("Bio", validators=[Optional(), Length(max=1000)])
-    picture = FileField("Profile picture", validators=[FileAllowed(["jpg","png"])])
-    submit = SubmitField("Save changes")
+    user_name = StringField("Full Name", validators=[DataRequired(), Length(min=2, max=50)])
+    gender = SelectField("Gender", choices=[("Male", "Male"), ("Female", "Female"), ("Other", "Other")])
+    bio = TextAreaField("Bio", validators=[Length(max=200)])
+    picture = FileField("Update Profile Picture", validators=[FileAllowed(["jpg", "png"])])
+    submit = SubmitField("Update")
+
 
 # User loader
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.filter_by(user_email=user_id).first()
+
+@app.template_filter("datetimeformat")
+def datetimeformat(value, format="%d/%m/%Y"):
+    """Convert YYYY-MM-DD or datetime into DD/MM/YYYY"""
+    if not value:
+        return ""
+    try:
+        # If value is a datetime
+        if isinstance(value, datetime):
+            return value.strftime(format)
+
+        # If stored as string (like event_datetime)
+        if isinstance(value, str):
+            try:
+                return datetime.strptime(value, "%Y-%m-%d").strftime(format)
+            except ValueError:
+                return value  # return raw if it’s not in date format
+    except Exception:
+        return value
+
 
 
 # Home page
@@ -313,6 +333,12 @@ def search():
 
     if sport and dateinpost:
         searched = True
+        try:
+            # Convert from YYYY-MM-DD (input) to DD/MM/YYYY
+            formatted_date = datetime.strptime(dateinpost, "%Y-%m-%d").strftime("%d/%m/%Y")
+        except ValueError:
+            formatted_date = dateinpost  # fallback
+
         results = Posts.query.join(User).filter(
             or_(
                 func.lower(Posts.title).like(f"%{sport}%"),
@@ -320,7 +346,7 @@ def search():
                 func.lower(Posts.location).like(f"%{sport}%"),
                 func.lower(User.user_name).like(f"%{sport}%"),
             ),
-            Posts.event_datetime.like(f"%{dateinpost}%")
+            Posts.event_datetime.like(f"%{formatted_date}%")
         ).order_by(Posts.date_posted.desc()).all()
 
     elif sport:
@@ -336,8 +362,13 @@ def search():
 
     elif dateinpost:
         searched = True
+        try:
+            formatted_date = datetime.strptime(dateinpost, "%Y-%m-%d").strftime("%d/%m/%Y")
+        except ValueError:
+            formatted_date = dateinpost
+
         results = Posts.query.filter(
-            Posts.event_datetime.like(f"%{dateinpost}%")
+            Posts.event_datetime.like(f"%{formatted_date}%")
         ).order_by(Posts.date_posted.desc()).all()
 
     else:
@@ -351,6 +382,7 @@ def search():
             post.local_date_posted_value = None
 
     return render_template("index.html", posts=results, searched=searched, sport=sport, date=dateinpost)
+
 
 # Error page
 @app.errorhandler(404)
@@ -373,16 +405,21 @@ def create():
             title=form.title.data,
             content=form.content.data,
             location=form.location.data,
-            event_datetime=form.event_datetime.data,
+            event_date=form.event_date.data,   
+            start_time=form.start_time.data,  
+            end_time=form.end_time.data,       
             participants=form.participants.data,
             user_email=current_user.user_email,
         )
         db.session.add(new_post)
         db.session.commit()
-        flash('Post created successfully!', 'success')
-        return redirect(url_for('posts'))
-    
-    return render_template('create.html', form=form)
+        flash("Post created successfully!", "success")
+        return redirect(url_for("posts"))  
+
+    return render_template("create.html", form=form)
+
+
+
 
 # Edit post
 @app.route("/edit/<int:post_id>", methods=["GET", "POST"])
@@ -390,22 +427,34 @@ def create():
 def edit_post(post_id):
     post = Posts.query.get_or_404(post_id)
     form = ActivityForm()
+
     if form.validate_on_submit():
         post.title = form.title.data
         post.content = form.content.data
         post.location = form.location.data
-        post.event_datetime = form.event_datetime.data
+        post.event_date = form.event_date.data
+        post.start_time = form.start_time.data
+        post.end_time = form.end_time.data
         post.participants = form.participants.data
+
         db.session.commit()
         flash("Post has been updated!", "info")
         return redirect(url_for("post_detail", post_id=post.post_id))
 
-    form.title.data = post.title
-    form.content.data = post.content
-    form.location.data = post.location
-    form.event_datetime.data = post.event_datetime
-    form.participants.data = post.participants
+    # Pre-fill form (only if GET or form not valid)
+    if request.method == "GET":
+        form.title.data = post.title
+        form.content.data = post.content
+        form.location.data = post.location
+        form.event_date.data = post.event_date
+        form.start_time.data = post.start_time
+        form.end_time.data = post.end_time
+        form.participants.data = post.participants
+
+    # ✅ Always return something here
     return render_template("edit_post.html", form=form, post=post)
+
+
 
 
 # Delete post
@@ -418,12 +467,17 @@ def delete(post_id):
     flash("Post deleted successfully!", "danger")
     return redirect(url_for("posts"))
 
-
 # Post detail
 @app.route("/post/<int:post_id>")
 def post_detail(post_id):
     post = Posts.query.get_or_404(post_id)
-    post.local_date_posted_value = post.local_date_posted()
+
+    if post.date_posted:
+        utc_time = pytz.utc.localize(post.date_posted)
+        post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
+    else:
+        post.local_date_posted_value = None
+
     join_activities = JoinActivity.query.filter_by(post_id=post.post_id).all()
 
     owner_conversations = []
@@ -502,14 +556,30 @@ def notifications():
 @app.route("/profile")
 @login_required
 def profile():
-    recent_posts = (Posts.query.filter_by(user_email=current_user.user_email).order_by(Posts.date_posted.desc()).all())
+    recent_posts = (
+        Posts.query.filter_by(user_email=current_user.user_email)
+        .order_by(Posts.date_posted.desc())
+        .all()
+    )
 
     for post in recent_posts:
-        post.local_date_posted_value = post.local_date_posted()
+        if post.date_posted:
+            utc_time = pytz.utc.localize(post.date_posted)
+            post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
+        else:
+            post.local_date_posted_value = None
 
-    image_url = url_for("static", filename=f"profile_pics/{current_user.image_file or "default.png"}")
+    image_url = url_for(
+        "static",
+        filename=f"profile_pics/{current_user.image_file or 'default.png'}"
+    )
 
-    return render_template("profile.html", user=current_user, image_url=image_url, recent_posts=recent_posts)
+    return render_template(
+        "profile.html", 
+        user=current_user, 
+        image_url=image_url, 
+        recent_posts=recent_posts
+    )
 
 @app.route("/profile/edit", methods=["GET", "POST"])
 @login_required
@@ -517,7 +587,7 @@ def profile_edit():
     form = UpdateProfileForm()
 
     if form.validate_on_submit():
-        current_user.user_name = form.full_name.data
+        current_user.user_name = form.user_name.data   # ✅ use user_name
         current_user.gender = form.gender.data
         current_user.bio = form.bio.data or None
 
@@ -530,13 +600,16 @@ def profile_edit():
         return redirect(url_for("profile"))
     
     if request.method == "GET":
-        form.full_name.data = current_user.user_name
+        form.user_name.data = current_user.user_name   # ✅
         form.gender.data = current_user.gender
         form.bio.data = current_user.bio
 
-    image_url = (url_for("static", filename=f"profile_pics/{current_user.image_file or "default.png"}"))
+    image_url = url_for(
+        "static", 
+        filename=f"profile_pics/{current_user.image_file or 'default.png'}"
+    )
 
-    return render_template("edit_profile.html",form=form, image_url=image_url)
+    return render_template("edit_profile.html", form=form, image_url=image_url)
 
 
 def save_picture(form_picture):

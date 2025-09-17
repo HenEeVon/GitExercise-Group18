@@ -8,11 +8,12 @@
 
     <form method="POST" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
-
+        
         <div>
-            {{ form.full_name.label }}<br>
-            {{ form.full_name(size=40) }}
+            {{ form.user_name.label }}<br>
+            {{ form.user_name(size=40) }}
         </div>
+
 
         <div>
             {{ form.gender.label }}<br>
@@ -26,10 +27,7 @@
 
         <div>
             {{ form.picture.label }}<br>
-            <div class="custom-file">
-                {{ form.picture() }}
-                <span class="custom-file-label">Choose file</span>
-            </div>
+            {{ form.picture(class="form-control-file") }}
         </div>
 
         <div>
