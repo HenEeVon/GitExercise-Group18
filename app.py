@@ -97,29 +97,36 @@ class JoinActivity(db.Model):
     post = db.relationship("Posts", backref="join_activities")
 
 def load_locations():
+    import csv, os
     csv_path = os.path.join("instance", "locations.csv")
     choices = []
-    
+
     if not os.path.exists(csv_path):
-        # Return default choices if file doesn't exist
-        return [("https://maps.app.goo.gl/BVDJU9KfrB7Q43oz9", "Default Location")]
-    
+        return [("none", "--Please select a location--")]
+
     try:
         with open(csv_path, "r", encoding="utf-8") as f:
-            csv_reader = csv.DictReader(f, delimiter='\t')
+            csv_reader = csv.DictReader(f)
             for row in csv_reader:
-                choices.append((row["google_maps_url"], row["name"]))
+                name = (row.get("name") or "").strip()
+                if name:
+                    # Value is just the name now
+                    choices.append((name, name))
     except Exception as e:
         print(f"Error loading locations: {e}")
-        choices = [("https://maps.app.goo.gl/BVDJU9KfrB7Q43oz9", "Error Loading Locations")]
-    
+        choices = [("none", "Error Loading Locations")]
+
+    if not choices:
+        choices = [("none", "--Please select a location--")]
+
     return choices
+
     
 # Activity Form database
 class ActivityForm(FlaskForm):
     title = StringField("Title", validators=[DataRequired()])
     content = TextAreaField("Content", validators=[DataRequired()])
-    location = StringField("Location", validators=[DataRequired()])
+    location = SelectField("Location", choices=[])
 
     event_date = DateField("Activity Date", format="%Y-%m-%d", validators=[DataRequired()])
     start_time = TimeField("Start Time", format="%H:%M", validators=[DataRequired()])
@@ -391,33 +398,46 @@ def page_not_found(e):
 
 
 # Create post form
+# Create post form with debug
 @app.route('/create', methods=['GET', 'POST'])
 @login_required
 def create():
     form = ActivityForm()
     
-    # Force reload of locations for this form instance
+    # Force reload of locations for this form instance (add safe defaults for testing)
     form.location.choices = load_locations()
+    if not form.location.choices or form.location.choices == [("none", "--Please select a location--")]:
+        form.location.choices = [("Gym", "Gym"), ("Pool", "Pool")]  # fallback choices
     
     if form.validate_on_submit():
-        # Process form data
-        new_post = Posts(
-            title=form.title.data,
-            content=form.content.data,
-            location=form.location.data,
-            event_date=form.event_date.data,   
-            start_time=form.start_time.data,  
-            end_time=form.end_time.data,       
-            participants=form.participants.data,
-            user_email=current_user.user_email,
-        )
-        db.session.add(new_post)
-        db.session.commit()
-        flash("Post created successfully!", "success")
-        return redirect(url_for("posts"))  
-
+        # Debug: show submitted data
+        print("Form validated! Data:", form.data)
+        
+        try:
+            new_post = Posts(
+                title=form.title.data,
+                content=form.content.data,
+                location=form.location.data,
+                event_date=form.event_date.data,
+                start_time=form.start_time.data,
+                end_time=form.end_time.data,
+                participants=form.participants.data,
+                user_email=current_user.user_email,
+            )
+            db.session.add(new_post)
+            db.session.commit()
+            flash("Post created successfully!", "success")
+            return redirect(url_for("posts"))
+        except Exception as e:
+            print("Error creating post:", e)
+            flash(f"Error creating post: {e}", "danger")
+    else:
+        if request.method == "POST":
+            # Form did not validate
+            print("Form validation failed. Errors:", form.errors)
+            flash(f"Form errors: {form.errors}", "danger")
+    
     return render_template("create.html", form=form)
-
 
 
 
