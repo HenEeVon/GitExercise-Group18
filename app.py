@@ -837,27 +837,28 @@ def check_approval():
     approval_status = None
 
     if request.method == "POST" and admin_email:
-        # check the request pending or reject?
         req = AdminRequest.query.filter_by(admin_email=admin_email).first()
         if req:
-            approval_status = req.approval.lower()  # pending / rejected
+            approval_status = req.approval.lower()
         else:
-            # check admin table request status=accepted?
             if Admin.query.get(admin_email):
                 approval_status = "approved"
             else:
                 approval_status = "not_found"
 
-        # Render instead of redirect to preserve the status
-        return render_template("request_admin.html",
-                               open_approval_modal=open_approval_modal,
-                               approval_status=approval_status,
-                               submitted_email=admin_email)  # Pass email to show in results
+        return render_template(
+            "request_admin.html",
+            open_approval_modal=open_approval_modal,
+            approval_status=approval_status,
+            submitted_email=admin_email
+        )
 
-    # GET request or no email submitted
-    return render_template("request_admin.html",
-                           open_approval_modal=open_approval_modal,
-                           approval_status=approval_status)
+    return render_template(
+        "request_admin.html",
+        open_approval_modal=open_approval_modal,
+        approval_status=approval_status
+    )
+
 
 
 # LOGOUT

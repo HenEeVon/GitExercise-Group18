@@ -922,6 +922,11 @@ header {
   margin-top: 100px;
 }
 
+.crd-1 img {
+  width: 3500px;
+  height: auto;
+}
+
 .left-content h1 {
     font-size: 4rem;
     font-weight: 800;
@@ -1702,5 +1707,47 @@ html {
 /*Change title to uppercase*/
 .post h2, .container h1 {
     text-transform: uppercase;
+}
+.project-grid .card img {
+  width: auto;   /* relative to card */
+  height: 200px;
+  margin: 0 auto;  /* center image */
+}
+
+/* home admin portal Image */
+.admin-mindmap {
+    width: 70%;       /* adjust size */
+    max-width: 600px; /* optional limit */
+    height: auto;
+    margin-bottom: 20px; /* space for buttons */
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Button group */
+.admin-btn-group {
+    margin-top: 20px;
+}
+
+/* Buttons */
+.admin-btn {
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 13px 40px;
+    background-color: transparent;
+    color: #2800c7;
+    border: 2px solid #080965;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s;
+    animation: bottomIn 1s ease-in-out forwards;
+    animation-delay: 0.3s;
+    text-decoration: none;
+    margin-right: px;
+    margin-top: 40px;
+    opacity:0;
 }
 
