@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Admin Reports{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Admin Reports</h1>
+
+    <h2>📊 Overview</h2>
+    <ul>
+        <li>Total Users: {{ users|length }}</li>
+        <li>Admins: {{ users|selectattr('role','equalto','admin')|list|length }}</li>
+        <li>Regular Users: {{ users|selectattr('role','equalto','user')|list|length }}</li>
+        <li>Total Posts: {{ posts|length }}</li>
+        <li>Published Posts: {{ posts|selectattr('post_status','equalto','published')|list|length }}</li>
+        <li>Pending Posts: {{ posts|selectattr('post_status','equalto','pending')|list|length }}</li>
+    </ul>
+
+    <h2>📌 Posts by Users</h2>
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>User Email</th>
+            <th>Number of Posts</th>
+        </tr>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.user_email }}</td>
+            <td>{{ posts|selectattr('user_email','equalto',user.user_email)|list|length }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>👤 Users Pending Approval</h2>
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>Email</th>
+            <th>Name</th>
+            <th>Status</th>
+        </tr>
+        {% for req in join_requests|selectattr('status','equalto','pending') %}
+        <tr>
+            <td>{{ req.user_email }}</td>
+            <td>{{ req.user_name }}</td>
+            <td>{{ req.status }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}

@@ -5,15 +5,18 @@
 {% block content %}
 <div class="container">
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% with messages = get_flashed_messages() %}
         {% if messages %}
-            {% for category, msg in messages %}
-                <div class="alert alert-{{ category }}" role="alert">
-                    {{ msg }}
+            {% for message in messages %}
+                <div class="popup">
+                        <div class="popup-content">
+                            <p>{{ message }}</p>
+                            <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                        </div>
                 </div>
             {% endfor %}
         {% endif %}
-    {% endwith %}
+    {% endwith %}
 
     <h1>Activity Posts</h1>
     <a href="{{ url_for('create') }}" class="btn">Create New Post</a>

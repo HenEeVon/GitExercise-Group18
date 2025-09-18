@@ -45,6 +45,7 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(255), nullable=False)
     image_file = db.Column(db.String(255), nullable=True, default="default.png")
     bio = db.Column(db.Text, nullable=True)
+    role = db.Column(db.String(20), default="user") 
     
 
     def get_id(self):
@@ -336,51 +337,33 @@ def search():
     dateinpost = (request.args.get("date") or "").strip()
 
     searched = False
-    results = []
+    query = Posts.query.join(User)
 
-    if sport and dateinpost:
+    # Filter by sport if provided
+    if sport:
         searched = True
-        try:
-            # Convert from YYYY-MM-DD (input) to DD/MM/YYYY
-            formatted_date = datetime.strptime(dateinpost, "%Y-%m-%d").strftime("%d/%m/%Y")
-        except ValueError:
-            formatted_date = dateinpost  # fallback
-
-        results = Posts.query.join(User).filter(
+        query = query.filter(
             or_(
                 func.lower(Posts.title).like(f"%{sport}%"),
                 func.lower(Posts.content).like(f"%{sport}%"),
                 func.lower(Posts.location).like(f"%{sport}%"),
-                func.lower(User.user_name).like(f"%{sport}%"),
-            ),
-            Posts.event_datetime.like(f"%{formatted_date}%")
-        ).order_by(Posts.date_posted.desc()).all()
-
-    elif sport:
-        searched = True
-        results = Posts.query.join(User).filter(
-            or_(
-                func.lower(Posts.title).like(f"%{sport}%"),
-                func.lower(Posts.content).like(f"%{sport}%"),
-                func.lower(Posts.location).like(f"%{sport}%"),
-                func.lower(User.user_name).like(f"%{sport}%"),
+                func.lower(User.user_name).like(f"%{sport}%")
             )
-        ).order_by(Posts.date_posted.desc()).all()
+        )
 
-    elif dateinpost:
+    # Filter by date if provided
+    if dateinpost:
         searched = True
         try:
-            formatted_date = datetime.strptime(dateinpost, "%Y-%m-%d").strftime("%d/%m/%Y")
+            date_obj = datetime.strptime(dateinpost, "%Y-%m-%d").date()
+            query = query.filter(Posts.event_date == date_obj)
         except ValueError:
-            formatted_date = dateinpost
+            flash("Invalid date format. Please use YYYY-MM-DD.")
 
-        results = Posts.query.filter(
-            Posts.event_datetime.like(f"%{formatted_date}%")
-        ).order_by(Posts.date_posted.desc()).all()
+    # Execute query
+    results = query.order_by(Posts.date_posted.desc()).all()
 
-    else:
-        results = Posts.query.order_by(Posts.date_posted.desc()).all()
-
+    # Convert posted date to Malaysia timezone
     for post in results:
         if post.date_posted:
             utc_time = pytz.utc.localize(post.date_posted)
@@ -388,7 +371,14 @@ def search():
         else:
             post.local_date_posted_value = None
 
-    return render_template("index.html", posts=results, searched=searched, sport=sport, date=dateinpost)
+    return render_template(
+        "index.html",  # keep your interface the same
+        posts=results,
+        searched=searched,
+        sport=sport,
+        date=dateinpost
+    )
+
 
 
 # Error page
@@ -607,7 +597,7 @@ def profile_edit():
     form = UpdateProfileForm()
 
     if form.validate_on_submit():
-        current_user.user_name = form.user_name.data   # ✅ use user_name
+        current_user.user_name = form.user_name.data   
         current_user.gender = form.gender.data
         current_user.bio = form.bio.data or None
 
@@ -620,7 +610,7 @@ def profile_edit():
         return redirect(url_for("profile"))
     
     if request.method == "GET":
-        form.user_name.data = current_user.user_name   # ✅
+        form.user_name.data = current_user.user_name  
         form.gender.data = current_user.gender
         form.bio.data = current_user.bio
 
@@ -877,7 +867,70 @@ def logout():
     flash("Logged out successfully.")
     return redirect(url_for("home"))
 
-# RUN APP
+
+
+# Admin dashboard
+@app.route("/admin/dashboard")
+@login_required
+def admin_dashboard():
+
+    users = User.query.all()
+    posts = Posts.query.all()
+    join_requests = JoinActivity.query.all()
+
+    return render_template(
+        "admin_dashboard.html",
+        users=users,
+        posts=posts,
+        join_requests=join_requests
+    )
+
+
+# admin promote user
+@app.route("/admin/promote_user/<string:user_email>", methods=["POST"])
+@login_required
+def promote_user(user_email):
+    if current_user.role != "admin":
+        abort(403)
+
+    user = User.query.get_or_404(user_email)
+    user.role = "admin"  # promote to admin
+    db.session.commit()
+    flash(f"{user.user_name} has been promoted to admin.", "success")
+    return redirect(url_for("admin_dashboard"))
+
+
+
+# admin delete user
+@app.route("/admin/delete_user/<string:user_email>", methods=["POST", "GET"])
+@login_required
+def delete_user(user_email):
+    if current_user.role != "admin":
+        abort(403)
+    user = User.query.get_or_404(user_email)
+    db.session.delete(user)
+    db.session.commit()
+    flash("User deleted.", "success")
+    return redirect(url_for("admin_dashboard"))
+
+
+# admin reports
+@app.route("/admin/reports")
+@login_required
+def admin_reports():
+    
+    users = User.query.all()
+    posts = Posts.query.all()
+    join_requests = JoinActivity.query.all()  
+
+    return render_template(
+        "admin_reports.html",
+        users=users,
+        posts=posts,
+        join_requests=join_requests
+    )
+
+# Run app
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()

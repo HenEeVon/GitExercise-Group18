@@ -2,62 +2,65 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-        <title>{% block title %}My App{% endblock %}</title>
-    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
+    <title>{% block title %}My App{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
 </head>
 <body>
     <header>
         <div class="navbar-container">
-            <a class="header-logo" href="{{ url_for('home') }}"><span>EbFit</span></a>
+            <!-- Logo always visible -->
+            <a class="header-logo" href="{{ url_for('home') }}"><span>ebFit</span></a>
 
-            <div class="navbar-search">
-                <details>
-                    <summary class="search-toggle">Search</summary>
-                    <form method="GET" action="{{ url_for('search') }}">
-                        <input type="text" name="sport" placeholder="Search by category..."
-                            value="{{ request.args.get('sport','')}}">
-                        <input type="date" name="date" value="{{ request.args.get('date','') }}">
-                        <button type="submit" class="search-btn">Search</button>
-                    </form>
-                </details>
-            </div>
+            <!-- Right side: nav links + search -->
+            <div class="nav-right">
+
+                <!-- Search bar -->
+                <div class="navbar-search">
+                    <details>
+                        <summary class="search-toggle">Search</summary>
+                        <form method="GET" action="{{ url_for('search') }}">
+                            <input type="text" name="sport" placeholder="Search by category..."
+                                value="{{ request.args.get('sport','') }}">
+                            <input type="date" name="date" value="{{ request.args.get('date','') }}">
+                            <button type="submit" class="search-btn">Search</button>
+                        </form>
+                    </details>
+                </div>
 
 
-            {% if current_user.is_authenticated %}
-                {% if current_user.role == "admin" %}
-                    <nav class="nav-item">
-                        <a href="{{ url_for('posts') }}">Posts</a>
-                        <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
-                        <a href="{{ url_for('users') }}">Users</a>
-                        <a href="{{ url_for('admin_dashboard') }}">Admin&nbsp;Approved</a>
-                        <a href="{{ url_for('logout') }}">Log&nbsp;Out</a>
-                    </nav>
-                {% else %}
-                    <nav class="nav-item">
-
-                        <a href="{{ url_for('logout') }}" class="nav-item">Log&nbsp;Out</a>
-                    </nav>
+                <!-- Show navbar only if logged in -->
+                {% if current_user.is_authenticated %}
+                    {% if current_user.role == "admin" %}
+                        <nav class="nav-item">
+                            <a href="{{ url_for('posts') }}">Posts</a>
+                            <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                            <a href="{{ url_for('users') }}">Users</a>
+                            <a href="{{ url_for('admin_dashboard') }}">Admin Approved</a>
+                            <a href="{{ url_for('logout') }}">Log Out</a>
+                        </nav>
+                    {% else %}
+                        <nav class="nav-item">
+                            <a href="{{ url_for('posts') }}">Posts</a>
+                            <a href="{{ url_for('notifications') }}">Notifications</a>
+                            <a href="{{ url_for('profile') }}">My Profile</a>
+                            <a href="{{ url_for('logout') }}">Log Out</a>
+                        </nav>
+                    {% endif %}
                 {% endif %}
-            {% else %}
-                <nav class="nav-item">
-                    <a href="{{ url_for('home') }}" >Home</a>
-                    <a href="{{ url_for('login') }}" >Log&nbsp;In</a>
-                    <a href="{{ url_for('register') }}" >Register</a>
-                </nav>
-            {% endif %}
+
+            </div>
         </div>
-    
     </header>
 
     <main>
         {% block content %}{% endblock %}
     </main>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" 
-            integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" 
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+            integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
             crossorigin="anonymous">
     </script>
     {% block page_scripts %}{% endblock %}
 </body>
 </html>
-
