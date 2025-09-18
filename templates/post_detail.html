@@ -23,6 +23,7 @@
 
     <!-- Posted date and author -->
     <p class="meta">
+        <i class="fa-solid fa-calendar"></i>
         Posted on:
         {{ post.local_date_posted_value.strftime('%d/%m/%Y %H:%M') if post.local_date_posted_value else '' }}
         by {{ post.user.user_name }}
@@ -30,12 +31,16 @@
 
     <!-- Post content -->
     <div class="content">
-        <p>{{ post.content }}</p>
+        <p>Content: {{ post.content }}</p>
     </div>
 
     <!-- Post status and participants -->
     <p>Status: {{ post.post_status }}</p>
-    <p>Required Participants: {{ post.participants }}</p>
+    
+    <p>
+        <i class="fa-solid fa-person"></i>
+        Required Participants: {{ post.participants }}
+    </p>
 
     <!-- Flash message popup -->
     {% with messages = get_flashed_messages() %}
