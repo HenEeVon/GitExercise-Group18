@@ -1,5 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
+{% block title %}Admin Approval{% endblock %}
+
+{% block content %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -61,4 +63,4 @@
         <p><a href="{{ url_for('logout') }}" class="logout-link">Logout</a></p>
     </div>
 </body>
-</html>
+{% endblock %}

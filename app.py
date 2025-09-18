@@ -35,7 +35,8 @@ login_manager.login_view = "login"
 
 # User database
 class User(UserMixin, db.Model):
-    __tablename__ = "users"
+    __tablename__ = "users"   
+
     user_email = db.Column(db.String(255), primary_key=True)
     user_name = db.Column(db.String(255), nullable=False)
     gender = db.Column(db.String(50), nullable=False)
@@ -46,56 +47,64 @@ class User(UserMixin, db.Model):
     image_file = db.Column(db.String(255), nullable=True, default="default.png")
     bio = db.Column(db.Text, nullable=True)
     role = db.Column(db.String(20), default="user") 
-    
+
+    posts = db.relationship("Posts", back_populates="user", lazy=True)
 
     def get_id(self):
         return self.user_email
 
+
 class Admin(db.Model):
-    __tablename__ = "admin"
-    admin_email =  db.Column(db.String(255), primary_key=True)
+    __tablename__ = "admins"   
+    admin_email = db.Column(db.String(255), primary_key=True)
     admin_name = db.Column(db.String(255), nullable=False)
     password = db.Column(db.String(255), nullable=False)
 
+
 class AdminRequest(db.Model):
-    __tablename__ = "admin_request"
-    approval_id = db.Column(db.Integer, primary_key=True)
+    __tablename__ = "admin_requests"  
+
+    approval_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     admin_email = db.Column(db.String(255), nullable=False)
     admin_name = db.Column(db.String(255), nullable=False)
     password = db.Column(db.String(255), nullable=False)
     join_reason = db.Column(db.Text, nullable=False)
-    approval = db.Column(db.String(20), default="pending")  # pending / approved / rejected
+    approval = db.Column(db.String(20), default="pending")  # values: pending / approved / rejected
+
 
 
 class Posts(db.Model):
     __tablename__ = "posts"
-    post_id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    location = db.Column(db.String(255), nullable=False)
 
+    post_id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    location = db.Column(db.String(100), nullable=False)
     event_date = db.Column(db.Date, nullable=False)
     start_time = db.Column(db.Time, nullable=False)
     end_time = db.Column(db.Time, nullable=False)
-
-    date_posted = db.Column(db.DateTime, default=datetime.utcnow)
+    date_posted = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     post_status = db.Column(db.String(20), default="open")
-    participants = db.Column(db.Integer, nullable=False, default=1)
+    participants = db.Column(db.Integer, nullable=False)
 
-    user_email = db.Column(db.String(255), db.ForeignKey("users.user_email"), nullable=False)
-    user = db.relationship("User", backref="posts")
+    # ✅ Foreign keys
+    user_email = db.Column(db.String, db.ForeignKey("users.user_email"), nullable=True)
+    admin_email = db.Column(db.String, db.ForeignKey("admins.admin_email"), nullable=True)
 
+    user = db.relationship("User", backref="user_posts", lazy=True, overlaps="posts")
+    admin = db.relationship("Admin", backref="admin_posts", lazy=True)
 
 
 class JoinActivity(db.Model):
     __tablename__ = "join_activities"
-    id = db.Column(db.Integer, primary_key=True)
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_email = db.Column(db.String(255), db.ForeignKey("users.user_email"), nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey("posts.post_id"), nullable=False)
     status = db.Column(db.String(20), default="pending")  # pending / accepted / rejected
 
-    user = db.relationship("User", backref="join_activities")
-    post = db.relationship("Posts", backref="join_activities")
+    user = db.relationship("User", backref="join_activities", lazy=True)
+    post = db.relationship("Posts", backref="join_activities", lazy=True)
 
 def load_locations():
     csv_path = os.path.join("instance", "locations.csv")
@@ -128,6 +137,7 @@ class ActivityForm(FlaskForm):
 
     participants = IntegerField("Required Participants", validators=[DataRequired(), NumberRange(min=1)])
     submit = SubmitField("Post")
+
 
 #Chat database
 class ChatMessage(db.Model):
@@ -314,13 +324,27 @@ def resetpass():
 @app.route("/index")
 def posts():
     posts = Posts.query.order_by(Posts.date_posted.desc()).all()
+
+    # Convert UTC to Malaysia timezone
     for post in posts:
         if post.date_posted:
             utc_time = pytz.utc.localize(post.date_posted)
             post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
         else:
             post.local_date_posted_value = None
-    return render_template("index.html", posts=posts)
+
+    # Detect logged-in account (user or admin)
+    current_admin = None
+    if session.get("admin_email"):
+        current_admin = Admin.query.get(session.get("admin_email"))
+
+    return render_template(
+        "index.html",
+        posts=posts,
+        admin=current_admin,   # Pass admin if logged in
+        user=current_user if current_user.is_authenticated else None
+    )
+
 
 
 # Search feature
@@ -330,7 +354,7 @@ def search():
     dateinpost = (request.args.get("date") or "").strip()
 
     searched = False
-    query = Posts.query.join(User)
+    query = Posts.query  # don't force join with User (breaks for admin posts)
 
     # Filter by sport if provided
     if sport:
@@ -340,7 +364,7 @@ def search():
                 func.lower(Posts.title).like(f"%{sport}%"),
                 func.lower(Posts.content).like(f"%{sport}%"),
                 func.lower(Posts.location).like(f"%{sport}%"),
-                func.lower(User.user_name).like(f"%{sport}%")
+                func.lower(Posts.user_email).like(f"%{sport}%")  # match against email
             )
         )
 
@@ -364,14 +388,20 @@ def search():
         else:
             post.local_date_posted_value = None
 
+    # Detect if admin is logged in
+    current_admin = None
+    if session.get("admin_email"):
+        current_admin = Admin.query.get(session.get("admin_email"))
+
     return render_template(
-        "index.html",  # keep your interface the same
+        "index.html",
         posts=results,
         searched=searched,
         sport=sport,
-        date=dateinpost
+        date=dateinpost,
+        admin=current_admin,
+        user=current_user if current_user.is_authenticated else None
     )
-
 
 
 # Error page
@@ -380,44 +410,73 @@ def page_not_found(e):
     return render_template("404.html"), 404
 
 
+
 # Create post form
-@app.route('/create', methods=['GET', 'POST'])
-@login_required
+@app.route("/create", methods=["GET", "POST"])
 def create():
+    if not current_user.is_authenticated and not session.get("admin_email"):
+        flash("You need to log in first!", "danger")
+        return redirect(url_for("login"))  # user login page
+    
     form = ActivityForm()
-    
-    # Force reload of locations for this form instance
-    form.location.choices = load_locations()
-    
+
     if form.validate_on_submit():
-        # Process form data
-        new_post = Posts(
-            title=form.title.data,
-            content=form.content.data,
-            location=form.location.data,
-            event_date=form.event_date.data,   
-            start_time=form.start_time.data,  
-            end_time=form.end_time.data,       
-            participants=form.participants.data,
-            user_email=current_user.user_email,
-        )
+        if current_user.is_authenticated:
+            # ✅ Regular user creating post
+            new_post = Posts(
+                title=form.title.data,
+                content=form.content.data,
+                location=form.location.data,
+                event_date=form.event_date.data,
+                start_time=form.start_time.data,
+                end_time=form.end_time.data,
+                participants=form.participants.data,
+                user_email=current_user.user_email
+            )
+        elif session.get("admin_email"):
+            # ✅ Admin creating post
+            new_post = Posts(
+                title=form.title.data,
+                content=form.content.data,
+                location=form.location.data,
+                event_date=form.event_date.data,
+                start_time=form.start_time.data,
+                end_time=form.end_time.data,
+                participants=form.participants.data,
+                admin_email=session["admin_email"]
+            )
+
         db.session.add(new_post)
         db.session.commit()
         flash("Post created successfully!", "success")
-        return redirect(url_for("posts"))  
+        return redirect(url_for("posts"))
 
     return render_template("create.html", form=form)
 
 
-
-
 # Edit post
 @app.route("/edit/<int:post_id>", methods=["GET", "POST"])
-@login_required
 def edit_post(post_id):
+    if not current_user.is_authenticated and not session.get("admin_email"):
+        flash("You must log in first.")
+        return redirect(url_for("login"))
+
     post = Posts.query.get_or_404(post_id)
     form = ActivityForm()
 
+    # ✅ Permission check (user OR admin)
+    if current_user.is_authenticated:
+        is_author = (post.user_email == current_user.user_email)
+    elif session.get("admin_email"):
+        is_author = (post.admin_email == session["admin_email"])
+    else:
+        is_author = False
+
+    if not is_author:
+        flash("You don't have permission to edit this post.", "danger")
+        return redirect(url_for("posts"))
+
+    # Handle form submit
     if form.validate_on_submit():
         post.title = form.title.data
         post.content = form.content.data
@@ -431,7 +490,6 @@ def edit_post(post_id):
         flash("Post has been updated!", "info")
         return redirect(url_for("post_detail", post_id=post.post_id))
 
-    # Pre-fill form (only if GET or form not valid)
     if request.method == "GET":
         form.title.data = post.title
         form.content.data = post.content
@@ -441,21 +499,37 @@ def edit_post(post_id):
         form.end_time.data = post.end_time
         form.participants.data = post.participants
 
-    # ✅ Always return something here
     return render_template("edit_post.html", form=form, post=post)
-
 
 
 
 # Delete post
 @app.route("/delete/<int:post_id>", methods=["POST"])
-@login_required
 def delete(post_id):
+    if not current_user.is_authenticated and not session.get("admin_email"):
+        flash("You must log in first.")
+        return redirect(url_for("login"))
+
     post = Posts.query.get_or_404(post_id)
+
+    # ✅ Permission check (user OR admin)
+    if current_user.is_authenticated:
+        is_author = (post.user_email == current_user.user_email)
+    elif session.get("admin_email"):
+        is_author = (post.admin_email == session["admin_email"])
+    else:
+        is_author = False
+
+    if not is_author:
+        flash("You don't have permission to delete this post.", "danger")
+        return redirect(url_for("posts"))
+
     db.session.delete(post)
     db.session.commit()
     flash("Post deleted successfully!", "danger")
     return redirect(url_for("posts"))
+
+
 
 # Post detail
 @app.route("/post/<int:post_id>")
@@ -471,16 +545,30 @@ def post_detail(post_id):
     join_activities = JoinActivity.query.filter_by(post_id=post.post_id).all()
 
     owner_conversations = []
-    if current_user.is_authenticated and current_user.user_email.lower() == post.user_email.lower():
-        partners = db.session.query(ChatMessage.sender_email).filter_by(post_id=post.post_id).distinct()
-        for (email,) in partners:
-            if email.lower() != post.user_email.lower():
-                user = User.query.get(email)
-                owner_conversations.append({"email": email, "name":user.user_name if user else email})
+    owner_email = post.user_email or post.admin_email  # ✅ pick whichever exists
 
-    return render_template("post_detail.html", post=post, join_activities=join_activities, owner_conversations=owner_conversations)
+    if current_user.is_authenticated and current_user.user_email and owner_email:
+        if current_user.user_email.lower() == owner_email.lower():
+            partners = (
+                db.session.query(ChatMessage.sender_email)
+                .filter_by(post_id=post.post_id)
+                .distinct()
+            )
+            for (email,) in partners:
+                if email.lower() != owner_email.lower():
+                    user = User.query.get(email)
+                    owner_conversations.append(
+                        {"email": email, "name": user.user_name if user else email}
+                    )
 
-#Chat feature
+    return render_template(
+        "post_detail.html",
+        post=post,
+        join_activities=join_activities,
+        owner_conversations=owner_conversations
+    )
+
+
 def conversation_key(a_email: str, b_email: str) -> str:
     return "|".join(sorted([a_email.lower(), b_email.lower()]))
 
@@ -488,54 +576,107 @@ def conversation_key(a_email: str, b_email: str) -> str:
 def chat_with_user(post_id, partner_email):
     post = Posts.query.get_or_404(post_id)
     owner_email = post.user_email.lower()
-    current_email = current_user.user_email.lower()
+
+    # Determine who is logged in (user OR admin)
+    if current_user.is_authenticated:
+        current_email = current_user.user_email.lower()
+        current_name = current_user.user_name
+    elif session.get("admin_email"):
+        current_email = session.get("admin_email").lower()
+        admin_obj = Admin.query.get(session.get("admin_email"))
+        current_name = admin_obj.admin_name if admin_obj else "Admin"
+    else:
+        flash("You must log in to chat.")
+        return redirect(url_for("login"))
+
     partner_email = partner_email.lower()
 
+    # Prevent outsiders from chatting
     if current_email != owner_email and partner_email != owner_email:
         return redirect(url_for("chat_with_user", post_id=post_id, partner_email=owner_email))
 
     conv = conversation_key(current_email, partner_email)
     room = f"post-{post_id}-{conv}"
 
-    messages = (ChatMessage.query.filter_by(post_id=post_id, conversation=conv).order_by(asc(ChatMessage.created_at)).all())
+    messages = (
+        ChatMessage.query.filter_by(post_id=post_id, conversation=conv)
+        .order_by(asc(ChatMessage.created_at))
+        .all()
+    )
 
+    # Partner display name
     partner_user = User.query.get(partner_email)
     partner_name = partner_user.user_name if partner_user else partner_email
 
-    if current_email == owner_email:
-        header_name = partner_name
-    else:
-        header_name = post.user.user_name
+    # Show correct chat header
+    header_name = partner_name if current_email == owner_email else post.user.user_name
 
-    return render_template("chat.html",post=post, room=room, username=current_user.user_name,header_name=header_name, 
-                           messages=messages, post_id=post_id, partner_email=partner_email)
+    return render_template(
+        "chat.html",
+        post=post,
+        room=room,
+        username=current_name,
+        header_name=header_name,
+        messages=messages,
+        post_id=post_id,
+        partner_email=partner_email,
+    )
 
 @socketio.on("join")
 def on_join(data):
     room = data.get("room")
+
+    # Identify sender
+    if current_user.is_authenticated:
+        name = current_user.user_name
+        email = current_user.user_email
+    elif session.get("admin_email"):
+        email = session.get("admin_email")
+        admin_obj = Admin.query.get(email)
+        name = admin_obj.admin_name if admin_obj else "Admin"
+    else:
+        return  # No one logged in, ignore
+
     if room:
-        print("JOIN ->", current_user.user_email, "to", room)
-    join_room(room)
-    send(f"{current_user.user_name} joined the chat.", to=room)
+        print("JOIN ->", email, "to", room)
+        join_room(room)
+        send(f"{name} joined the chat.", to=room)
 
 @socketio.on("send_message")
 def on_send_message(data):
     room = (data or {}).get("room")
     text = ((data or {}).get("message") or "").strip()
     post_id = (data or {}).get("post_id")
-    partner = ((data or {}).get("partner_email")or "").lower().strip()
+    partner = ((data or {}).get("partner_email") or "").lower().strip()
 
     if not (room and text and post_id and partner):
         return
 
-    current_email = current_user.user_email.lower()
-    conv = conversation_key(current_email,partner)
+    # Identify sender (user OR admin)
+    if current_user.is_authenticated:
+        current_email = current_user.user_email.lower()
+        current_name = current_user.user_name
+    elif session.get("admin_email"):
+        current_email = session.get("admin_email").lower()
+        admin_obj = Admin.query.get(session.get("admin_email"))
+        current_name = admin_obj.admin_name if admin_obj else "Admin"
+    else:
+        return  # No sender, ignore
 
-    msg = ChatMessage(post_id=int(post_id), conversation=conv, sender_email=current_user.user_email, sender_name=current_user.user_name, text=text)
+    conv = conversation_key(current_email, partner)
+
+    msg = ChatMessage(
+        post_id=int(post_id),
+        conversation=conv,
+        sender_email=current_email,
+        sender_name=current_name,
+        text=text,
+    )
     db.session.add(msg)
     db.session.commit()
 
     send({"user": msg.sender_name, "text": msg.text}, to=room)
+
 
 # Notifications
 @app.route("/notifications")
@@ -623,7 +764,6 @@ def save_picture(form_picture):
 
 # Join Activity
 @app.route("/activityrequest/<int:post_id>", methods=["POST"])
-@login_required
 def activityrequest(post_id):
     post = Posts.query.get_or_404(post_id)
 
@@ -631,15 +771,27 @@ def activityrequest(post_id):
         flash("This activity is already closed.")
         return redirect(url_for("post_detail", post_id=post.post_id))
 
-    # Prevent duplicate request
-    existing = JoinActivity.query.filter_by(user_email=current_user.user_email, post_id=post.post_id).first()
-    if existing:
-        flash("You already requested this activity. Please wait for the post owner to approve")
+    # Determine if user OR admin is logged in
+    if current_user.is_authenticated:
+        requester_email = current_user.user_email
+        requester_name = current_user.user_name
+    elif session.get("admin_email"):
+        requester_email = session.get("admin_email")
+        admin_obj = Admin.query.get(requester_email)
+        requester_name = admin_obj.admin_name if admin_obj else "Admin"
     else:
-        join_act = JoinActivity(user_email=current_user.user_email, post_id=post.post_id)
+        flash("You must log in first.")
+        return redirect(url_for("login"))
+
+    # Prevent duplicate request
+    existing = JoinActivity.query.filter_by(user_email=requester_email, post_id=post.post_id).first()
+    if existing:
+        flash("You already requested this activity. Please wait for the post owner to approve.")
+    else:
+        join_act = JoinActivity(user_email=requester_email, post_id=post.post_id)
         db.session.add(join_act)
         db.session.commit()
-        flash("Your request has been sent to the post owner.")
+        flash(f"Your request has been sent to the post owner ({requester_name}).")
 
     return redirect(url_for("post_detail", post_id=post.post_id))
 
@@ -753,7 +905,7 @@ def request_admin():
 
 
 # HANDLE REQUEST (any logged-in admin can approve/reject)
-@app.route("/handle-request/<int:approval_id>", methods=["GET", "POST"])
+@app.route("/handle-admin-request/<int:approval_id>", methods=["GET", "POST"])
 def handle_request_admin(approval_id):
     if "admin_email" not in session:
         flash("You must log in first.")
@@ -920,6 +1072,16 @@ def admin_reports():
         posts=posts,
         join_requests=join_requests
     )
+
+
+@app.context_processor
+def inject_admin():
+    email = session.get("admin_email")
+    if email:
+        current_admin = Admin.query.get(email)
+        return dict(admin=current_admin)
+    return dict(admin=None)
+
 
 # Run app
 if __name__ == "__main__":

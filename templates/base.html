@@ -21,32 +21,41 @@
                         <summary class="search-toggle">Search</summary>
                         <form method="GET" action="{{ url_for('search') }}">
                             <input type="text" name="sport" placeholder="Search by category..."
-                                value="{{ request.args.get('sport','') }}">
+                                   value="{{ request.args.get('sport','') }}">
                             <input type="date" name="date" value="{{ request.args.get('date','') }}">
                             <button type="submit" class="search-btn">Search</button>
                         </form>
                     </details>
                 </div>
 
+                <!-- Navbar links -->
+                {% if admin %}
+                    <!-- Admin is logged in -->
+                    <nav class="nav-item">
+                        <a href="{{ url_for('posts') }}">Posts</a>
+                        <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                        <a href="{{ url_for('admin_reports') }}">Reports</a>
+                        <a href="{{ url_for('admin_approval') }}">Admin Approvals</a>
+                        <a href="{{ url_for('profile') }}">My Profile</a>
+                        <a href="{{ url_for('logout') }}">Log Out</a>
+                    </nav>
 
-                <!-- Show navbar only if logged in -->
-                {% if current_user.is_authenticated %}
-                    {% if current_user.role == "admin" %}
-                        <nav class="nav-item">
-                            <a href="{{ url_for('posts') }}">Posts</a>
-                            <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
-                            <a href="{{ url_for('users') }}">Users</a>
-                            <a href="{{ url_for('admin_dashboard') }}">Admin Approved</a>
-                            <a href="{{ url_for('logout') }}">Log Out</a>
-                        </nav>
-                    {% else %}
-                        <nav class="nav-item">
-                            <a href="{{ url_for('posts') }}">Posts</a>
-                            <a href="{{ url_for('notifications') }}">Notifications</a>
-                            <a href="{{ url_for('profile') }}">My Profile</a>
-                            <a href="{{ url_for('logout') }}">Log Out</a>
-                        </nav>
-                    {% endif %}
+                {% elif current_user.is_authenticated %}
+                    <!-- Regular user is logged in -->
+                    <nav class="nav-item">
+                        <a href="{{ url_for('posts') }}">Posts</a>
+                        <a href="{{ url_for('notifications') }}">Notifications</a>
+                        <a href="{{ url_for('profile') }}">My Profile</a>
+                        <a href="{{ url_for('logout') }}">Log Out</a>
+                    </nav>
+
+                {% else %}
+                    <!-- Guest user -->
+                    <nav class="nav-item">
+                        <a href="{{ url_for('login') }}">Login</a>
+                        <a href="{{ url_for('register') }}">Register</a>
+                        <a href="{{ url_for('login_admin') }}">Admin Login</a>
+                    </nav>
                 {% endif %}
 
             </div>

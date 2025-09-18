@@ -2,48 +2,89 @@
 {% block title %}Admin Dashboard{% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="admin-dashboard container">
     <h1>Admin Dashboard</h1>
+    
+    {% if admin %}
+        <p class="logged-in">Logged in as: <strong>{{ admin.admin_email }}</strong></p>
+    {% endif %}
 
-    <br>
-    <h2>Overview</h2>
-    <ul>
-        <li>Total Users: {{ users|length }}</li>
-        <li>Total Posts: {{ posts|length }}</li>
-        <li>Pending Join Requests: {{ join_requests|selectattr('status', 'equalto', 'pending')|list|length }}</li>
-    </ul>
+    <!-- Overview Cards -->
+    <div class="overview-cards">
+        <div class="card">
+            <h3>Total Users</h3>
+            <p>{{ users|length }}</p>
+        </div>
+        <div class="card">
+            <h3>Total Posts</h3>
+            <p>{{ posts|length }}</p>
+        </div>
+        <div class="card">
+            <h3>Pending Join Requests</h3>
+            <p>{{ join_requests|selectattr('status', 'equalto', 'pending')|list|length }}</p>
+        </div>
+    </div>
 
-    <h2>User Management</h2>
-    <table border="1" cellpadding="5">
-        <tr>
-            <th>Email</th>
-            <th>Name</th>
-            <th>Role</th>
-            <th>Actions</th>
-        </tr>
-        {% for user in users %}
-        <tr>
-            <td>{{ user.user_email }}</td>
-            <td>{{ user.user_name }}</td>
-            <td>{{ user.role }}</td>
-            <td>
-                <a href="{{ url_for('delete_user', user_email=user.user_email) }}" class="btn delete-btn">Delete</a>
-                {% if user.role != "admin" %}
-                    <a href="{{ url_for('promote_user', user_email=user.user_email) }}" class="btn">Promote to Admin</a>
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
+    <!-- User Management Table -->
+    <h3>User Management</h3>
+    <div class="table-wrapper">
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.user_email }}</td>
+                    <td>{{ user.user_name }}</td>
+                    <td>{{ user.role }}</td>
+                    <td class="action-buttons">
+                        <a href="{{ url_for('delete_user', user_email=user.user_email) }}" class="delete-btn">Delete</a>
+                        {% if user.role != "admin" %}
+                            <a href="{{ url_for('promote_user', user_email=user.user_email) }}" class="promote-btn">Promote</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-    <h2>Posts Management</h2>
-    <ul>
-        {% for post in posts %}
-        <li>
-            {{ post.title }} ({{ post.post_status }}) by {{ post.user_email }}
-            <a href="{{ url_for('delete', post_id=post.post_id) }}" class="btn delete-btn">Delete</a>
-        </li>
-        {% endfor %}
-    </ul>
+    <!-- Posts Management Table -->
+    <h3>Posts Management</h3>
+    <div class="table-wrapper">
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Author</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for post in posts %}
+                <tr>
+                    <td>{{ post.title }}</td>
+                    <td>{{ post.post_status }}</td>
+                    <td>
+                        {% if post.user %} {{ post.user.user_name }}
+                        {% elif post.admin %} {{ post.admin.admin_name }} (Admin) {% endif %}
+                    </td>
+                    <td class="action-buttons">
+                        <a href="{{ url_for('post_detail', post_id=post.post_id, readonly=1) }}" class="btn btn-info">View</a>
+
+                        <a href="{{ url_for('delete', post_id=post.post_id) }}" class="delete-btn">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}
