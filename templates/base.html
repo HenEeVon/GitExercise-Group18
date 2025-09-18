@@ -10,37 +10,46 @@
     <header>
         <div class="navbar-container">
             <!-- Logo always visible -->
-            <a class="header-logo" href="{{ url_for('home') }}"><span>EbFit</span></a>
+            <a class="header-logo" href="{{ url_for('home') }}"><span>ebFit</span></a>
 
-            <!-- Search bar always visible -->
-            <div class="navbar-search">
-                <details>
-                    <summary class="search-toggle">Search</summary>
-                    <form method="GET" action="{{ url_for('search') }}">
-                        <input type="text" name="sport" placeholder="Search by category..."
-                               value="{{ request.args.get('sport','') }}">
-                        <input type="date" name="date" value="{{ request.args.get('date','') }}">
-                        <button type="submit" class="search-btn">Search</button>
-                    </form>
-                </details>
-            </div>
+            <!-- Right side: nav links + search -->
+            <div class="nav-right">
 
-            <!-- Show navbar only if logged in -->
-            {% if current_user.is_authenticated %}
-                {% if current_user.role == "admin" %}
-                    <nav class="nav-item">
-                        <a href="{{ url_for('posts') }}">Posts</a>
-                        <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
-                        <a href="{{ url_for('users') }}">Users</a>
-                        <a href="{{ url_for('admin_dashboard') }}">Admin&nbsp;Approved</a>
-                        <a href="{{ url_for('logout') }}">Log&nbsp;Out</a>
-                    </nav>
-                {% else %}
-                    <nav class="nav-item">
-                        <a href="{{ url_for('logout') }}">Log&nbsp;Out</a>
-                    </nav>
+                <!-- Search bar -->
+                <div class="navbar-search">
+                    <details>
+                        <summary class="search-toggle">Search</summary>
+                        <form method="GET" action="{{ url_for('search') }}">
+                            <input type="text" name="sport" placeholder="Search by category..."
+                                value="{{ request.args.get('sport','') }}">
+                            <input type="date" name="date" value="{{ request.args.get('date','') }}">
+                            <button type="submit" class="search-btn">Search</button>
+                        </form>
+                    </details>
+                </div>
+
+
+                <!-- Show navbar only if logged in -->
+                {% if current_user.is_authenticated %}
+                    {% if current_user.role == "admin" %}
+                        <nav class="nav-item">
+                            <a href="{{ url_for('posts') }}">Posts</a>
+                            <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                            <a href="{{ url_for('users') }}">Users</a>
+                            <a href="{{ url_for('admin_dashboard') }}">Admin Approved</a>
+                            <a href="{{ url_for('logout') }}">Log Out</a>
+                        </nav>
+                    {% else %}
+                        <nav class="nav-item">
+                            <a href="{{ url_for('posts') }}">Posts</a>
+                            <a href="{{ url_for('notifications') }}">Notifications</a>
+                            <a href="{{ url_for('profile') }}">My Profile</a>
+                            <a href="{{ url_for('logout') }}">Log Out</a>
+                        </nav>
+                    {% endif %}
                 {% endif %}
-            {% endif %}
+
+            </div>
         </div>
     </header>
 
