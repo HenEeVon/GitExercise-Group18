@@ -710,7 +710,7 @@ def login_admin():
         if check_password_hash(admin_instance.password, password):
             session["admin_email"] = admin_instance.admin_email
             flash(f"Welcome {admin_instance.admin_name}!")
-            return redirect(url_for("admin_approval"))
+            return redirect(url_for("admin_dashboard"))
         else:
             flash("Password incorrect.")
 
@@ -821,42 +821,72 @@ def logout():
 
 # Admin dashboard
 @app.route("/admin/dashboard")
-@login_required
 def admin_dashboard():
+    # Check if admin is logged in via session
+    email = session.get("admin_email")
+    if not email:
+        flash("You must log in first.")
+        return redirect(url_for("login_admin"))
 
+    current_admin = Admin.query.get(email)
+    if not current_admin:
+        session.clear()
+        flash("Session expired. Please log in again.")
+        return redirect(url_for("login_admin"))
+
+    # Now fetch dashboard data
     users = User.query.all()
     posts = Posts.query.all()
     join_requests = JoinActivity.query.all()
 
     return render_template(
         "admin_dashboard.html",
+        admin=current_admin,
         users=users,
         posts=posts,
         join_requests=join_requests
     )
 
 
-# admin promote user
+# Admin promote user
 @app.route("/admin/promote_user/<string:user_email>", methods=["POST"])
-@login_required
 def promote_user(user_email):
-    if current_user.role != "admin":
-        abort(403)
+    # Check if admin is logged in via session
+    email = session.get("admin_email")
+    if not email:
+        flash("You must log in first.")
+        return redirect(url_for("login_admin"))
 
+    current_admin = Admin.query.get(email)
+    if not current_admin:
+        session.clear()
+        flash("Session expired. Please log in again.")
+        return redirect(url_for("login_admin"))
+
+    # Promote the user
     user = User.query.get_or_404(user_email)
-    user.role = "admin"  # promote to admin
+    user.role = "admin"
     db.session.commit()
     flash(f"{user.user_name} has been promoted to admin.", "success")
     return redirect(url_for("admin_dashboard"))
 
 
 
-# admin delete user
+# Admin delete user
 @app.route("/admin/delete_user/<string:user_email>", methods=["POST", "GET"])
-@login_required
 def delete_user(user_email):
-    if current_user.role != "admin":
-        abort(403)
+    # Check if admin is logged in via session
+    email = session.get("admin_email")
+    if not email:
+        flash("You must log in first.")
+        return redirect(url_for("login_admin"))
+
+    current_admin = Admin.query.get(email)
+    if not current_admin:
+        session.clear()
+        flash("Session expired. Please log in again.")
+        return redirect(url_for("login_admin"))
+
     user = User.query.get_or_404(user_email)
     db.session.delete(user)
     db.session.commit()
@@ -864,17 +894,28 @@ def delete_user(user_email):
     return redirect(url_for("admin_dashboard"))
 
 
-# admin reports
+# Admin reports
 @app.route("/admin/reports")
-@login_required
 def admin_reports():
-    
+    # Check if admin is logged in via session
+    email = session.get("admin_email")
+    if not email:
+        flash("You must log in first.")
+        return redirect(url_for("login_admin"))
+
+    current_admin = Admin.query.get(email)
+    if not current_admin:
+        session.clear()
+        flash("Session expired. Please log in again.")
+        return redirect(url_for("login_admin"))
+
     users = User.query.all()
     posts = Posts.query.all()
-    join_requests = JoinActivity.query.all()  
+    join_requests = JoinActivity.query.all()
 
     return render_template(
         "admin_reports.html",
+        admin=current_admin,
         users=users,
         posts=posts,
         join_requests=join_requests
