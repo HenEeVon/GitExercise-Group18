@@ -8,61 +8,63 @@
     <title>Admin Login</title>
 </head>
 
-<body class="admin">
+<body class="admin login-page">
     <div class="page-container">
+        <!-- Navigation Bar -->
         <header>
-            <a class="header-logo"><span>EbFit</span></a>
-            <nav class="nav-item">
-                <a href="{{ url_for('login_admin') }}" class="nav-item lines">Log&nbsp;In</a>
-                <a href="{{ url_for('request_admin') }}" class="nav-item">Request&nbsp;admin</a>
-            </nav>
+            <a class="header-logo"><span>ebFit</span></a>
         </header>
     </div>
+
     <div id="popup"></div>
     <div id="page" class="site">
         <div class="container2">
             <div class="login">
+                <!-- Left side hero -->
                 <div class="hero">
-                    <h1>Welcome <br>Admin</h1>
+                    <h1>Welcome <br>Admin.</h1>
                     <p>
                         Want to become admin?<br>
                         <a href="{{ url_for('request_admin') }}">Request to Join Here</a>.
                     </p>
                 </div>
 
+                <!-- Right side login form -->
                 <div class="main">
-                    {% with messages = get_flashed_messages() %}
-                    {% if messages %}
-                    {% for message in messages %}
-                    <div class="popup">
-                        <div class="popup-content">
-                            <p>{{ message }}</p>
-                            <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                    <div class="login-box">
+                        {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                        {% for message in messages %}
+                        <div class="popup">
+                            <div class="popup-content">
+                                <p>{{ message }}</p>
+                                <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                            </div>
                         </div>
+                        {% endfor %}
+                        {% endif %}
+                        {% endwith %}
+
+                        <form action="{{ url_for('login_admin') }}" method="POST">
+                            <h2 class="form-title">Admin Login</h2>
+
+                            <p class="colortext">
+                                <span><strong>Email address</strong></span>
+                                <input type="email" name="admin_email" required>
+                            </p>
+
+                            <p class="password">
+                                <span><strong>Password</strong></span>
+                                <input type="password" name="password" required>
+                            </p>
+
+                            <div class="btn-group">
+                                <input type="submit" class="big-cta-btn" value="Log In">
+                            </div>
+                        </form>
                     </div>
-                    {% endfor %}
-                    {% endif %}
-                    {% endwith %}
-
-                    <form action="{{ url_for('login_admin') }}" method="POST">
-                        <h2 class="form-title">Admin Login:</h2>
-
-                        <p class="colortext">
-                            <span><strong>Email address:</strong></span>
-                            <input type="email" name="admin_email" required>
-                        </p>
-
-                        <p class="password">
-                            <span><strong>Password:</strong></span>
-                            <input type="password" name="password" required>
-                        </p>
-
-                        <p>
-                            <input type="submit" class="submit" value="Login">
-                        </p>
-                    </form>
-
                 </div>
+
             </div>
         </div>
     </div>

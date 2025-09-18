@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Review Admin Request</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Admin Dashboard</h1>
+    <h1>Review Admin Request</h1>
 
     <!-- Flash messages -->
     {% with messages = get_flashed_messages() %}
@@ -20,28 +20,21 @@
         {% endif %}
     {% endwith %}
 
-    <!-- Show logged in admin -->
-    <p>Logged in as: <strong>{{ session['admin_email'] }}</strong> ({{ session['role'] }})</p>
+    <!-- Logged in admin -->
+    <p>Logged in as: <strong>{{ session['admin_email'] }}</strong></p>
 
-    <h2>Pending Requests</h2>
-    {% if requests %}
-        <table border="1" cellpadding="5">
-            <tr>
-                <th>ID</th>
-                <th>Email</th>
-                <th>Name</th>
-                <th>Reason</th>
-                <th>Action</th>
-            </tr>
-            {% for r in requests %}
-                <tr>
-                    <td>{{ r.approval_id }}</td>
-                    <td>{{ r.admin_email }}</td>
-                    <td>{{ r.admin_name }}</td>
-                    <td>{{ r.join_reason }}</td>
-                    <td>
-                        <!-- Approve form -->
-                        <form method="POST" action="{{ url_for('approval_admin', approval_id=r.approval_id) }}" style="display:inline;">
-                            <input type="hidden" name="decision" value="accept">
-                            <select name="role">
-                                <option value="admin">Admin<
+    <!-- Request details -->
+    <h2>Request Details</h2>
+    <p><strong>Email:</strong> {{ request.admin_email }}</p>
+    <p><strong>Name:</strong> {{ request.admin_name }}</p>
+    <p><strong>Reason:</strong> {{ request.join_reason }}</p>
+
+    <!-- Approval / Rejection form -->
+    <form method="POST" action="{{ url_for('handle_request_admin', approval_id=request.approval_id) }}">
+        <button type="submit" name="decision" value="accept">Approve</button>
+        <button type="submit" name="decision" value="reject">Reject</button>
+    </form>
+
+    <p><a href="{{ url_for('admin_approval') }}">Back to Pending Requests</a></p>
+</body>
+</html>

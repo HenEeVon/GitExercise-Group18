@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Approval</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="admin">
+    <div class="container2">
+        <h1>Welcome, {{ admin.admin_name }}</h1>
+        <p>Logged in as: <strong>{{ admin.admin_email }}</strong></p>
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="popup">
+                        <div class="popup-content">
+                            <p>{{ message }}</p>
+                                <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h2>Pending Admin Requests</h2>
+        {% if requests %}
+            <table class="requests-table">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Name</th>
+                        <th>Reason</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                    <tr>
+                        <td>{{ req.admin_email }}</td>
+                        <td>{{ req.admin_name }}</td>
+                        <td>{{ req.join_reason }}</td>
+                        <td>
+                            <form action="{{ url_for('handle_request_admin', approval_id=req.approval_id) }}" method="POST" style="display:inline;">
+                                <button type="submit" name="decision" value="accept" class="approve-btn">Approve</button>
+                            </form>
+                            <form action="{{ url_for('handle_request_admin', approval_id=req.approval_id) }}" method="POST" style="display:inline;">
+                                <button type="submit" name="decision" value="reject" class="reject-btn">Reject</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No pending requests.</p>
+        {% endif %}
+
+        <p><a href="{{ url_for('logout') }}" class="logout-link">Logout</a></p>
+    </div>
+</body>
+</html>
