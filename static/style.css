@@ -77,6 +77,7 @@ input[type="submit"].post-btn:hover {
 .meta {
     color: #888;
     font-size: 0.9em;
+    line-height: 28px;
 }
 
 .join-btn {
@@ -1382,7 +1383,12 @@ html {
 .node1 { top: 15%; left: 50%; transform: translateX(-50%); }
 .node2 { bottom: 20%; right: 10%; }
 .node3 { bottom: 20%; left: 10%; }
-    
+
+#location-select {
+        max-height: 150px; /* limit dropdown height */
+        overflow-y: auto;  /* allow vertical scroll */
+    }
+
 /* Animations */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
