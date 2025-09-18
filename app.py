@@ -840,6 +840,36 @@ def admin_approval():
 
     return render_template("admin_approval.html", admin=current_admin, requests=requests)
 
+@app.route("/check_approval", methods=["GET", "POST"])
+def check_approval():
+    admin_email = request.form.get("admin_email", "").strip().lower()
+    open_approval_modal = True
+    approval_status = None
+
+    if request.method == "POST" and admin_email:
+        # check the request pending or reject?
+        req = AdminRequest.query.filter_by(admin_email=admin_email).first()
+        if req:
+            approval_status = req.approval.lower()  # pending / rejected
+        else:
+            # check admin table request status=accepted?
+            if Admin.query.get(admin_email):
+                approval_status = "approved"
+            else:
+                approval_status = "not_found"
+
+        # Render instead of redirect to preserve the status
+        return render_template("request_admin.html",
+                               open_approval_modal=open_approval_modal,
+                               approval_status=approval_status,
+                               submitted_email=admin_email)  # Pass email to show in results
+
+    # GET request or no email submitted
+    return render_template("request_admin.html",
+                           open_approval_modal=open_approval_modal,
+                           approval_status=approval_status)
+
+
 # LOGOUT
 @app.route("/logout")
 def logout():
