@@ -853,11 +853,6 @@ section {
     opacity:0;
 }
 
-.big-cta-btn:hover {
-    background-color: #08032e;
-    color: white;
-    box-shadow: 0 0 100px #0056b3;
-}
 
 .page-container {
     padding: 0 15%;
@@ -1719,7 +1714,7 @@ html {
     width: 70%;       /* adjust size */
     max-width: 600px; /* optional limit */
     height: auto;
-    margin-bottom: 20px; /* space for buttons */
+    margin-top: 50px; /* space for buttons */
     display: block;
     margin-left: auto;
     margin-right: auto;
@@ -1746,8 +1741,19 @@ html {
     animation: bottomIn 1s ease-in-out forwards;
     animation-delay: 0.3s;
     text-decoration: none;
+    margin-bottom: 30px;
+    opacity:0;
+}
+
+.admin-btn:hover {
+    background-color: #08032e;
+    color: white;
+    box-shadow: 0 0 100px #0056b3;
+    transition: all 0.3s;
+    animation: bottomIn 1s ease-in-out forwards;
+    animation-delay: 0.3s;
+    text-decoration: none;
     margin-right: px;
     margin-top: 40px;
     opacity:0;
 }
-

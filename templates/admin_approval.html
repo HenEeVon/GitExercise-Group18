@@ -5,12 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Approval</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
 </head>
+<!-- Navigation Bar -->
+        <header>
+            <a class="header-logo"><span>ebFit</span></a>
+            <p><a href="{{ url_for('logout') }}" class="logout-link">Logout</a></p>
+        </header>
+    </div>
 <body class="admin">
     <div class="container2">
-        <h1>Welcome, {{ admin.admin_name }}</h1>
-        <p>Logged in as: <strong>{{ admin.admin_email }}</strong></p>
-
         <!-- Flash messages -->
         {% with messages = get_flashed_messages() %}
             {% if messages %}
@@ -25,6 +29,7 @@
             {% endif %}
         {% endwith %}
 
+        <h1> Admin Approval</h1>
         <h2>Pending Admin Requests</h2>
         {% if requests %}
             <table class="requests-table">
@@ -57,8 +62,6 @@
         {% else %}
             <p>No pending requests.</p>
         {% endif %}
-
-        <p><a href="{{ url_for('logout') }}" class="logout-link">Logout</a></p>
     </div>
 </body>
 </html>

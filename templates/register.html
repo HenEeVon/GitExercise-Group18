@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <title>Register</title>
 </head>
 
@@ -14,9 +15,9 @@
     <div class="page-container">
         <header>
             <a class="header-logo"><span>ebFit</span></a>
-            <nav class="nav-bar">
-                <a href="{{ url_for('home') }}" class="nav-items">Home</a>
-            </nav>
+            <a href="{{ url_for('home') }}" class="nav-items">
+                    <i class="fa-solid fa-house"></i>
+                </a>
         </header>
     </div>
 
