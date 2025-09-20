@@ -33,7 +33,6 @@
                 <tr>
                     <th>Email</th>
                     <th>Name</th>
-                    <th>Role</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -42,7 +41,6 @@
                 <tr>
                     <td>{{ user.user_email }}</td>
                     <td>{{ user.user_name }}</td>
-                    <td>{{ user.role }}</td>
                     <td class="action-buttons">
                         <a href="{{ url_for('delete_user', user_email=user.user_email) }}" class="delete-btn">Delete</a>
                     </td>
