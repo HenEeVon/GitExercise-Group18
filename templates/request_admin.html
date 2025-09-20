@@ -89,60 +89,53 @@
             </div>
         </div>
         
-        
-       <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Check Approval</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
+        <div id="approvalModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="document.getElementById('approvalModal').style.display='none'">&times;</span>
+                <h2>Check Approval Status</h2>
 
-<div id="approvalModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="document.getElementById('approvalModal').style.display='none'">&times;</span>
-        <h2>Check Approval Status</h2>
+                {% if approval_status is not defined %}
+                    <!-- Step 1: ask for email -->
+                    <form method="POST" action="{{ url_for('check_approval') }}">
+                        <label>Email address</label>
+                        <input type="email" name="admin_email" required>
+                        <div class="btn-group">
+                            <input type="submit" class="big-cta-btn" value="Check Status">
+                        </div>
+                    </form>
 
-        {% if approval_status is not defined %}
-        <!-- Step 1: ask for email -->
-        <form method="POST" action="{{ url_for('check_approval') }}">
-            <label>Email address</label>
-            <input type="email" name="admin_email" required>
-            <div class="btn-group">
-                <input type="submit" class="big-cta-btn" value="Check Status">
+                {% else %}
+                    <!-- Step 2: show status -->
+                    {% if approval_status == "pending" %}
+                        <p>Status: <strong>Pending</strong></p>
+                    {% elif approval_status == "approved" %}
+                        <p>Status: <strong>Approved</strong></p>
+                    {% elif approval_status == "rejected" %}
+                        <p>Status: <strong>Rejected</strong></p>
+                    {% else %}
+                        <p>Status: <strong>Not Found</strong></p>
+                    {% endif %}
+
+                    <div class="btn-group">
+                        {% if approval_status == "approved" %}
+                            <!-- If approved, send to login -->
+                            <a href="{{ url_for('login_admin') }}" class="big-cta-btn">Done</a>
+                        {% else %}
+                            <!-- Otherwise just close the modal -->
+                            <button type="button" class="big-cta-btn" onclick="document.getElementById('approvalModal').style.display='none'">Done</button>
+                        {% endif %}
+                    </div>
+                {% endif %}
             </div>
-        </form>
-
-        {% else %}
-        <!-- Step 2: show status -->
-        {% if approval_status == "pending" %}
-            <p>Status: <strong>Pending</strong></p>
-        {% elif approval_status == "approved" %}
-            <p>Status: <strong>Approved</strong></p>
-        {% elif approval_status == "rejected" %}
-            <p>Status: <strong>Rejected</strong></p>
-        {% else %}
-            <p>Status: <strong>Not Found</strong></p>
-        {% endif %}
-
-        <div class="btn-group">
-            <!-- Done button resets modal -->
-            <a href="{{ url_for('request_admin') }}" class="big-cta-btn">Done</a>
         </div>
+
+        <!-- Auto-open modal if Flask sets flag -->
+        {% if open_approval_modal %}
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                document.getElementById("approvalModal").style.display = "block";
+            });
+        </script>
         {% endif %}
-
-    </div>
-</div>
-
-<!-- Auto-open modal if Flask sets flag -->
-{% if open_approval_modal %}
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        document.getElementById("approvalModal").style.display = "block";
-    });
-</script>
-{% endif %}
-
-</body>
+    </body>
 </html>

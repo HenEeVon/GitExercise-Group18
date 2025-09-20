@@ -1757,3 +1757,75 @@ html {
     margin-top: 40px;
     opacity:0;
 }
+
+.admincon{
+    padding:30px;
+}
+
+body.adminapp h1 {
+    font-size:38px;  
+    font-weight: bold;
+    color: #333333;
+    font-family: 'Rubik', sans-serif;
+}
+
+body.adminapp h2 {
+    font-size:25px;  
+    font-weight: bold;
+    color: #606060;
+    text-align: center;
+    line-height: 65px;
+     margin-top: 30px;  
+    margin-bottom: 15px;
+    font-family: 'Times New Roman', Times, serif;
+}
+
+body.adminapp p {
+    font-size:15px;  
+    color: #000000;
+    text-align: center;
+}
+
+/* Approved status text */
+body.adminapp td.status-approved {
+    color: #248719;   /* Bootstrap green */
+    font-weight: bold;
+}
+
+/* Rejected status text */
+body.adminapp td.status-rejected {
+    color: #b80315;  
+    font-weight: bold;
+}
+
+/* Apply to all request tables */
+.requests-table th:nth-child(1), 
+.requests-table td:nth-child(1) {
+    width: 25%;   /* Email */
+}
+
+.requests-table th:nth-child(2), 
+.requests-table td:nth-child(2) {
+    width: 20%;   /* Name */
+}
+
+.requests-table th:nth-child(3), 
+.requests-table td:nth-child(3) {
+    width: 35%;   /* Reason */
+}
+
+/* Right align Email + Reason columns */
+.requests-table th:nth-child(1),
+.requests-table td:nth-child(1) {
+    padding-left: 100px;
+}
+
+.requests-table th:nth-child(3),
+.requests-table td:nth-child(3) {
+    padding-left: 200px;
+}
+
+.requests-table th:nth-child(2),
+.requests-table td:nth-child(2) {
+    padding-left: 150px;
+}

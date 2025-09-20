@@ -17,7 +17,7 @@ from datetime import datetime
 from PIL import Image
 import pytz
 import os, secrets
-from sqlalchemy import func, or_, asc
+from sqlalchemy import func, or_, asc, case
 import csv 
 import os
 MALAYSIA_TZ = pytz.timezone("Asia/Kuala_Lumpur")
@@ -438,6 +438,11 @@ def edit_post(post_id):
     post = Posts.query.get_or_404(post_id)
     form = ActivityForm()
 
+    # ✅ Reload choices for edit form too
+    form.location.choices = load_locations()
+    if not form.location.choices or form.location.choices == [("none", "--Please select a location--")]:
+        form.location.choices = [("Gym", "Gym"), ("Pool", "Pool")]
+
     if form.validate_on_submit():
         post.title = form.title.data
         post.content = form.content.data
@@ -451,7 +456,6 @@ def edit_post(post_id):
         flash("Post has been updated!", "info")
         return redirect(url_for("post_detail", post_id=post.post_id))
 
-    # Pre-fill form (only if GET or form not valid)
     if request.method == "GET":
         form.title.data = post.title
         form.content.data = post.content
@@ -461,10 +465,7 @@ def edit_post(post_id):
         form.end_time.data = post.end_time
         form.participants.data = post.participants
 
-    # ✅ Always return something here
     return render_template("edit_post.html", form=form, post=post)
-
-
 
 
 # Delete post
@@ -752,22 +753,23 @@ def request_admin():
             return redirect(url_for("login_admin"))
 
         # already requested?
-        existing = AdminRequest.query.filter_by(admin_email=email, approval="pending").first()
+        existing = AdminRequest.query.filter_by(admin_email=email).first()
         if existing:
-            flash("You already submitted a request. Please wait for approval.")
-        else:
-            new_request = AdminRequest(
-                admin_email=email,
-                admin_name=admin_name,
-                password=generate_password_hash(password, method="pbkdf2:sha256"),
-                join_reason=join_reason,
-                approval="pending"
-            )
-            db.session.add(new_request)
-            db.session.commit()
-            flash("Your request has been submitted and is pending approval.")
+            flash("User can only request once, You already submitted a request before.")
+            return redirect(url_for("login_admin"))
 
-        return redirect(url_for("login_admin"))
+        new_request = AdminRequest(
+            admin_email=email,
+            admin_name=admin_name,
+            password=generate_password_hash(password, method="pbkdf2:sha256"),
+            join_reason=join_reason,
+            approval="pending"
+        )
+        db.session.add(new_request)
+        db.session.commit()
+        flash("Your request has been submitted and is pending approval.")
+
+        return redirect(url_for("request_admin"))
 
     return render_template("request_admin.html")
 
@@ -794,23 +796,21 @@ def handle_request_admin(approval_id):
                 new_admin = Admin(
                     admin_email=join_request.admin_email.lower(),
                     admin_name=join_request.admin_name,
-                    password=join_request.password,  # already hashed
+                    password=join_request.password,
                 )
                 db.session.add(new_admin)
-
-            db.session.delete(join_request)
+            join_request.approval = "approved"  
             db.session.commit()
             flash(f"{join_request.admin_name} has been approved as admin.")
 
         elif decision == "reject":
-            db.session.delete(join_request)
+            join_request.approval = "rejected" 
             db.session.commit()
             flash(f"Request from {join_request.admin_name} has been rejected.")
 
         return redirect(url_for("admin_approval"))
 
     return render_template("join_admin.html", request=join_request)
-
 
 # ADMIN APPROVAL PAGE
 @app.route("/admin_approval")
@@ -826,9 +826,17 @@ def admin_approval():
         flash("Session expired. Please log in again.")
         return redirect(url_for("login_admin"))
 
-    requests = AdminRequest.query.filter_by(approval="pending").all()
+    pending_requests = AdminRequest.query.filter_by(approval="pending").order_by(AdminRequest.approval_id.desc()).all()
+    approved_requests = AdminRequest.query.filter_by(approval="approved").order_by(AdminRequest.approval_id.desc()).all()
+    rejected_requests = AdminRequest.query.filter_by(approval="rejected").order_by(AdminRequest.approval_id.desc()).all()
 
-    return render_template("admin_approval.html", admin=current_admin, requests=requests)
+    return render_template(
+        "admin_approval.html",
+        admin=current_admin,
+        pending_requests=pending_requests,
+        approved_requests=approved_requests,
+        rejected_requests=rejected_requests
+    )
 
 @app.route("/check_approval", methods=["GET", "POST"])
 def check_approval():
@@ -846,19 +854,18 @@ def check_approval():
             else:
                 approval_status = "not_found"
 
-        return render_template(
+        return render_template(  #submit and check email exist or not
             "request_admin.html",
             open_approval_modal=open_approval_modal,
             approval_status=approval_status,
             submitted_email=admin_email
         )
 
-    return render_template(
+    return render_template( #check approval status
         "request_admin.html",
         open_approval_modal=open_approval_modal,
         approval_status=approval_status
     )
-
 
 
 # LOGOUT
