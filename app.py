@@ -216,8 +216,11 @@ def register():
         security_answer = request.form["security_answer"].strip().lower()
         password = request.form["password"]
         hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
+        picture_file = "default.png"
+        if "picture" in request.files and request.files["picture"].filename:
+            picture_file = save_picture(request.files["picture"])
 
-        new_user = User(user_email=user_email, user_name=user_name, gender=gender, sport_level=sport_level, security_question=security_question, security_answer=security_answer, password=hashed_password)
+        new_user = User(user_email=user_email, user_name=user_name, gender=gender, sport_level=sport_level, security_question=security_question, security_answer=security_answer, password=hashed_password, image_file=picture_file)
 
         try:
             db.session.add(new_user)
