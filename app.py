@@ -10,7 +10,7 @@ from string import ascii_uppercase
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, TextAreaField, IntegerField, DateField, TimeField,  SelectField
+from wtforms import StringField, SubmitField, TextAreaField, IntegerField, DateField, TimeField,  SelectField, RadioField
 from wtforms.validators import DataRequired, NumberRange, Length, Optional
 from flask_wtf.file import FileField, FileAllowed
 from datetime import datetime
@@ -32,6 +32,17 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
+
+Security_Questions = {
+    "pet":"What was your first pet name?",
+    "car":"What was your first car?",
+    "hospital":"What hospital name were you born in?",
+    "city": "What city were you born in?",
+    "girlfriend":"What was your first ex girlfriend's name?",
+    "boyfriend":"What was your first ex boyfriend's name?",
+    "school": "What was the name of your first school?",
+    "book": "What was your favorite childhood book?"
+}
 
 # User database
 class User(UserMixin, db.Model):
@@ -154,8 +165,10 @@ class ChatMessage(db.Model):
 #Update Profile
 class UpdateProfileForm(FlaskForm):
     user_name = StringField("Full Name", validators=[DataRequired(), Length(min=2, max=50)])
-    gender = SelectField("Gender", choices=[("Male", "Male"), ("Female", "Female"), ("Other", "Other")])
+    gender = RadioField("Gender", choices=[("Male", "Male"),("Female", "Female")], validators=[DataRequired()])
     bio = TextAreaField("Bio", validators=[Length(max=200)])
+    security_question = SelectField("Security Question", choices=Security_Questions, validators=[DataRequired(), Length(max=255)])
+    security_answer = StringField("Security Answer", validators=[DataRequired(), Length(max=255)])
     picture = FileField("Update Profile Picture", validators=[FileAllowed(["jpg", "png"])])
     submit = SubmitField("Update")
 
@@ -600,6 +613,8 @@ def profile_edit():
         current_user.user_name = form.user_name.data   
         current_user.gender = form.gender.data
         current_user.bio = form.bio.data or None
+        current_user.security_question = form.security_question.data
+        current_user.security_answer = (form.security_answer.data or "").strip().lower()
 
         if form.picture.data:
             filename = save_picture(form.picture.data)
@@ -613,6 +628,8 @@ def profile_edit():
         form.user_name.data = current_user.user_name  
         form.gender.data = current_user.gender
         form.bio.data = current_user.bio
+        form.security_question.data = current_user.security_question
+        form.security_answer.data = current_user.security_answer
 
     image_url = url_for(
         "static", 
