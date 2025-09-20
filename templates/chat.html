@@ -5,8 +5,8 @@
 {% block content %}
 <div class="chat-container">
     <div class="chat-header">
-        <a href="{{ url_for('post_detail', post_id=post.post_id) }}" class="back-btn">&lsaquo;</a>
-    <h2>Chat with {{ header_name }}</h2>
+        {% set owner_email = post.user_email or post.admin_email %}
+        <a href="{{ url_for('post_detail', post_id=post.post_id, partner_email=owner_email) }}" class="back-btn">Chat with {{ header_name }}</a>
     </div>
 
     <div id="chat" data-room="{{ room }}" data-username="{{ username }}" data-postid="{{ post.post_id }}" data-partner="{{ partner_email }}">
