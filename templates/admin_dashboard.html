@@ -45,9 +45,6 @@
                     <td>{{ user.role }}</td>
                     <td class="action-buttons">
                         <a href="{{ url_for('delete_user', user_email=user.user_email) }}" class="delete-btn">Delete</a>
-                        {% if user.role != "admin" %}
-                            <a href="{{ url_for('promote_user', user_email=user.user_email) }}" class="promote-btn">Promote</a>
-                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}

@@ -6,6 +6,7 @@
 <div class="container">
 
     {% set readonly = request.args.get('readonly', 0) | int %}
+    {% set owner_email = post.user_email or post.admin_email %}
 
     <h1>{{ post.title }}</h1>
 
@@ -54,46 +55,20 @@
             {% endfor %}
         {% endif %}
     {% endwith %}
-    <!-- Actions for everybody -->
+
+    <!-- Back button (always visible) -->
     <a href="{{ url_for('posts') }}" class="btn btn-secondary">Back to Activity Posts</a>
+
     {% if not readonly %}
-        <!-- Actions for owner -->
-        {% if current_user.is_authenticated and current_user.user_email == post.user_email %}
+
+        {# ---- OWNER ACTIONS (User or Admin) ---- #}
+        {% if (current_user.is_authenticated and current_user.user_email == owner_email) 
+              or (session.get('admin_email') and session.get('admin_email') == owner_email) %}
             <form method="POST" action="{{ url_for('delete', post_id=post.post_id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this post?');">
                 <button type="submit" class="btn delete-btn">Delete</button>
             </form>
             <a href="{{ url_for('edit_post', post_id=post.post_id) }}" class="btn btn-warning">Edit</a>
-        {% endif %}
 
-        <!-- Actions for other users -->
-        {% if current_user.is_authenticated and current_user.user_email != post.user_email %}
-            {% set user_request = join_activities|selectattr('user_email', 'equalto', current_user.user_email)|first %}
-                {% if user_request %}
-                    <p>
-                        Your request status:
-                        {% if user_request.status == "pending" %}
-                            <span class="text-warning">Pending</span>
-                        {% elif user_request.status == "accepted" %}
-                            <span class="text-success">Accepted</span>
-                        {% elif user_request.status == "rejected" %}
-                            <span class="text-danger">Rejected</span>
-                        {% endif %}
-                    </p>
-                {% else %}
-                    {% if post.post_status == "open" %}
-                        <form action="{{ url_for('activityrequest', post_id=post.post_id) }}" method="post">
-                            <button type="submit" class="btn btn-primary">Request to Join</button>
-                        </form>
-                    {% endif %}
-                {% endif %}
-                    {% if current_user.is_authenticated and current_user.user_email != post.user_email %}
-                        {% set partner_email = post.user_email or post.admin_email %}
-                        <a href="{{ url_for('chat_with_user', post_id=post.post_id, partner_email=partner_email) }}" class="btn btn-info">Chat with Me</a>
-                    {% endif %}
-        {% endif %}
-
-        <!-- Owner join requests -->
-        {% if current_user.is_authenticated and current_user.user_email == post.user_email %}
             <hr>
             <h3>Join Requests</h3>
             {% if join_activities %}
@@ -115,6 +90,35 @@
             {% else %}
                 <p>No join requests yet.</p>
             {% endif %}
+        {% endif %}
+
+        {# ---- NON-OWNER ACTIONS (User or Admin) ---- #}
+        {% if (current_user.is_authenticated and current_user.user_email != owner_email) 
+              or (session.get('admin_email') and session.get('admin_email') != owner_email) %}
+            
+            {% set user_request = join_activities|selectattr('user_email', 'equalto', current_user.user_email if current_user.is_authenticated else session.get('admin_email'))|first %}
+            
+            {% if user_request %}
+                <p>
+                    Your request status:
+                    {% if user_request.status == "pending" %}
+                        <span class="text-warning">Pending</span>
+                    {% elif user_request.status == "accepted" %}
+                        <span class="text-success">Accepted</span>
+                    {% elif user_request.status == "rejected" %}
+                        <span class="text-danger">Rejected</span>
+                    {% endif %}
+                </p>
+            {% else %}
+                {% if post.post_status == "open" %}
+                    <form action="{{ url_for('activityrequest', post_id=post.post_id) }}" method="post">
+                        <button type="submit" class="btn btn-primary">Request to Join</button>
+                    </form>
+                {% endif %}
+            {% endif %}
+
+            {% set partner_email = post.user_email or post.admin_email %}
+            <a href="{{ url_for('chat_with_user', post_id=post.post_id, partner_email=partner_email) }}" class="btn btn-info">Chat with Me</a>
         {% endif %}
 
     {% else %}
