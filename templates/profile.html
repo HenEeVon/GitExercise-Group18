@@ -56,9 +56,19 @@
 
                     <p class="meta">
                         <i class="fa-solid fa-calendar"></i>
-                        <span>Event:</span>
-                        {{ post.event_date.strftime('%d/%m/%Y') }} |
+                        Event Date: {{ post.event_date.strftime('%d/%m/%Y') }}
+                    </p>
+
+                    <p class="meta">
+                        <i class="fa-solid fa-clock"></i>
+                        Event Time:
                         {{ post.start_time.strftime('%H:%M') }} - {{ post.end_time.strftime('%H:%M') }}
+                    </p>
+
+                    <p class="meta">
+                        <i class="fa-solid fa-newspaper"></i>
+                        Posted on:
+                        {{ post.local_date_posted_value.strftime('%d/%m/%Y %H:%M') if post.local_date_posted_value else '' }}
                     </p>
 
                     <p class="meta">
