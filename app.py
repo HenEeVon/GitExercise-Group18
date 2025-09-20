@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, session, abort, current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
     LoginManager, UserMixin, login_user, logout_user,
@@ -497,10 +497,16 @@ def edit_post(post_id):
 
         # Handle new image upload
         if form.image.data:
-            image_file = form.image.data
-            filename = secure_filename(image_file.filename)
-            image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            image_file.save(image_path)
+            # If old image exists → delete it
+            if post.image_filename:
+                old_path = os.path.join(current_app.root_path, "static/uploads", post.image_filename)
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+
+            # Save new image
+            file = form.image.data
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(current_app.root_path, "static/uploads", filename))
             post.image_filename = filename
 
         db.session.commit()
@@ -532,6 +538,12 @@ def delete(post_id):
     if not is_author:
         flash("You don't have permission to delete this post.", "danger")
         return redirect(url_for("posts"))
+    
+    # Delete image file if exists
+    if post.image_filename:
+        img_path = os.path.join(current_app.root_path, "static/uploads", post.image_filename)
+        if os.path.exists(img_path):
+            os.remove(img_path)
 
     db.session.delete(post)
     db.session.commit()
