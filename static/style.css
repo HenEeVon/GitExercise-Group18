@@ -1809,3 +1809,35 @@ html {
 .profile-posts .post {
     margin-top: 15px;
 }
+
+.profile-gender {
+    margin: 15px 0;
+}
+
+.gender-title {
+    display: block;
+    font-size: 16px;
+    font-weight: bold;
+    color: black;
+}
+
+.gender-option {
+    display: flex;
+    gap: 20px;
+}
+
+.gender-option label {
+    font-weight: normal;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.security-option .form-control {
+    width: 100%;
+    padding: 6px;
+    font-size: 14px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
