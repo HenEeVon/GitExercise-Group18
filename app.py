@@ -15,6 +15,7 @@ from wtforms.validators import DataRequired, NumberRange, Length, Optional
 from flask_wtf.file import FileField, FileAllowed
 from datetime import datetime
 from PIL import Image
+from werkzeug.utils import secure_filename
 import pytz
 import os, secrets
 from sqlalchemy import func, or_, asc
@@ -31,6 +32,8 @@ socketio = SocketIO(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
+app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
 
 # User database
@@ -86,6 +89,7 @@ class Posts(db.Model):
     date_posted = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     post_status = db.Column(db.String(20), default="open")
     participants = db.Column(db.Integer, nullable=False)
+    image_filename = db.Column(db.String(200), nullable=True)
 
     # ✅ Foreign keys
     user_email = db.Column(db.String, db.ForeignKey("users.user_email"), nullable=True)
@@ -128,13 +132,12 @@ def load_locations():
 # Activity Form database
 class ActivityForm(FlaskForm):
     title = StringField("Title", validators=[DataRequired()])
+    image = FileField("Upload Image", validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only!')])
     content = TextAreaField("Content", validators=[DataRequired()])
     location = StringField("Location", validators=[DataRequired()])
-
     event_date = DateField("Activity Date", format="%Y-%m-%d", validators=[DataRequired()])
     start_time = TimeField("Start Time", format="%H:%M", validators=[DataRequired()])
     end_time = TimeField("End Time", format="%H:%M", validators=[DataRequired()])
-
     participants = IntegerField("Required Participants", validators=[DataRequired(), NumberRange(min=1)])
     submit = SubmitField("Post")
 
@@ -416,13 +419,21 @@ def page_not_found(e):
 def create():
     if not current_user.is_authenticated and not session.get("admin_email"):
         flash("You need to log in first!", "danger")
-        return redirect(url_for("login"))  # user login page
+        return redirect(url_for("login"))
     
     form = ActivityForm()
 
     if form.validate_on_submit():
+        # Handle image upload
+        image_file = form.image.data
+        filename = None
+        if image_file:
+            filename = secure_filename(image_file.filename)
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            image_file.save(image_path)
+
+        # Regular user creating post
         if current_user.is_authenticated:
-            # ✅ Regular user creating post
             new_post = Posts(
                 title=form.title.data,
                 content=form.content.data,
@@ -431,10 +442,11 @@ def create():
                 start_time=form.start_time.data,
                 end_time=form.end_time.data,
                 participants=form.participants.data,
-                user_email=current_user.user_email
+                user_email=current_user.user_email,
+                image_filename=filename  # <-- new field
             )
+        # Admin creating post
         elif session.get("admin_email"):
-            # ✅ Admin creating post
             new_post = Posts(
                 title=form.title.data,
                 content=form.content.data,
@@ -443,7 +455,8 @@ def create():
                 start_time=form.start_time.data,
                 end_time=form.end_time.data,
                 participants=form.participants.data,
-                admin_email=session["admin_email"]
+                admin_email=session["admin_email"],
+                image_filename=filename  # <-- new field
             )
 
         db.session.add(new_post)
@@ -457,26 +470,22 @@ def create():
 # Edit post
 @app.route("/edit/<int:post_id>", methods=["GET", "POST"])
 def edit_post(post_id):
-    if not current_user.is_authenticated and not session.get("admin_email"):
-        flash("You must log in first.")
-        return redirect(url_for("login"))
-
     post = Posts.query.get_or_404(post_id)
-    form = ActivityForm()
 
-    # ✅ Permission check (user OR admin)
+    # Check if the current user is allowed to edit
     if current_user.is_authenticated:
-        is_author = (post.user_email == current_user.user_email)
+        is_owner = (post.user_email == current_user.user_email)
     elif session.get("admin_email"):
-        is_author = (post.admin_email == session["admin_email"])
+        is_owner = (post.admin_email == session.get("admin_email"))
     else:
-        is_author = False
+        is_owner = False
 
-    if not is_author:
-        flash("You don't have permission to edit this post.", "danger")
+    if not is_owner:
+        flash("You are not authorized to edit this post.", "danger")
         return redirect(url_for("posts"))
 
-    # Handle form submit
+    form = ActivityForm(obj=post)
+
     if form.validate_on_submit():
         post.title = form.title.data
         post.content = form.content.data
@@ -486,20 +495,20 @@ def edit_post(post_id):
         post.end_time = form.end_time.data
         post.participants = form.participants.data
 
+        # Handle new image upload
+        if form.image.data:
+            image_file = form.image.data
+            filename = secure_filename(image_file.filename)
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            image_file.save(image_path)
+            post.image_filename = filename
+
         db.session.commit()
-        flash("Post has been updated!", "info")
+        flash("Post updated successfully!", "success")
         return redirect(url_for("post_detail", post_id=post.post_id))
 
-    if request.method == "GET":
-        form.title.data = post.title
-        form.content.data = post.content
-        form.location.data = post.location
-        form.event_date.data = post.event_date
-        form.start_time.data = post.start_time
-        form.end_time.data = post.end_time
-        form.participants.data = post.participants
-
     return render_template("edit_post.html", form=form, post=post)
+
 
 
 

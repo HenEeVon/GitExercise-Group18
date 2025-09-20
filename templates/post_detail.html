@@ -33,6 +33,13 @@
         {% elif post.admin %} by {{ post.admin.admin_name }} (Admin) {% endif %}
     </p>
 
+    {% if post.image_filename %}
+        <div class="post-image">
+            <img src="{{ url_for('static', filename='uploads/' ~ post.image_filename) }}" 
+                alt="Post Image" style="max-width: 400px; height: auto; margin-bottom: 15px;">
+        </div>
+    {% endif %}
+
     <!-- Post content -->
     <div class="post-content">
         <p>{{ post.content }}</p>
@@ -59,7 +66,7 @@
     
 
     {% if not readonly %}
-    
+
         <a href="{{ url_for('posts') }}" class="btn btn-secondary">Back to Activity Posts</a>
 
         {# ---- OWNER ACTIONS (User or Admin) ---- #}

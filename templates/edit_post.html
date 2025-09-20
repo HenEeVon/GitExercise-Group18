@@ -6,13 +6,33 @@
 <div class="container">
     <h1>Edit Post</h1>
 
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
 
         <div>
             {{ form.title.label }}<br>
             {{ form.title(size=40) }}
         </div>
+
+        {% if post.image_filename %}
+            <div class="form-group">
+                <p>Current Image:</p>
+                <img src="{{ url_for('static', filename='uploads/' ~ post.image_filename) }}"
+                     alt="Post Image"
+                     class="img-fluid rounded"
+                     style="max-width: 300px;">
+            </div>
+        {% endif %}
+
+        <!-- Upload New Image -->
+        <div class="form-group">
+            {{ form.image.label }}<br>
+            {{ form.image(class="form-control-file") }}
+            {% for error in form.image.errors %}
+                <span class="text-danger">{{ error }}</span>
+            {% endfor %}
+        </div>
+
 
 
         <div>
