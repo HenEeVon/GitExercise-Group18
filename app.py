@@ -33,16 +33,16 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 
 
-Security_Questions = {
-    "pet":"What was your first pet name?",
-    "car":"What was your first car?",
-    "hospital":"What hospital name were you born in?",
-    "city": "What city were you born in?",
-    "girlfriend":"What was your first ex girlfriend's name?",
-    "boyfriend":"What was your first ex boyfriend's name?",
-    "school": "What was the name of your first school?",
-    "book": "What was your favorite childhood book?"
-}
+Security_Questions = [
+    ("pet","What was your first pet name?"),
+    ("car","What was your first car?"),
+    ("hospital","What hospital name were you born in?"),
+    ("city", "What city were you born in?"),
+    ("girlfriend", "What was your first ex girlfriend's name?"),
+    ("boyfriend", "What was your first ex boyfriend's name?"),
+    ("school", "What was the name of your first school?"),
+    ("book", "What was your favorite childhood book?")
+]
 
 # User database
 class User(UserMixin, db.Model):

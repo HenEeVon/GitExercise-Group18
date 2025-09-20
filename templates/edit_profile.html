@@ -13,16 +13,33 @@
             {{ form.user_name.label }}<br>
             {{ form.user_name(size=40) }}
         </div>
-
-
-        <div>
-            {{ form.gender.label }}<br>
-            {{ form.gender(class="form-select") }}
+        
+        <div class="profile-gender">
+            <div class="gender-title">{{ form.gender.label }}</div>
+            <div class="gender-option">
+                {% for subfield in form.gender %}
+                    <label>
+                        {{ subfield() }} {{ subfield.label.text }}
+                    </label>
+                {% endfor %}
+            </div>
         </div>
 
         <div>
             {{ form.bio.label }}<br>
             {{ form.bio(rows=5, cols=40) }}
+        </div>
+
+        <div>
+            {{ form.security_question.label }}<br>
+            <div class="security-option">
+                {{ form.security_question(class="form-control") }}
+            </div>
+        </div>
+
+        <div>
+            {{ form.security_answer.label }}<br>
+            {{ form.security_answer(size=40) }}
         </div>
 
         <div>
