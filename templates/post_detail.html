@@ -56,10 +56,11 @@
         {% endif %}
     {% endwith %}
 
-    <!-- Back button (always visible) -->
-    <a href="{{ url_for('posts') }}" class="btn btn-secondary">Back to Activity Posts</a>
+    
 
     {% if not readonly %}
+    
+        <a href="{{ url_for('posts') }}" class="btn btn-secondary">Back to Activity Posts</a>
 
         {# ---- OWNER ACTIONS (User or Admin) ---- #}
         {% if (current_user.is_authenticated and current_user.user_email == owner_email) 
