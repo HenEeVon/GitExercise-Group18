@@ -1859,6 +1859,15 @@ html {
     background: #eef6ff;
 }
 
+.notification.read {
+    color: #555;
+}
+
+.notification a {
+    color: #007bff;
+    text-decoration: none;
+}
+
 .notification .time {
     display: block;
     font-size: 12px;
