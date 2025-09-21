@@ -296,10 +296,6 @@ body.user {
     background: linear-gradient(to right, #ffffff, #ebeafd);
 }
 
-body.user {
-    background: linear-gradient(to right, #ffffff, #ebeafd);
-}
-
 body.login{
     font-family:'Rubik', sans-serif;
     font-size:16px;
@@ -322,8 +318,6 @@ body.login{
     padding: 0 30px;
     margin: 0 auto;
     margin-top: 300px;
-    
-
     margin-top: 300px;
     
 
@@ -348,8 +342,6 @@ body.login{
     margin: 0 auto;
     animation: fadeIn 0.5s ease-in-out;
     margin-left: -80px;
-    
-    
 }
 
 .login-box .form-title {
@@ -360,27 +352,23 @@ body.login{
     text-align: center;
 }
 
+
+
 body.login-page .container2 {
     margin-top: 200px;
     margin-bottom: 100px;
 }
 
-body.admin.register-page .container2 {
-    margin-top: 200px; 
-    margin-bottom: 100px;
-}
-
-body.admin.login-page .container2 {
-    margin-top: 100px; 
-    margin-bottom: 100px;
+body.admin .step2-container {
+    margin-bottom: -150px;
 }
 
 body.login-page .big-cta-btn {
     margin-top: 2px;
     padding: 0px 30px;
     line-height: 50px;
-    
 }
+
 
 #resetModal .big-cta-btn {
     margin-top: 15px;
@@ -438,6 +426,15 @@ body.user .hero::before {
     filter: blur(70px);
     transform: translate(-50%, -50%);
 }
+
+.register-page .hero {
+    margin-top:-150px; 
+}
+
+.admin .hero {
+    margin-top: 20px;
+}
+
 
 body.admin .hero::before {
     content: '';
@@ -953,6 +950,11 @@ h1 span {
     animation-delay: 0.3s;
 }
 
+
+#user-section , #about, #project {
+    background: linear-gradient(to right, #eff3fe, rgb(172, 187, 255));
+}
+
 /*About us*/
 .section-tittle{
     font-size: 3rem;
@@ -982,17 +984,6 @@ h1 span {
     animation-delay: 1.0s;
 }
 
-#about p{
-    font-size: 1.2rem;
-    line-height: 1.6;
-    margin-bottom: 50px;
-    font-family:'Times New Roman', Times, serif;
-    color: #011d3d;
-    animation: fadeIn 1s ease-in-out forwards;
-    opacity: 0;
-    animation-delay: 1.3s;
-    animation-delay: 1.3s;
-}
 #about .section-wrap {
   box-shadow: 0 0 100px #4270e6cc; 
 }
@@ -1428,7 +1419,7 @@ html {
     
 }
 #admin-section {
-    background: #f8f9fa;
+    background: linear-gradient(to right, #ffffff60, #65c29f7b);
     padding: 60px 20px;
     text-align: center;
 }
@@ -1765,7 +1756,7 @@ html {
 body.adminapp h1 {
     font-size:38px;  
     font-weight: bold;
-    color: #333333;
+    color:#012e60;
     font-family: 'Rubik', sans-serif;
 }
 
@@ -1828,4 +1819,62 @@ body.adminapp td.status-rejected {
 .requests-table th:nth-child(2),
 .requests-table td:nth-child(2) {
     padding-left: 150px;
+}
+
+.login-page .hero p {
+    line-height: 1; 
+}
+
+.login-page .hero p a {
+    display: flex;
+    margin-top: 5px; 
+}
+
+.admin .hero p {
+    line-height: 0.6; 
+}
+
+.admin .hero p a {
+    display: flex;
+    margin-top: 8px;
+}
+
+body.admin {
+    background: linear-gradient(to right, #ffffff, #e6ffea);
+}
+
+body.adminapp {
+    background: linear-gradient(to right, #ffffff, #e6ffea);
+}
+
+body.admin {
+    font-family: 'Rubik', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.8;
+    color: var(--dark-color);
+}
+
+
+body.admin .big-cta-btn {
+    margin-top: 2px;
+    padding: 0px 30px;
+    line-height: 45px;
+}
+
+body.admin .hero {
+    margin-top: -300px; 
+}
+
+.main .login-box.step1 {
+    margin-top: -300px ;
+}
+
+.main .login-box.step2 {
+    position: relative;
+    top: -10000px;
+}
+
+.readonly-input {
+    color: #2f2f2fd5;
 }

@@ -36,35 +36,31 @@ login_manager.login_view = "login"
 # User database
 class User(UserMixin, db.Model):
     __tablename__ = "users"
-    user_email = db.Column(db.String(255), primary_key=True)
-    user_name = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(255), primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
     gender = db.Column(db.String(50), nullable=False)
     sport_level = db.Column(db.String(255), nullable=False)
     security_question = db.Column(db.String(255), nullable=False)
     security_answer = db.Column(db.String(255), nullable=False)
-    password = db.Column(db.String(255), nullable=False)
+    password = db.Column(db.String(255), nullable=True)
     image_file = db.Column(db.String(255), nullable=True, default="default.png")
     bio = db.Column(db.Text, nullable=True)
     role = db.Column(db.String(20), default="user") 
     
 
     def get_id(self):
-        return self.user_email
-
-class Admin(db.Model):
-    __tablename__ = "admin"
-    admin_email =  db.Column(db.String(255), primary_key=True)
-    admin_name = db.Column(db.String(255), nullable=False)
-    password = db.Column(db.String(255), nullable=False)
+        return self.email
 
 class AdminRequest(db.Model):
     __tablename__ = "admin_request"
     approval_id = db.Column(db.Integer, primary_key=True)
-    admin_email = db.Column(db.String(255), nullable=False)
-    admin_name = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(255), nullable=False, unique=True)
+    name = db.Column(db.String(255), nullable=False)
     password = db.Column(db.String(255), nullable=False)
     join_reason = db.Column(db.Text, nullable=False)
     approval = db.Column(db.String(20), default="pending")  # pending / approved / rejected
+    security_question = db.Column(db.String(255), nullable=False) 
+    security_answer = db.Column(db.String(255), nullable=False)  
 
 
 class Posts(db.Model):
@@ -82,7 +78,7 @@ class Posts(db.Model):
     post_status = db.Column(db.String(20), default="open")
     participants = db.Column(db.Integer, nullable=False, default=1)
 
-    user_email = db.Column(db.String(255), db.ForeignKey("users.user_email"), nullable=False)
+    email = db.Column(db.String(255), db.ForeignKey("users.email"), nullable=False)
     user = db.relationship("User", backref="posts")
 
 
@@ -90,7 +86,7 @@ class Posts(db.Model):
 class JoinActivity(db.Model):
     __tablename__ = "join_activities"
     id = db.Column(db.Integer, primary_key=True)
-    user_email = db.Column(db.String(255), db.ForeignKey("users.user_email"), nullable=False)
+    email = db.Column(db.String(255), db.ForeignKey("users.email"), nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey("posts.post_id"), nullable=False)
     status = db.Column(db.String(20), default="pending")  # pending / accepted / rejected
 
@@ -153,7 +149,7 @@ class ChatMessage(db.Model):
 
 #Update Profile
 class UpdateProfileForm(FlaskForm):
-    user_name = StringField("Full Name", validators=[DataRequired(), Length(min=2, max=50)])
+    name = StringField("Full Name", validators=[DataRequired(), Length(min=2, max=50)])
     gender = SelectField("Gender", choices=[("Male", "Male"), ("Female", "Female"), ("Other", "Other")])
     bio = TextAreaField("Bio", validators=[Length(max=200)])
     picture = FileField("Update Profile Picture", validators=[FileAllowed(["jpg", "png"])])
@@ -163,7 +159,7 @@ class UpdateProfileForm(FlaskForm):
 # User loader
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.filter_by(user_email=user_id).first()
+    return User.query.filter_by(email=user_id).first()
 
 @app.template_filter("datetimeformat")
 def datetimeformat(value, format="%d/%m/%Y"):
@@ -191,58 +187,82 @@ def datetimeformat(value, format="%d/%m/%Y"):
 def home():
     return render_template("home.html")
 
-# Register page
+
+#register page
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        user_email = request.form["user_email"].strip().lower()
-        user_name = request.form["user_name"]
-        gender = request.form["gender"]
-        sport_level = request.form["sport_level"]
-        security_question = request.form["security_question"]
-        security_answer = request.form["security_answer"].strip().lower()
-        password = request.form["password"]
+        # Get and normalize form data
+        email = request.form.get("email", "").strip().lower()
+        name = request.form.get("name", "").strip()
+        gender = request.form.get("gender", "").strip()
+        sport_level = request.form.get("sport_level", "").strip()
+        security_question = request.form.get("security_question", "").strip().lower()
+        security_answer = request.form.get("security_answer", "").strip().lower()
+        password = request.form.get("password", "").strip()
+
+        if not (email and name and password):
+            flash("Please fill in all required fields.")
+            return redirect(url_for("register"))
+
+        # Hash the password
         hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
 
-        new_user = User(user_email=user_email, user_name=user_name, gender=gender, sport_level=sport_level, security_question=security_question, security_answer=security_answer, password=hashed_password)
+        # Create user
+        new_user = User(
+            email=email,
+            name=name,
+            gender=gender,
+            sport_level=sport_level,
+            security_question=security_question,
+            security_answer=security_answer,
+            password=hashed_password,
+            role="user"  # default role
+        )
 
         try:
             db.session.add(new_user)
             db.session.commit()
-            flash("Registration successful! Please log in.")
-            return redirect(url_for("login"))
+
+            # Automatically log in new user
+            login_user(new_user)
+            flash(f"Registration successful! Welcome {new_user.name}.")
+            return redirect(url_for("posts"))
+
         except IntegrityError:
             db.session.rollback()
-            flash("Email already exists! Please log in.")
+            flash("Email already exists. Please log in.")
+            return redirect(url_for("login"))
 
-    return render_template("register.html")
+    return render_template("register.html",question=question)
 
 
-# Login page
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form.get("user_email", "").strip().lower()
-        password = request.form.get("password", "")
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "").strip()
 
-        if not email or not password:
-            flash("Please enter email and password.")
-            return redirect(url_for("login"))
+        user = User.query.filter_by(email=email).first()
 
-        user = User.query.filter_by(user_email=email).first()
         if not user:
-            flash("Invalid email !")
+            flash("Email not found.")
             return redirect(url_for("login"))
-        
-        if check_password_hash(user.password, password):
-            login_user(user)
-            flash(f"Welcome {user.user_name}!")
-            return redirect(url_for("posts"))
-        else:
-            flash("Wrong password. Please type again.")
+
+        if not check_password_hash(user.password, password):
+            flash("Incorrect password. Please try again")
             return redirect(url_for("login"))
-        
+
+        # Login successful
+        login_user(user)
+        flash(f"Welcome back, {user.name}!")
+
+        if user.role in ["admin", "both"]:
+            return redirect(url_for("admin_approval"))
+        return redirect(url_for("posts"))
+
     return render_template("login.html")
+
 
 question = {
     "pet": "What was your first pet name?",
@@ -255,79 +275,78 @@ question = {
     "book": "What was your favorite childhood book?"
 }
 
-@app.route("/resetpass", methods=["GET", "POST"])
-def resetpass():
-    user_email = None
-    security_question = None
-
+@app.route("/reset_password", methods=["GET", "POST"])
+def reset_password():
     if request.method == "POST":
         step = request.form.get("current")
-        # check email validity
-        if step == "email":
-            user_email = request.form.get("user_email", "").strip().lower()
-            if not user_email:
-                flash("Please enter your email.")
-                return render_template("login.html", open_reset_modal=True)
 
-            user = User.query.filter_by(user_email=user_email).first()
+        # Step 1: Enter email
+        if step == "email":
+            email = request.form.get("email", "").strip().lower()
+            user = User.query.filter_by(email=email).first()
+
             if not user:
                 flash("Email not found.")
                 return render_template("login.html", open_reset_modal=True)
 
-            # Map security question ket to get the sentence
-            security_question = question.get(user.security_question, "Security question not found")
+            security_question = question.get(user.security_question.strip().lower(), "Security question not found")
+
             return render_template(
                 "login.html",
                 open_reset_modal=True,
-                user_email=user_email,
+                email=email,
                 security_question=security_question
             )
 
-        # answer security answers so can reset password
+        # Step 2: Submit answer & new password
         elif step == "reset":
-            user_email = request.form.get("user_email", "").strip().lower()
+            email = request.form.get("email", "").strip().lower()
             answer = request.form.get("security_answer", "").strip().lower()
             new_password = request.form.get("new_password", "")
 
-            if not user_email or not answer or not new_password:
-                flash("Please fill all fields.")
-                return render_template("login.html", open_reset_modal=True)
-
-            user = User.query.filter_by(user_email=user_email).first()
+            user = User.query.filter_by(email=email).first()
             if not user:
                 flash("Email not found.")
                 return render_template("login.html", open_reset_modal=True)
 
             if user.security_answer.lower() == answer:
-                # Update password
                 user.password = generate_password_hash(new_password, method="pbkdf2:sha256")
                 db.session.commit()
-                flash("Password updated successfully! Please log in.")
+                flash("Password updated successfully!")
                 return redirect(url_for("login"))
             else:
                 flash("Security answer incorrect.")
                 return render_template(
                     "login.html",
                     open_reset_modal=True,
-                    user_email=user_email,
-                    security_question=question.get(user.security_question, "Security question not found")
+                    email=email,
+                    security_question = question.get(user.security_question.strip().lower(), "Security question not found")
                 )
 
-    return render_template("login.html", open_reset_modal=True)
-
+    # Default: show reset modal
+    return render_template("login.html", open_reset_modal=True,question=question)
 
 
 # Posts page
 @app.route("/index")
+@login_required
 def posts():
+    # Load all posts
     posts = Posts.query.order_by(Posts.date_posted.desc()).all()
+
+    # Convert UTC to Malaysia timezone
     for post in posts:
         if post.date_posted:
             utc_time = pytz.utc.localize(post.date_posted)
             post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
         else:
             post.local_date_posted_value = None
-    return render_template("index.html", posts=posts)
+
+    return render_template(
+        "index.html",
+        posts=posts,
+        is_admin=current_user.role == "admin" if current_user.is_authenticated else False
+    )
 
 
 # Search feature
@@ -347,7 +366,7 @@ def search():
                 func.lower(Posts.title).like(f"%{sport}%"),
                 func.lower(Posts.content).like(f"%{sport}%"),
                 func.lower(Posts.location).like(f"%{sport}%"),
-                func.lower(User.user_name).like(f"%{sport}%")
+                func.lower(User.name).like(f"%{sport}%")
             )
         )
 
@@ -388,7 +407,6 @@ def page_not_found(e):
 
 
 # Create post form
-# Create post form with debug
 @app.route('/create', methods=['GET', 'POST'])
 @login_required
 def create():
@@ -412,7 +430,7 @@ def create():
                 start_time=form.start_time.data,
                 end_time=form.end_time.data,
                 participants=form.participants.data,
-                user_email=current_user.user_email,
+                email=current_user.email,
             )
             db.session.add(new_post)
             db.session.commit()
@@ -492,12 +510,12 @@ def post_detail(post_id):
     join_activities = JoinActivity.query.filter_by(post_id=post.post_id).all()
 
     owner_conversations = []
-    if current_user.is_authenticated and current_user.user_email.lower() == post.user_email.lower():
+    if current_user.is_authenticated and current_user.email.lower() == post.email.lower():
         partners = db.session.query(ChatMessage.sender_email).filter_by(post_id=post.post_id).distinct()
         for (email,) in partners:
-            if email.lower() != post.user_email.lower():
+            if email.lower() != post.email.lower():
                 user = User.query.get(email)
-                owner_conversations.append({"email": email, "name":user.user_name if user else email})
+                owner_conversations.append({"email": email, "name":user.name if user else email})
 
     return render_template("post_detail.html", post=post, join_activities=join_activities, owner_conversations=owner_conversations)
 
@@ -508,8 +526,8 @@ def conversation_key(a_email: str, b_email: str) -> str:
 @app.route("/chat/<int:post_id>/<partner_email>")
 def chat_with_user(post_id, partner_email):
     post = Posts.query.get_or_404(post_id)
-    owner_email = post.user_email.lower()
-    current_email = current_user.user_email.lower()
+    owner_email = post.email.lower()
+    current_email = current_user.email.lower()
     partner_email = partner_email.lower()
 
     if current_email != owner_email and partner_email != owner_email:
@@ -521,23 +539,23 @@ def chat_with_user(post_id, partner_email):
     messages = (ChatMessage.query.filter_by(post_id=post_id, conversation=conv).order_by(asc(ChatMessage.created_at)).all())
 
     partner_user = User.query.get(partner_email)
-    partner_name = partner_user.user_name if partner_user else partner_email
+    partner_name = partner_user.name if partner_user else partner_email
 
     if current_email == owner_email:
         header_name = partner_name
     else:
-        header_name = post.user.user_name
+        header_name = post.user.name
 
-    return render_template("chat.html",post=post, room=room, username=current_user.user_name,header_name=header_name, 
+    return render_template("chat.html",post=post, room=room, username=current_user.name,header_name=header_name, 
                            messages=messages, post_id=post_id, partner_email=partner_email)
 
 @socketio.on("join")
 def on_join(data):
     room = data.get("room")
     if room:
-        print("JOIN ->", current_user.user_email, "to", room)
+        print("JOIN ->", current_user.email, "to", room)
     join_room(room)
-    send(f"{current_user.user_name} joined the chat.", to=room)
+    send(f"{current_user.name} joined the chat.", to=room)
 
 @socketio.on("send_message")
 def on_send_message(data):
@@ -549,10 +567,10 @@ def on_send_message(data):
     if not (room and text and post_id and partner):
         return
 
-    current_email = current_user.user_email.lower()
+    current_email = current_user.email.lower()
     conv = conversation_key(current_email,partner)
 
-    msg = ChatMessage(post_id=int(post_id), conversation=conv, sender_email=current_user.user_email, sender_name=current_user.user_name, text=text)
+    msg = ChatMessage(post_id=int(post_id), conversation=conv, sender_email=current_user.email, sender_name=current_user.name, text=text)
     db.session.add(msg)
     db.session.commit()
 
@@ -568,7 +586,7 @@ def notifications():
 @login_required
 def profile():
     recent_posts = (
-        Posts.query.filter_by(user_email=current_user.user_email)
+        Posts.query.filter_by(email=current_user.email)
         .order_by(Posts.date_posted.desc())
         .all()
     )
@@ -598,7 +616,7 @@ def profile_edit():
     form = UpdateProfileForm()
 
     if form.validate_on_submit():
-        current_user.user_name = form.user_name.data   
+        current_user.name = form.name.data   
         current_user.gender = form.gender.data
         current_user.bio = form.bio.data or None
 
@@ -611,7 +629,7 @@ def profile_edit():
         return redirect(url_for("profile"))
     
     if request.method == "GET":
-        form.user_name.data = current_user.user_name  
+        form.name.data = current_user.name  
         form.gender.data = current_user.gender
         form.bio.data = current_user.bio
 
@@ -653,11 +671,11 @@ def activityrequest(post_id):
         return redirect(url_for("post_detail", post_id=post.post_id))
 
     # Prevent duplicate request
-    existing = JoinActivity.query.filter_by(user_email=current_user.user_email, post_id=post.post_id).first()
+    existing = JoinActivity.query.filter_by(email=current_user.email, post_id=post.post_id).first()
     if existing:
         flash("You already requested this activity. Please wait for the post owner to approve")
     else:
-        join_act = JoinActivity(user_email=current_user.user_email, post_id=post.post_id)
+        join_act = JoinActivity(email=current_user.email, post_id=post.post_id)
         db.session.add(join_act)
         db.session.commit()
         flash("Your request has been sent to the post owner.")
@@ -672,8 +690,8 @@ def handle_request(request_id, decision):
     join_activity = JoinActivity.query.get_or_404(request_id)
     post = join_activity.post
 
-    # Only post owner can handle
-    if post.user_email != current_user.user_email:
+    # Only user posted can handle
+    if post.email != current_user.email:
         flash("You are not authorized to manage this request.")
         return redirect(url_for("post_detail", post_id=post.post_id))
 
@@ -686,7 +704,7 @@ def handle_request(request_id, decision):
 
         if accepted_count < post.participants:
             join_activity.status = "accepted"
-            flash(f"{join_activity.user.user_name} has been accepted!")
+            flash(f"{join_activity.user.name} has been accepted!")
 
             accepted_count += 1
             if accepted_count >= post.participants:
@@ -697,94 +715,106 @@ def handle_request(request_id, decision):
 
     elif decision == "reject":
         join_activity.status = "rejected"
-        flash(f"{join_activity.user.user_name} has been rejected.")
+        flash(f"{join_activity.user.name} has been rejected.")
 
     db.session.commit()
     return redirect(url_for("post_detail", post_id=post.post_id))
 
+
 #admin interface
-#owner of the website
 # Create default first admin
 def create_first_admin():
-    if not Admin.query.first():
-        admin = Admin(
-            admin_email="eewen@gmail.com".lower(),
-            admin_name="Lee Ee Wen",
+    # Check if any user already has role 'admin' or 'both'
+    existing_admin = User.query.filter(User.role.in_(["admin", "both"])).first()
+    
+    if not existing_admin:
+        admin_user = User(
+            email="eewen@gmail.com",
+            name="Lee Ee Wen",
             password=generate_password_hash("aaaa", method="pbkdf2:sha256"),
+            gender="Female",
+            sport_level="Advanced",
+            security_question="book",  #  key from the question dict
+            security_answer="Cinderella",
+            role="both"
         )
-        db.session.add(admin)
+        db.session.add(admin_user)
         db.session.commit()
-
-
-# LOGIN ADMIN
-@app.route("/login_admin", methods=["GET", "POST"])
-def login_admin():
-    if request.method == "POST":
-        email = request.form["admin_email"].strip().lower()
-        password = request.form["password"]
-
-        admin_instance = Admin.query.get(email)
-        if not admin_instance:
-            flash("No admin found with this email.")
-            return redirect(url_for("login_admin"))
-
-        if check_password_hash(admin_instance.password, password):
-            session["admin_email"] = admin_instance.admin_email
-            flash(f"Welcome {admin_instance.admin_name}!")
-            return redirect(url_for("admin_approval"))
-        else:
-            flash("Password incorrect.")
-
-    return render_template("login_admin.html")
+        print("First admin created successfully!")
 
 
 # REQUEST ADMIN ACCESS
 @app.route("/request_admin", methods=["GET", "POST"])
 def request_admin():
-    if request.method == "POST":
-        email = request.form.get("admin_email", "").strip().lower()
-        admin_name = request.form.get("admin_name", "")
-        password = request.form.get("password", "")
-        join_reason = request.form.get("join_reason", "")
+    email = request.form.get("email", "").strip().lower()
 
-        # already an admin?
-        if Admin.query.get(email):
-            flash("You are already an admin. Please log in instead.")
-            return redirect(url_for("login_admin"))
+    # Prevent existing admins from submitting requests
+    existing_user = User.query.filter_by(email=email).first()
+    if existing_user and existing_user.role in ["admin", "both"]:
+        flash("You are already an admin. Please log in.")
+        return redirect(url_for("login"))
 
-        # already requested?
-        existing = AdminRequest.query.filter_by(admin_email=email).first()
-        if existing:
-            flash("User can only request once, You already submitted a request before.")
-            return redirect(url_for("login_admin"))
+    step = request.form.get("step", "email")
 
+    if step == "email" and request.method == "POST":
+        return render_template("request_admin.html", email=email, existing_user=existing_user)
+
+    elif step == "submit" and request.method == "POST":
+        join_reason = request.form.get("join_reason", "").strip()
+
+        # Check if a request already exists
+        existing_request = AdminRequest.query.filter_by(email=email).first()
+        if existing_request:
+            flash("One submission per email. You have already submitted a request.")
+            return redirect(url_for("request_admin"))
+
+        if existing_user:
+            # Existing user: take info from User table
+            password_hash = existing_user.password
+            name = existing_user.name
+            sec_question = existing_user.security_question
+            sec_answer = existing_user.security_answer
+            join_reason = request.form.get("join_reason", "").strip()
+        else:
+            # New user must provide all info
+            name = request.form.get("name", "").strip()
+            password = request.form.get("password", "").strip()
+            sec_question = request.form.get("security_question", "").strip()
+            sec_answer = request.form.get("security_answer", "").strip()
+
+            if not all([name, password, sec_question, sec_answer]):
+                flash("All fields are required for new users.")
+                return redirect(url_for("request_admin"))
+
+            password_hash = generate_password_hash(password, method="pbkdf2:sha256")
+
+        # Create admin request
         new_request = AdminRequest(
-            admin_email=email,
-            admin_name=admin_name,
-            password=generate_password_hash(password, method="pbkdf2:sha256"),
+            email=email,
+            name=name,
+            password=password_hash,
             join_reason=join_reason,
-            approval="pending"
+            approval="pending",
+            security_question=sec_question,
+            security_answer=sec_answer
         )
+
         db.session.add(new_request)
         db.session.commit()
-        flash("Your request has been submitted and is pending approval.")
-
+        flash("Your admin request has been submitted.")
         return redirect(url_for("request_admin"))
 
     return render_template("request_admin.html")
 
-
+        
+# HANDLE REQUEST (any logged-in admin can approve/reject)
 # HANDLE REQUEST (any logged-in admin can approve/reject)
 @app.route("/handle-request/<int:approval_id>", methods=["GET", "POST"])
+@login_required
 def handle_request_admin(approval_id):
-    if "admin_email" not in session:
-        flash("You must log in first.")
-        return redirect(url_for("login_admin"))
-
-    current_admin = Admin.query.get(session["admin_email"])
-    if not current_admin:
-        flash("Invalid session. Please log in again.")
-        return redirect(url_for("login_admin"))
+    if current_user.role not in ["admin", "both"]:
+        flash("You do not have permission to perform this action.")
+        return redirect(url_for("home"))
 
     join_request = AdminRequest.query.get_or_404(approval_id)
 
@@ -792,73 +822,95 @@ def handle_request_admin(approval_id):
         decision = request.form.get("decision")
 
         if decision == "accept":
-            if not Admin.query.get(join_request.admin_email):
-                new_admin = Admin(
-                    admin_email=join_request.admin_email.lower(),
-                    admin_name=join_request.admin_name,
-                    password=join_request.password,
+            # Check if user already exists
+            user = User.query.filter_by(email=join_request.email).first()
+
+            if user:
+                # Existing user: only update role
+                if user.role == "user":
+                    user.role = "admin"
+                elif user.role == "admin":
+                    user.role = "both"
+
+                # Ensure security question and answer exist
+                if not user.security_question or not user.security_answer:
+                    user.security_question = join_request.security_question
+                    user.security_answer = join_request.security_answer
+
+            else:
+                # New user: take all info from the request
+                new_user = User(
+                    email=join_request.email,
+                    name=join_request.name,
+                    password=join_request.password,  
+                    role="admin",
+                    gender="Other",
+                    sport_level="None",
+                    security_question=join_request.security_question,
+                    security_answer=join_request.security_answer
                 )
-                db.session.add(new_admin)
-            join_request.approval = "approved"  
+                db.session.add(new_user)
+
+            join_request.approval = "approved"
             db.session.commit()
-            flash(f"{join_request.admin_name} has been approved as admin.")
+            flash(f"{join_request.name} has been approved as admin.")
 
         elif decision == "reject":
-            join_request.approval = "rejected" 
+            join_request.approval = "rejected"
             db.session.commit()
-            flash(f"Request from {join_request.admin_name} has been rejected.")
+            flash(f"Request from {join_request.name} has been rejected.")
 
         return redirect(url_for("admin_approval"))
 
     return render_template("join_admin.html", request=join_request)
 
+
 # ADMIN APPROVAL PAGE
 @app.route("/admin_approval")
+@login_required
 def admin_approval():
-    email = session.get("admin_email")
-    if not email:
-        flash("You must log in first.")
-        return redirect(url_for("login_admin"))
+    # check role
+    if current_user.role not in ["admin", "both"]:
+        flash("You do not have permission to access this page.")
+        return redirect(url_for("home"))
 
-    current_admin = Admin.query.get(email)
-    if not current_admin:
-        session.clear()
-        flash("Session expired. Please log in again.")
-        return redirect(url_for("login_admin"))
-
-    pending_requests = AdminRequest.query.filter_by(approval="pending").order_by(AdminRequest.approval_id.desc()).all()
-    approved_requests = AdminRequest.query.filter_by(approval="approved").order_by(AdminRequest.approval_id.desc()).all()
-    rejected_requests = AdminRequest.query.filter_by(approval="rejected").order_by(AdminRequest.approval_id.desc()).all()
+    # normal admin logic
+    pending_requests = AdminRequest.query.filter_by(approval="pending").all()
+    approved_requests = AdminRequest.query.filter_by(approval="approved").all()
+    rejected_requests = AdminRequest.query.filter_by(approval="rejected").all()
 
     return render_template(
         "admin_approval.html",
-        admin=current_admin,
         pending_requests=pending_requests,
         approved_requests=approved_requests,
         rejected_requests=rejected_requests
     )
 
+
 @app.route("/check_approval", methods=["GET", "POST"])
 def check_approval():
-    admin_email = request.form.get("admin_email", "").strip().lower()
+    email = request.form.get("email", "").strip().lower()
     open_approval_modal = True
     approval_status = None
 
-    if request.method == "POST" and admin_email:
-        req = AdminRequest.query.filter_by(admin_email=admin_email).first()
+    if request.method == "POST" and email:
+        # Check if there is a pending or approved request
+        req = AdminRequest.query.filter_by(email=email).first()
         if req:
             approval_status = req.approval.lower()
         else:
-            if Admin.query.get(admin_email):
+            # Check if user exists and has admin role
+            user = User.query.filter_by(email=email).first()
+            if user and user.role in ["admin", "both"]:
                 approval_status = "approved"
             else:
                 approval_status = "not_found"
 
-        return render_template(  #submit and check email exist or not
+        return render_template( # submit email to check validity
             "request_admin.html",
             open_approval_modal=open_approval_modal,
             approval_status=approval_status,
-            submitted_email=admin_email
+            submitted_email=email
         )
 
     return render_template( #check approval status
@@ -866,7 +918,6 @@ def check_approval():
         open_approval_modal=open_approval_modal,
         approval_status=approval_status
     )
-
 
 # LOGOUT
 @app.route("/logout")
@@ -881,41 +932,27 @@ def logout():
 @app.route("/admin/dashboard")
 @login_required
 def admin_dashboard():
+    if current_user.role != "admin":
+        abort(403)  # only admin can access
 
     users = User.query.all()
     posts = Posts.query.all()
-    join_requests = JoinActivity.query.all()
 
     return render_template(
         "admin_dashboard.html",
         users=users,
         posts=posts,
-        join_requests=join_requests
+        is_admin=True  # flag for template
     )
 
 
-# admin promote user
-@app.route("/admin/promote_user/<string:user_email>", methods=["POST"])
-@login_required
-def promote_user(user_email):
-    if current_user.role != "admin":
-        abort(403)
-
-    user = User.query.get_or_404(user_email)
-    user.role = "admin"  # promote to admin
-    db.session.commit()
-    flash(f"{user.user_name} has been promoted to admin.", "success")
-    return redirect(url_for("admin_dashboard"))
-
-
-
 # admin delete user
-@app.route("/admin/delete_user/<string:user_email>", methods=["POST", "GET"])
+@app.route("/admin/delete_user/<string:email>", methods=["POST", "GET"])
 @login_required
-def delete_user(user_email):
+def delete_user(email):
     if current_user.role != "admin":
         abort(403)
-    user = User.query.get_or_404(user_email)
+    user = User.query.get_or_404(email)
     db.session.delete(user)
     db.session.commit()
     flash("User deleted.", "success")

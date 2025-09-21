@@ -1,141 +1,171 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-        <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
-        <title>Request to Join Admin</title>
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <title>Request Admin Access</title>
+</head>
 
-    <body class="admin register-page">
+<body class="admin">
 
-        <!-- Navigation Bar -->
-        <div class="page-container">
+    <!-- Navigation Bar -->
+    <div class="page-container">
         <header>
             <a class="header-logo"><span>ebFit</span></a>
             <a href="{{ url_for('home') }}" class="nav-items">
-                    <i class="fa-solid fa-house"></i>
-                </a>
+                <i class="fa-solid fa-house"></i>
+            </a>
         </header>
-        </div>
+    </div>
 
-        <div id="page" class="site">
-            <div class="container2">
-                <div class="login">
+    <div id="page" class="site">
+        <div class="container2">
+            <div class="login">
 
-                    <!-- Left Hero -->
-                    <div class="hero">
-                        <h1>Welcome <br>Admin.</h1>
-                        <p>
-                            If you already have an admin account,<br>
-                            <a href="{{ url_for('login_admin') }}">Login here</a>.
-                        </p>
-                            
-                        <p> Check approval status,<a href="#" onclick="document.getElementById('approvalModal').style.display='block'">Click Here.</a>
-                        </p>
-                    </div>
+                <!-- Left Hero -->
+                <div class="hero">
+                    <h1>Welcome <br>ebFit.</h1>
+                    <p>
+                        Already have an admin account?<br>
+                        <a href="{{ url_for('login') }}">Log in here</a><br><br>
 
-                    <!-- Right Form -->
-                    <div class="main">
-                        <div class="login-box">
+                        Check Approval, <br>
+                        <a href="#" onclick="document.getElementById('approvalModal').style.display='block'">
+                            Click here
+                        </a>
+                    </p>
+                </div>
 
-                            {% with messages = get_flashed_messages() %}
-                            {% if messages %}
+                <!-- Right Form -->
+                <div class="main">
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
                             {% for message in messages %}
-                            <div class="popup">
-                                <div class="popup-content">
-                                    <p>{{ message }}</p>
-                                    <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                                <div class="popup">
+                                    <div class="popup-content">
+                                        <p>{{ message }}</p>
+                                        <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                                    </div>
                                 </div>
-                            </div>
                             {% endfor %}
-                            {% endif %}
-                            {% endwith %}
+                        {% endif %}
+                    {% endwith %}
 
+                    {% if not email %}
+                        <!-- Step 1: Email input -->
+                        <div class="login-box step1">
                             <form action="{{ url_for('request_admin') }}" method="POST">
-                                <h2 class="form-title">Request Admin</h2>
+                                <h2 class="form-title">Request Admin Access</h2>
 
                                 <p class="colortext">
-                                    <span><strong>Email address</strong></span>
-                                    <input type="email" name="admin_email" required>
+                                    <strong>Email address</strong>
+                                    <input type="email" name="email" required>
                                 </p>
 
-                                <p class="colortext">
-                                    <span><strong>Full name</strong></span>
-                                    <input type="text" name="admin_name" required>
-                                </p>
+                                <input type="hidden" name="step" value="email">
 
-                                <p class="colortext">
-                                    <span><strong>Password</strong></span>
-                                    <input type="password" name="password" required>
-                                </p>
+                                <div class="btn-group">
+                                    <input type="submit" class="big-cta-btn" value="Next">
+                                </div>
+                            </form>
+                        </div>
+                    {% else %}
+                        <!-- Step 2: Admin request details -->
+                        <div class="login-box">
+                            <form action="{{ url_for('request_admin') }}" method="POST">
+                                <h2 class="form-title">Request Admin Access</h2>
 
+                                <input type="hidden" name="step" value="submit">
+                                <input type="hidden" name="email" value="{{ email }}">
+                                
                                 <p class="colortext">
-                                    <span><strong>Join reason</strong></span>
+    <strong>Email address</strong>
+    <input type="email" value="{{ email }}" readonly class="readonly-input">
+</p>
+<p class="colortext">
+    <strong>Full Name</strong>
+    <input type="text" value="{{ existing_user.name }}" readonly class="readonly-input">
+</p>
+
+
+                                <!-- Join Reason comes after Full Name -->
+                                <p class="colortext">
+                                    <strong>Join Reason</strong>
                                     <input type="text" name="join_reason" required>
                                 </p>
 
+                                {% if not existing_user %}
+                                    <p class="colortext">
+                                        <strong>Password</strong>
+                                        <input type="password" name="password" required>
+                                    </p>
+
+                                    <p class="colortext">
+                                        <strong>Security Question (For Reset Password)</strong>
+                                        <select name="security_question" class="form-select" required>
+                                            <option value="" disabled selected>-- Select a security question --</option>
+                                            <option value="pet">What was your first pet name?</option>
+                                            <option value="car">What was your first car?</option>
+                                            <option value="hospital">What hospital name were you born in?</option>
+                                            <option value="city">What city were you born in?</option>
+                                            <option value="girlfriend">What was your first ex girlfriend's name?</option>
+                                            <option value="boyfriend">What was your first ex boyfriend's name?</option>
+                                            <option value="school">What was the name of your first school?</option>
+                                            <option value="book">What was your favorite childhood book?</option>
+                                        </select>
+                                    </p>
+
+                                    <p class="colortext">
+                                        <strong>Security Answer (For Reset Password)</strong>
+                                        <input type="text" name="security_answer" required>
+                                    </p>
+                                {% endif %}
+
                                 <div class="btn-group">
-                                    <input type="submit" class="big-cta-btn" value="Request">
+                                    <div class="btn-group">
+                                    <a href="{{ url_for('request_admin') }}" class="big-cta-btn">Back</a>
+                                    <input type="submit" class="big-cta-btn" value="Submit Request">
                                 </div>
                             </form>
-
                         </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-        
-        <div id="approvalModal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="document.getElementById('approvalModal').style.display='none'">&times;</span>
-                <h2>Check Approval Status</h2>
-
-                {% if approval_status is not defined %}
-                    <!-- Step 1: ask for email -->
-                    <form method="POST" action="{{ url_for('check_approval') }}">
-                        <label>Email address</label>
-                        <input type="email" name="admin_email" required>
-                        <div class="btn-group">
-                            <input type="submit" class="big-cta-btn" value="Check Status">
-                        </div>
-                    </form>
-
-                {% else %}
-                    <!-- Step 2: show status -->
-                    {% if approval_status == "pending" %}
-                        <p>Status: <strong>Pending</strong></p>
-                    {% elif approval_status == "approved" %}
-                        <p>Status: <strong>Approved</strong></p>
-                    {% elif approval_status == "rejected" %}
-                        <p>Status: <strong>Rejected</strong></p>
-                    {% else %}
-                        <p>Status: <strong>Not Found</strong></p>
                     {% endif %}
 
-                    <div class="btn-group">
-                        {% if approval_status == "approved" %}
-                            <!-- If approved, send to login -->
-                            <a href="{{ url_for('login_admin') }}" class="big-cta-btn">Done</a>
-                        {% else %}
-                            <!-- Otherwise just close the modal -->
-                            <button type="button" class="big-cta-btn" onclick="document.getElementById('approvalModal').style.display='none'">Done</button>
-                        {% endif %}
-                    </div>
-                {% endif %}
-            </div>
-        </div>
+    <!-- Approval Modal -->
+    <div id="approvalModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('approvalModal').style.display='none'">&times;</span>
+            <h2>Check Approval Status</h2>
 
-        <!-- Auto-open modal if Flask sets flag -->
-        {% if open_approval_modal %}
+            {% if approval_status is not defined %}
+                <form method="POST" action="{{ url_for('check_approval') }}">
+                    <label>Email address</label>
+                    <input type="email" name="email" required>
+                    <div class="btn-group">
+                        <input type="submit" class="big-cta-btn" value="Check Status">
+                    </div>
+                </form>
+            {% else %}
+                <p>Status: <strong>{{ approval_status|capitalize }}</strong></p>
+                <div class="btn-group">
+                    {% if approval_status == "approved" %}
+                        <a href="{{ url_for('login') }}" class="big-cta-btn">Done</a>
+                    {% else %}
+                        <button type="button" class="big-cta-btn" onclick="document.getElementById('approvalModal').style.display='none'">Done</button>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if open_approval_modal %}
         <script>
             document.addEventListener("DOMContentLoaded", function() {
                 document.getElementById("approvalModal").style.display = "block";
             });
         </script>
-        {% endif %}
-    </body>
+    {% endif %}
+</body>
 </html>
