@@ -5,7 +5,7 @@
 <div class="container">
     <h1>Admin Reports</h1>
 
-    {% if posts %}
+    {% if flagged_posts %}
         <table class="styled-table">
             <thead>
                 <tr>
@@ -17,7 +17,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for post in posts %}
+                {% for post, report_count in flagged_posts %}
                 <tr>
                     <td>{{ post.title }}</td>
                     <td>
@@ -25,7 +25,7 @@
                         {% elif post.admin %} {{ post.admin.admin_name }} (Admin)
                         {% endif %}
                     </td>
-                    <td>{{ post.reports_count }}</td>
+                    <td>{{ report_count }}</td>
                     <td>
                         {% if post.is_hidden %}
                             <span class="text-danger">Hidden</span>

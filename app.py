@@ -90,13 +90,13 @@ class Posts(db.Model):
     date_posted = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     post_status = db.Column(db.String(20), default="open")
     participants = db.Column(db.Integer, nullable=False)
-    image_filename = db.Column(db.String(200), nullable=True)
-    reports_count = db.Column(db.Integer, default=0)   
-    is_hidden = db.Column(db.Boolean, default=False)
+    image_filename = db.Column(db.String(200), nullable=True)   
 
     # ✅ Foreign keys
     user_email = db.Column(db.String, db.ForeignKey("users.user_email"), nullable=True)
     admin_email = db.Column(db.String, db.ForeignKey("admins.admin_email"), nullable=True)
+
+    is_hidden = db.Column(db.Boolean, default=False)
 
     user = db.relationship("User", backref="user_posts", lazy=True, overlaps="posts")
     admin = db.relationship("Admin", backref="admin_posts", lazy=True)
@@ -580,28 +580,29 @@ def report_post(post_id):
 
     post = Posts.query.get_or_404(post_id)
 
-    # Determine reporter email (user or admin)
+    # determine who reported
     reporter_email = current_user.user_email if current_user.is_authenticated else session.get("admin_email")
 
     # prevent duplicate reports by same reporter
     existing_report = Reports.query.filter_by(post_id=post_id, reporter_email=reporter_email).first()
     if existing_report:
         flash("You already reported this post.", "warning")
-        return redirect(url_for("posts"))
+        return redirect(url_for("post_detail", post_id=post_id))
 
-    # create new report
+    # create and commit the report
     new_report = Reports(post_id=post_id, reporter_email=reporter_email)
     db.session.add(new_report)
-
-    # increment report count
-    post.reports_count += 1
-    if post.reports_count >= 3:
-        post.is_hidden = True  # automatically hide
-
     db.session.commit()
+
+    # count total reports from Reports table and hide if threshold reached
+    report_count = Reports.query.filter_by(post_id=post_id).count()
+    if report_count >= 3:
+        post.is_hidden = True
+        db.session.commit()
 
     flash("Post reported successfully.", "success")
     return redirect(url_for("posts"))
+
 
 
 
@@ -1098,6 +1099,7 @@ def delete_user(user_email):
     return redirect(url_for("admin_dashboard"))
 
 
+
 # Admin reports
 @app.route("/admin/reports")
 def admin_reports():
@@ -1152,7 +1154,10 @@ def reactivate_post(post_id):
 
     post = Posts.query.get_or_404(post_id)
     post.is_hidden = False
-    post.reports_count = 0  # reset reports
+
+    # delete all reports for this post
+    Reports.query.filter_by(post_id=post_id).delete()
+
     db.session.commit()
 
     flash("Post has been reactivated and is now visible.", "success")
