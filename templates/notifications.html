@@ -6,10 +6,14 @@
     <h1>Notifications</h1>
 
     {% if rows %}
-        <ul class="notifications_list">
+        <ul class="notifications-list">
             {% for notif in rows %}
-                <li class="notification {% if not notif.is_read %} unread {% endif %}">
-                    <p>{{ notif.text }}</p>
+                <li class="notification {{'read' if notif.is_read else 'unread'}}">
+                    {% if notif.link %}
+                        <a href="{{ notif.link }}">{{ notif.text }}</a>
+                    {% else %}
+                        {{ notif.text }}
+                    {% endif %}
                     <span class="time">{{ notif.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
                 </li>
             {% endfor %}

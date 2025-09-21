@@ -177,12 +177,13 @@ class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_email = db.Column(db.String(255), db.ForeignKey("users.user_email"), nullable=False)
     text = db.Column(db.String(500), nullable=False)
+    link = db.Column(db.String(500), nullable=True)
     is_read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-def add_notification(user_email, text):
+def add_notification(user_email, text, link=None):
     try:
-        db.session.add(Notification(user_email=user_email, text=text))
+        db.session.add(Notification(user_email=user_email, text=text, link=link))
         db.session.commit()
     except Exception:
         db.session.rollback()
@@ -588,7 +589,8 @@ def on_send_message(data):
     if partner != current_user.user_email.lower():
         post = Posts.query.get(int(post_id))
         if post:
-            add_notification(partner, f"{current_user.user_name} sent you a message")
+            chat_url = url_for("chat_with_user", post_id=post.id, partner_email=current_user.user_email)
+            add_notification(partner, f"{current_user.user_name} sent you a message", link=chat_url)
 
     send({"user": msg.sender_name, "text": msg.text}, to=room)
 
@@ -709,7 +711,7 @@ def activityrequest(post_id):
         db.session.commit()
         flash("Your request has been sent to the post owner.")
 
-        add_notification(post.user_email, f"{current_user.user_name} requested to join '{post.title}'")
+        add_notification(post.user_email, f"{current_user.user_name} requested to join '{post.title}'", link=url_for("post_detail", post_id=post.post_id))
 
     return redirect(url_for("post_detail", post_id=post.post_id))
 
@@ -737,7 +739,7 @@ def handle_request(request_id, decision):
             join_activity.status = "accepted"
             flash(f"{join_activity.user.user_name} has been accepted!")
 
-            add_notification(join_activity.user_email, f"Your request for '{post.title}' was accepted")
+            add_notification(join_activity.user_email, f"Your request for '{post.title}' was accepted", link=url_for("post_detail", post_id=post.post_id))
 
             accepted_count += 1
             if accepted_count >= post.participants:
