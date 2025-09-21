@@ -39,7 +39,9 @@
                     <details>
                         <summary class="menu-btn">⋮</summary>
                         <div class="menu-dropdown">
-                            <a href="#">Report</a>
+                            <form action="{{ url_for('report_post', post_id=post.post_id) }}" method="POST" style="margin:0;">
+                                <button type="submit" class="menu-link">Report</button>
+                            </form>
                         </div>
                     </details>
                 </div>

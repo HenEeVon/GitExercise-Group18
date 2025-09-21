@@ -50,6 +50,7 @@ class User(UserMixin, db.Model):
     image_file = db.Column(db.String(255), nullable=True, default="default.png")
     bio = db.Column(db.Text, nullable=True)
     role = db.Column(db.String(20), default="user") 
+    is_suspended = db.Column(db.Boolean, default=False)
 
     posts = db.relationship("Posts", back_populates="user", lazy=True)
 
@@ -90,6 +91,8 @@ class Posts(db.Model):
     post_status = db.Column(db.String(20), default="open")
     participants = db.Column(db.Integer, nullable=False)
     image_filename = db.Column(db.String(200), nullable=True)
+    reports_count = db.Column(db.Integer, default=0)   
+    is_hidden = db.Column(db.Boolean, default=False)
 
     # ✅ Foreign keys
     user_email = db.Column(db.String, db.ForeignKey("users.user_email"), nullable=True)
@@ -97,6 +100,16 @@ class Posts(db.Model):
 
     user = db.relationship("User", backref="user_posts", lazy=True, overlaps="posts")
     admin = db.relationship("Admin", backref="admin_posts", lazy=True)
+  
+
+class Reports(db.Model):
+    __tablename__ = "reports"
+
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey("posts.post_id"), nullable=False)
+    reporter_email = db.Column(db.String(120), nullable=False)  # works for both users & admins
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    post = db.relationship("Posts", backref=db.backref("reports", lazy=True))
 
 
 class JoinActivity(db.Model):
@@ -240,6 +253,10 @@ def login():
             flash("Invalid email !")
             return redirect(url_for("login"))
         
+        if user.is_suspended:
+            flash("Your account has been suspended. Contact admin for support.", "danger")
+            return redirect(url_for("login"))
+        
         if check_password_hash(user.password, password):
             login_user(user)
             flash(f"Welcome {user.user_name}!")
@@ -340,6 +357,10 @@ def posts():
     current_admin = None
     if session.get("admin_email"):
         current_admin = Admin.query.get(session.get("admin_email"))
+        posts = Posts.query.all() # admin see all posts
+    else:  # users see only non-hidden posts
+        posts = Posts.query.filter_by(is_hidden=False).all()
+    return render_template("index.html", posts=posts)
 
     return render_template(
         "index.html",
@@ -549,6 +570,39 @@ def delete(post_id):
     db.session.commit()
     flash("Post deleted successfully!", "danger")
     return redirect(url_for("posts"))
+
+# Report post
+@app.route("/report/<int:post_id>", methods=["POST"])
+def report_post(post_id):
+    if not current_user.is_authenticated and not session.get("admin_email"):
+        flash("You must be logged in to report posts.", "danger")
+        return redirect(url_for("login"))
+
+    post = Posts.query.get_or_404(post_id)
+
+    # Determine reporter email (user or admin)
+    reporter_email = current_user.user_email if current_user.is_authenticated else session.get("admin_email")
+
+    # prevent duplicate reports by same reporter
+    existing_report = Reports.query.filter_by(post_id=post_id, reporter_email=reporter_email).first()
+    if existing_report:
+        flash("You already reported this post.", "warning")
+        return redirect(url_for("posts"))
+
+    # create new report
+    new_report = Reports(post_id=post_id, reporter_email=reporter_email)
+    db.session.add(new_report)
+
+    # increment report count
+    post.reports_count += 1
+    if post.reports_count >= 3:
+        post.is_hidden = True  # automatically hide
+
+    db.session.commit()
+
+    flash("Post reported successfully.", "success")
+    return redirect(url_for("posts"))
+
 
 
 
@@ -1021,29 +1075,6 @@ def admin_dashboard():
     )
 
 
-# Admin promote user
-@app.route("/admin/promote_user/<string:user_email>", methods=["POST"])
-def promote_user(user_email):
-    # Check if admin is logged in via session
-    email = session.get("admin_email")
-    if not email:
-        flash("You must log in first.")
-        return redirect(url_for("login_admin"))
-
-    current_admin = Admin.query.get(email)
-    if not current_admin:
-        session.clear()
-        flash("Session expired. Please log in again.")
-        return redirect(url_for("login_admin"))
-
-    # Promote the user
-    user = User.query.get_or_404(user_email)
-    user.role = "admin"
-    db.session.commit()
-    flash(f"{user.user_name} has been promoted to admin.", "success")
-    return redirect(url_for("admin_dashboard"))
-
-
 
 # Admin delete user
 @app.route("/admin/delete_user/<string:user_email>", methods=["POST", "GET"])
@@ -1070,29 +1101,62 @@ def delete_user(user_email):
 # Admin reports
 @app.route("/admin/reports")
 def admin_reports():
-    # Check if admin is logged in via session
-    email = session.get("admin_email")
-    if not email:
-        flash("You must log in first.")
-        return redirect(url_for("login_admin"))
+    if not session.get("admin_email"):
+        flash("Admins only!", "danger")
+        return redirect(url_for("login"))
 
-    current_admin = Admin.query.get(email)
-    if not current_admin:
-        session.clear()
-        flash("Session expired. Please log in again.")
-        return redirect(url_for("login_admin"))
-
-    users = User.query.all()
-    posts = Posts.query.all()
-    join_requests = JoinActivity.query.all()
-
-    return render_template(
-        "admin_reports.html",
-        admin=current_admin,
-        users=users,
-        posts=posts,
-        join_requests=join_requests
+    flagged_posts = (
+        db.session.query(Posts, db.func.count(Reports.id).label("report_count"))
+        .join(Reports, Reports.post_id == Posts.post_id)
+        .group_by(Posts.post_id)
+        .having(db.func.count(Reports.id) >= 3)  # flag threshold
+        .all()
     )
+
+    return render_template("admin_reports.html", flagged_posts=flagged_posts)
+
+# Suspend user
+@app.route("/suspend/<string:user_email>", methods=["POST"])
+def suspend_user(user_email):
+    if not session.get("admin_email"):  # only admins allowed
+        flash("Unauthorized access", "danger")
+        return redirect(url_for("login"))
+
+    user = Users.query.filter_by(user_email=user_email).first_or_404()
+    user.is_suspended = True
+    db.session.commit()
+
+    flash(f"User {user.user_email} has been suspended.", "warning")
+    return redirect(url_for("admin_reports"))
+
+# Unsuspend user
+@app.route("/unsuspend/<string:user_email>", methods=["POST"])
+def unsuspend_user(user_email):
+    if not session.get("admin_email"):
+        flash("Unauthorized access", "danger")
+        return redirect(url_for("login"))
+
+    user = Users.query.filter_by(user_email=user_email).first_or_404()
+    user.is_suspended = False
+    db.session.commit()
+
+    flash(f"User {user.user_email} has been unsuspended.", "success")
+    return redirect(url_for("admin_dashboard"))
+
+# Reactivate hidden post
+@app.route("/reactivate/<int:post_id>", methods=["POST"])
+def reactivate_post(post_id):
+    if not session.get("admin_email"):
+        flash("Unauthorized access", "danger")
+        return redirect(url_for("login"))
+
+    post = Posts.query.get_or_404(post_id)
+    post.is_hidden = False
+    post.reports_count = 0  # reset reports
+    db.session.commit()
+
+    flash("Post has been reactivated and is now visible.", "success")
+    return redirect(url_for("admin_reports"))
 
 
 @app.context_processor
