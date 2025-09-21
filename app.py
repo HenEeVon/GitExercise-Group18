@@ -162,7 +162,7 @@ class ChatMessage(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
 
-#Update Profile
+#Update Profile database
 class UpdateProfileForm(FlaskForm):
     user_name = StringField("Full Name", validators=[DataRequired(), Length(min=2, max=50)])
     gender = RadioField("Gender", choices=[("Male", "Male"),("Female", "Female")], validators=[DataRequired()])
@@ -172,6 +172,20 @@ class UpdateProfileForm(FlaskForm):
     picture = FileField("Update Profile Picture", validators=[FileAllowed(["jpg", "png"])])
     submit = SubmitField("Update")
 
+#Notification database
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_email = db.Column(db.String(255), db.ForeignKey("users.user_email"), nullable=False)
+    text = db.Column(db.String(500), nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+def add_notification(user_email, text):
+    try:
+        db.session.add(Notification(user_email=user_email, text=text))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 # User loader
 @login_manager.user_loader
@@ -571,12 +585,26 @@ def on_send_message(data):
     db.session.add(msg)
     db.session.commit()
 
+    if partner != current_user.user_email.lower():
+        post = Posts.query.get(int(post_id))
+        if post:
+            add_notification(partner, f"{current_user.user_name} sent you a message")
+
     send({"user": msg.sender_name, "text": msg.text}, to=room)
 
 # Notifications
 @app.route("/notifications")
+@login_required
 def notifications():
-    return render_template("notifications.html")
+    rows = (Notification.query.filter_by(user_email=current_user.user_email).order_by(Notification.created_at.desc()).all())
+    return render_template("notifications.html", rows=rows)
+
+@app.route("/notifications/read_all", methods=["POST"])
+@login_required
+def notifications_read_all():
+    Notification.query.filter_by(user_email=current_user.user_email, is_read=False).update({"is_read":True})
+    db.session.commit()
+    return redirect(url_for("notifications"))
 
 #My profile
 @app.route("/profile")
@@ -681,6 +709,8 @@ def activityrequest(post_id):
         db.session.commit()
         flash("Your request has been sent to the post owner.")
 
+        add_notification(post.user_email, f"{current_user.user_name} requested to join '{post.title}'")
+
     return redirect(url_for("post_detail", post_id=post.post_id))
 
 
@@ -707,6 +737,8 @@ def handle_request(request_id, decision):
             join_activity.status = "accepted"
             flash(f"{join_activity.user.user_name} has been accepted!")
 
+            add_notification(join_activity.user_email, f"Your request for '{post.title}' was accepted")
+
             accepted_count += 1
             if accepted_count >= post.participants:
                 post.post_status = "closed"
@@ -717,6 +749,8 @@ def handle_request(request_id, decision):
     elif decision == "reject":
         join_activity.status = "rejected"
         flash(f"{join_activity.user.user_name} has been rejected.")
+
+        add_notification(join_activity.user_email, f"Your request for '{post.title}' was rejected")
 
     db.session.commit()
     return redirect(url_for("post_detail", post_id=post.post_id))
