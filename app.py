@@ -586,11 +586,12 @@ def on_send_message(data):
     db.session.add(msg)
     db.session.commit()
 
-    if partner != current_user.user_email.lower():
-        post = Posts.query.get(int(post_id))
-        if post:
-            chat_url = url_for("chat_with_user", post_id=post.id, partner_email=current_user.user_email)
+    try:
+        if partner != current_email:
+            chat_url = url_for("chat_with_user", post_id=post_id, partner_email=current_user.user_email)
             add_notification(partner, f"{current_user.user_name} sent you a message", link=chat_url)
+    except Exception:
+        db.session.rollback()
 
     send({"user": msg.sender_name, "text": msg.text}, to=room)
 
@@ -607,6 +608,17 @@ def notifications_read_all():
     Notification.query.filter_by(user_email=current_user.user_email, is_read=False).update({"is_read":True})
     db.session.commit()
     return redirect(url_for("notifications"))
+
+@app.route("/notif/<int:notif_id>")
+@login_required
+def open_notif(notif_id):
+    notif = Notification.query.get_or_404(notif_id)
+
+    if notif.user_email == current_user.user_email:
+        notif.is_read = True
+        db.session.commit()
+
+    return redirect(notif.link or url_for("notifications"))
 
 #My profile
 @app.route("/profile")

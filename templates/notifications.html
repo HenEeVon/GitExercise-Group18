@@ -10,7 +10,7 @@
             {% for notif in rows %}
                 <li class="notification {{'read' if notif.is_read else 'unread'}}">
                     {% if notif.link %}
-                        <a href="{{ notif.link }}">{{ notif.text }}</a>
+                        <a href="{{ url_for('open_notif', notif_id=notif.id) }}">{{ notif.text }}</a>
                     {% else %}
                         {{ notif.text }}
                     {% endif %}
