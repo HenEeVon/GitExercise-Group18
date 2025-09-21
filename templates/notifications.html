@@ -6,18 +6,18 @@
     <h1>Notifications</h1>
 
     {% if rows %}
-        <form method="post" action="{{ url_for('notifications_read_all') }}">
-            <button class="btn">Mark all as read</button>
-        </form>
-
         <ul class="notifications_list">
             {% for notif in rows %}
-                <li class="notification-item {% if not notif.is_read %} unread {% endif %}">
-                    <div class="notification_meta">{{ notif.created_at.strftime('%d/%m/%Y %H:%M') }}</div>
-                    <div class="notification-text">{{ notif.text }}</div>
+                <li class="notification {% if not notif.is_read %} unread {% endif %}">
+                    <p>{{ notif.text }}</p>
+                    <span class="time">{{ notif.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
                 </li>
             {% endfor %}
         </ul>
+
+        <form method="post" action="{{ url_for('notifications_read_all') }}">
+            <button type="submit" class="btn">Mark all as read</button>
+        </form>
     {% else %}
         <p>No notifications yet.</p>
     {% endif %}
