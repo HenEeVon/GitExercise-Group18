@@ -1124,7 +1124,7 @@ def suspend_user(user_email):
         flash("Unauthorized access", "danger")
         return redirect(url_for("login"))
 
-    user = Users.query.filter_by(user_email=user_email).first_or_404()
+    user = User.query.filter_by(user_email=user_email).first_or_404()
     user.is_suspended = True
     db.session.commit()
 
@@ -1138,7 +1138,7 @@ def unsuspend_user(user_email):
         flash("Unauthorized access", "danger")
         return redirect(url_for("login"))
 
-    user = Users.query.filter_by(user_email=user_email).first_or_404()
+    user = User.query.filter_by(user_email=user_email).first_or_404()
     user.is_suspended = False
     db.session.commit()
 
