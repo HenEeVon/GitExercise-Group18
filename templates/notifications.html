@@ -14,7 +14,11 @@
                     {% else %}
                         {{ notif.text }}
                     {% endif %}
-                    <span class="time">{{ notif.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
+                    <span class="time">
+                        {% if notif.local_time %}
+                            {{ notif.local_time.strftime('%d/%m/%Y %H:%M') }}
+                        {% endif %}
+                    </span>
                 </li>
             {% endfor %}
         </ul>

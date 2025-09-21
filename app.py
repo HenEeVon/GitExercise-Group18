@@ -600,6 +600,13 @@ def on_send_message(data):
 @login_required
 def notifications():
     rows = (Notification.query.filter_by(user_email=current_user.user_email).order_by(Notification.created_at.desc()).all())
+
+    for notif in rows:
+        if notif.created_at:
+            notif.local_time = pytz.utc.localize(notif.created_at).astimezone(MALAYSIA_TZ)
+        else:
+            notif.local_time = None
+
     return render_template("notifications.html", rows=rows)
 
 @app.route("/notifications/read_all", methods=["POST"])
@@ -841,7 +848,7 @@ def request_admin():
 
 
 # HANDLE REQUEST (any logged-in admin can approve/reject)
-@app.route("/handle-request/<int:approval_id>", methods=["GET", "POST"])
+@app.route("/admin/handle-request/<int:approval_id>", methods=["GET", "POST"])
 def handle_request_admin(approval_id):
     if "admin_email" not in session:
         flash("You must log in first.")
