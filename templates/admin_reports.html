@@ -11,7 +11,6 @@
                 <tr>
                     <th>Title</th>
                     <th>Author</th>
-                    <th>Reports</th>
                     <th>Post Status</th>
                     <th>Actions</th>
                 </tr>
@@ -25,7 +24,6 @@
                         {% elif post.admin %} {{ post.admin.admin_name }} (Admin)
                         {% endif %}
                     </td>
-                    <td>{{ report_count }}</td>
                     <td>
                         {% if post.is_hidden %}
                             <span class="text-danger">Hidden</span>
@@ -34,14 +32,19 @@
                         {% endif %}
                     </td>
                     <td>
+                        <a href="{{ url_for('post_detail', post_id=post.post_id, readonly=1, from_reports=1) }}" class="btn btn-info">View</a>
+
                         {% if post.is_hidden %}
                             <form action="{{ url_for('reactivate_post', post_id=post.post_id) }}" method="POST" style="display:inline;">
                                 <button class="btn btn-success btn-sm">Reactivate</button>
                             </form>
                         {% endif %}
                         <form action="{{ url_for('delete', post_id=post.post_id) }}" method="POST" style="display:inline;">
-                            <button class="btn btn-danger btn-sm">Delete</button>
+                            <button class="btn btn-danger btn-sm">Delete Post</button>
                         </form>
+
+                        
+
 
                         {% if post.user %}
                             {% if post.user.is_suspended %}

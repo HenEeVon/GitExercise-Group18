@@ -109,7 +109,7 @@ class Reports(db.Model):
     post_id = db.Column(db.Integer, db.ForeignKey("posts.post_id"), nullable=False)
     reporter_email = db.Column(db.String(120), nullable=False)  # works for both users & admins
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    post = db.relationship("Posts", backref=db.backref("reports", lazy=True))
+    post = db.relationship("Posts", backref=db.backref("reports", lazy=True, cascade="all, delete-orphan"))
 
 
 class JoinActivity(db.Model):
@@ -540,6 +540,7 @@ def edit_post(post_id):
 
 
 # Delete post
+# Delete post
 @app.route("/delete/<int:post_id>", methods=["POST"])
 def delete(post_id):
     if not current_user.is_authenticated and not session.get("admin_email"):
@@ -552,15 +553,15 @@ def delete(post_id):
     if current_user.is_authenticated:
         is_author = (post.user_email == current_user.user_email)
     elif session.get("admin_email"):
-        is_author = (post.admin_email == session["admin_email"])
+        is_author = True   # admins can delete any post
     else:
         is_author = False
 
     if not is_author:
         flash("You don't have permission to delete this post.", "danger")
         return redirect(url_for("posts"))
-    
-    # Delete image file if exists
+
+    # ✅ Delete image file if exists
     if post.image_filename:
         img_path = os.path.join(current_app.root_path, "static/uploads", post.image_filename)
         if os.path.exists(img_path):
@@ -569,7 +570,13 @@ def delete(post_id):
     db.session.delete(post)
     db.session.commit()
     flash("Post deleted successfully!", "danger")
-    return redirect(url_for("posts"))
+
+    # ✅ Redirect based on referrer
+    if request.referrer and "admin/reports" in request.referrer:
+        return redirect(url_for("admin_reports"))
+    else:
+        return redirect(url_for("posts"))
+
 
 # Report post
 @app.route("/report/<int:post_id>", methods=["POST"])
@@ -637,11 +644,19 @@ def post_detail(post_id):
                         {"email": email, "name": user.user_name if user else email}
                     )
 
+    # readonly logic
+    readonly = request.args.get("readonly", type=int)
+    if session.get("admin_email") and readonly is None:
+        readonly = 1
+    elif readonly is None:
+        readonly = 0
+
     return render_template(
         "post_detail.html",
         post=post,
         join_activities=join_activities,
-        owner_conversations=owner_conversations
+        owner_conversations=owner_conversations,
+        readonly=readonly
     )
 
 

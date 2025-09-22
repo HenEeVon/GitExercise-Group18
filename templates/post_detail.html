@@ -131,7 +131,15 @@
 
     {% else %}
         <!-- Read-only mode for admins -->
-        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back</a>
+         {% if request.args.get("readonly") %}
+            {% if request.args.get("from_reports") %}
+                <a href="{{ url_for('admin_reports') }}" class="btn btn-secondary">Back</a>
+            {% else %}
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back</a>
+            {% endif %}
+        {% else %}
+            <a href="{{ url_for('posts') }}" class="btn btn-secondary">Back to Activity Post</a>
+        {% endif %}
     {% endif %}
 
 </div>
