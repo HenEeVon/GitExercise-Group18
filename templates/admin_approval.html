@@ -19,6 +19,8 @@
                 {% if current_user.is_authenticated %}
                     <nav class="nav-item">
                         <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+                        <a href="{{ url_for('admin_approval') }}">Admin Approval</a>
+                        <a href="{{ url_for('upload_location_csv') }}">Upload location</a>
 
                         {% if current_user.role in ['admin', 'both'] %}
                             <a href="{{ url_for('posts') }}">Login As User</a>

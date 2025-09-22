@@ -975,6 +975,77 @@ def admin_reports():
         join_requests=join_requests
     )
 
+
+# Upload location list
+import io
+
+# Upload location list
+@app.route("/admin/updatelocation", methods=["GET", "POST"])
+@login_required
+def upload_location_csv():
+    if current_user.role not in ["admin", "both"]:
+        flash("Request Denied. You are not admin.")
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        if "file" not in request.files:
+            flash("Please select a file.")
+            return redirect(url_for("upload_location_csv"))
+
+        file = request.files["file"]
+        if file.filename == "":
+            flash("Please select a CSV file.")
+            return redirect(url_for("upload_location_csv"))
+
+        try:
+            csv_path = os.path.join("instance", "locations.csv")
+            existing_locations = set()
+
+            # Read existing locations if file exists
+            if os.path.exists(csv_path):
+                with open(csv_path, "r", encoding="utf-8") as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        name = row.get("name")
+                        if name:
+                            existing_locations.add(name.strip())
+
+            # Read new uploaded file
+            text_stream = io.TextIOWrapper(file.stream, encoding="utf-8")
+            reader = csv.DictReader(text_stream)
+            new_rows = [row for row in reader if row.get("name")]
+
+            if not new_rows:
+                flash("Uploaded CSV has no valid 'name' column.")
+                return redirect(url_for("upload_location_csv"))
+
+            # Append only new locations
+            added_count = 0
+            with open(csv_path, "a", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=["name"])
+                if os.path.getsize(csv_path) == 0:
+                    writer.writeheader()  # write header if file is empty
+                for row in new_rows:
+                    name = row["name"].strip()
+                    if name not in existing_locations:
+                        writer.writerow({"name": name})
+                        existing_locations.add(name)
+                        added_count += 1
+
+            if added_count == 0:
+                flash("No new locations were added (all already exist).")
+            else:
+                flash(f"Upload successful! {added_count} new location(s) added.")
+
+            return redirect(url_for("upload_location_csv"))
+
+        except Exception as e:
+            flash(f"Error uploading. Please try again: {e}")
+            return redirect(url_for("upload_location_csv"))
+
+    return render_template("uploadlocation.html")
+            
+
 # Run app
 if __name__ == "__main__":
     with app.app_context():
