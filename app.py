@@ -366,7 +366,6 @@ def posts():
     )
 
 
-
 # Search feature
 @app.route("/search", methods=["GET"])
 def search():
@@ -374,7 +373,7 @@ def search():
     dateinpost = (request.args.get("date") or "").strip()
 
     searched = False
-    query = Posts.query  # don't force join with User (breaks for admin posts)
+    query = Posts.query.filter_by(is_hidden=False)  # Exclude hidden posts
 
     # Filter by sport if provided
     if sport:
@@ -408,7 +407,7 @@ def search():
         else:
             post.local_date_posted_value = None
 
-    # Detect if admin is logged in
+    # Detect if admin is logged in (but don’t override filtering now)
     current_admin = None
     if session.get("admin_email"):
         current_admin = Admin.query.get(session.get("admin_email"))
@@ -422,6 +421,7 @@ def search():
         admin=current_admin,
         user=current_user if current_user.is_authenticated else None
     )
+
 
 
 # Error page
