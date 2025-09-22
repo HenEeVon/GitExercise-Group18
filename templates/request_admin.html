@@ -80,27 +80,35 @@
 
                                 <input type="hidden" name="step" value="submit">
                                 <input type="hidden" name="email" value="{{ email }}">
-                                
-                                <p class="colortext">
-    <strong>Email address</strong>
-    <input type="email" value="{{ email }}" readonly class="readonly-input">
-</p>
-<p class="colortext">
-    <strong>Full Name</strong>
-    <input type="text" value="{{ existing_user.name }}" readonly class="readonly-input">
-</p>
 
-
-                                <!-- Join Reason comes after Full Name -->
+                                <!-- Email -->
                                 <p class="colortext">
-                                    <strong>Join Reason</strong>
-                                    <input type="text" name="join_reason" required>
+                                    <strong>Email address</strong>
+                                    <input type="email" value="{{ email }}" readonly class="readonly-input">
                                 </p>
 
-                                {% if not existing_user %}
+                                <!-- Existing User -->
+                                {% if existing_user %}
+                                    <p class="colortext">
+                                        <strong>Full Name</strong>
+                                        <input type="text" value="{{ existing_user.name }}" readonly class="readonly-input">
+                                    </p>
+                                {% else %}
+                                    <!-- New User Fields -->
+                                    <p class="colortext">
+                                        <strong>Full Name</strong>
+                                        <input type="text" name="name" required>
+                                    </p>
+
                                     <p class="colortext">
                                         <strong>Password</strong>
                                         <input type="password" name="password" required>
+                                    </p>
+
+                                        <!-- Join Reason -->
+                                    <p class="colortext">
+                                        <strong>Join Reason</strong>
+                                        <input type="text" name="join_reason" required>
                                     </p>
 
                                     <p class="colortext">
@@ -125,13 +133,17 @@
                                 {% endif %}
 
                                 <div class="btn-group">
-                                    <div class="btn-group">
                                     <a href="{{ url_for('request_admin') }}" class="big-cta-btn">Back</a>
                                     <input type="submit" class="big-cta-btn" value="Submit Request">
                                 </div>
                             </form>
                         </div>
                     {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Approval Modal -->
     <div id="approvalModal" class="modal">
@@ -167,5 +179,6 @@
             });
         </script>
     {% endif %}
+
 </body>
 </html>
