@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Location CSV</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+</head>
+<body>
+    <!-- Flash messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="popup">
+                        <div class="popup-content">
+                            <p>{{ message }}</p>
+                                <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    <!-- Navigation bar -->
+    <div class="navbar-container">
+        <a class="header-logo" href="{{ url_for('home') }}"><span>ebFit</span></a>
+        <div class="nav-right">
+            <nav class="nav-item">
+                <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+                <a href="{{ url_for('admin_approval') }}">Admin Approval</a>
+                <a href="{{ url_for('upload_location_csv') }}">Upload Location</a>
+                {% if current_user.role in ['admin', 'both'] %}
+                    <a href="{{ url_for('posts') }}">Login As User</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}">Log Out</a>
+            </nav>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Update Location List CSV</h1>
+        <p>Upload a CSV file with a list of locations (one column, header: <strong>name</strong>).</p>
+
+        <form method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".csv" required>
+            <button type="submit" class="btn btn-primary">Upload</button>
+        </form>
+    </div>
+</body>
+</html>

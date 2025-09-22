@@ -30,9 +30,23 @@
         </div>
 
         <div class="form-group">
-            {{ form.location.label }}<br>
-            {{ form.location(class="form-control", placeholder="Enter location") }}
-        </div>
+            <label for="location-select"><strong>{{ form.location.label.text }}</strong></label>
+            <select name="{{ form.location.name }}" id="location-select" class="form-select" required>
+                <option value="" disabled selected>-- Please select a location --</option>
+                {% for value, label in form.location.choices %}
+                    <option value="{{ value }}" {% if form.location.data == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                {% endfor %}
+                </select>
+                
+
+    <div class="mt-2">
+        <a id="map-link" href="#" target="_blank" class="btn btn-success" style="display:none;">
+            Search on Google Maps
+        </a>
+    </div>
+</div>
 
         <div class="form-group">
             {{ form.event_date.label }}<br>
@@ -51,7 +65,7 @@
 
         <div class="form-group">
             {{ form.participants.label }}<br>
-            {{ form.participants(class="form-control", placeholder="Number of required participants") }}
+            {{ form.participants(class="form-control", min="1") }}
         </div>
 
         <div class="form-group">
@@ -61,4 +75,19 @@
     </form>
 
 </div>
+
+<script>
+    const select = document.getElementById("location-select"); 
+    const link = document.getElementById("map-link");
+
+    select.addEventListener("change", () => {
+        const value = select.value;
+        if (value && value !== "none") {
+            link.href = "https://www.google.com/maps/search/" + encodeURIComponent(value);
+            link.style.display = "inline-block";
+        } else {
+            link.style.display = "none";
+        }
+    });
+</script>
 {% endblock %}

@@ -21,12 +21,12 @@
     {% endwith %}
 
     <!-- Logged in admin -->
-    <p>Logged in as: <strong>{{ session['admin_email'] }}</strong></p>
+    <p>Logged in as: <strong>{{ session['email'] }}</strong></p>
 
     <!-- Request details -->
     <h2>Request Details</h2>
-    <p><strong>Email:</strong> {{ request.admin_email }}</p>
-    <p><strong>Name:</strong> {{ request.admin_name }}</p>
+    <p><strong>Email:</strong> {{ request.email }}</p>
+    <p><strong>Name:</strong> {{ request.name }}</p>
     <p><strong>Reason:</strong> {{ request.join_reason }}</p>
 
     <!-- Approval / Rejection form -->

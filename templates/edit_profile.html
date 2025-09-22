@@ -10,19 +10,36 @@
         {{ form.hidden_tag() }}
         
         <div>
-            {{ form.user_name.label }}<br>
-            {{ form.user_name(size=40) }}
+            {{ form.name.label }}<br>
+            {{ form.name(size=40) }}
         </div>
+        
+       <p class="gender-row">
+            <label>Gender</label>
+            <label>
+                <input type="radio" name="gender" value="Male" required> Male
+            </label>
+            <label>
+                <input type="radio" name="gender" value="Female" required> Female
+            </label>
+        </p>
 
-
-        <div>
-            {{ form.gender.label }}<br>
-            {{ form.gender(class="form-select") }}
-        </div>
 
         <div>
             {{ form.bio.label }}<br>
             {{ form.bio(rows=5, cols=40) }}
+        </div>
+
+        <div>
+            {{ form.security_question.label }}<br>
+            <div class="security-option">
+                {{ form.security_question(class="form-control") }}
+            </div>
+        </div>
+
+        <div>
+            {{ form.security_answer.label }}<br>
+            {{ form.security_answer(size=40) }}
         </div>
 
         <div>

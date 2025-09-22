@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <title>Register</title>
 </head>
 
@@ -14,9 +15,9 @@
     <div class="page-container">
         <header>
             <a class="header-logo"><span>ebFit</span></a>
-            <nav class="nav-bar">
-                <a href="{{ url_for('home') }}" class="nav-items">Home</a>
-            </nav>
+            <a href="{{ url_for('home') }}" class="nav-items">
+                    <i class="fa-solid fa-house"></i>
+                </a>
         </header>
     </div>
 
@@ -26,10 +27,10 @@
 
                 <!-- Left Hero -->
                 <div class="hero">
-                    <h1>Welcome <br>User.</h1>
+                    <h1>Welcome <br>ebFit.</h1>
                     <p>
                         If you already have an account,<br>
-                        <a href="{{ url_for('login') }}">Login here</a>.
+                        <a href="{{ url_for('login') }}">Login here.</a>
                     </p>
                 </div>
 
@@ -50,17 +51,17 @@
                         {% endif %}
                         {% endwith %}
                         
-                        <form action="{{ url_for('register') }}" method="POST">
+                        <form action="{{ url_for('register') }}" method="POST" enctype="multipart/form-data">
                             <h2 class="form-title">Register User</h2>
 
                             <p class="colortext">
                                 <span><strong>Email address</strong></span>
-                                <input type="email" name="user_email" required>
+                                <input type="email" name="email" required>
                             </p>
 
                             <p class="colortext">
                                 <span><strong>Full name</strong></span>
-                                <input type="text" name="user_name" required>
+                                <input type="text" name="name" required>
                             </p>
 
                             <p class="gender-row">
@@ -76,7 +77,7 @@
                              <p class="colortext">
                                 <span><strong>Fitness Level</strong></span>
                                 <select name="sport_level" class="form-select" required>
-                                    <option value="">-- Select Fitness Level --</option>
+                                    <option value="" disabled selected>-- Select Fitness Level --</option>
                                     <option value="newbie">Newbie</option>
                                     <option value="intermediate">Intermediate</option>
                                     <option value="advanced">Advanced</option>
@@ -91,22 +92,24 @@
                             <p class="colortext">
                                 <span><strong>Security Question (For Reset Password)</strong></span>
                                 <select name="security_question" class="form-select" required>
-                                    <option value="">-- Select a security question --</option>
-                                    <option value="pet">What was your first pet name?</option>
-                                    <option value="car">What was your first car?</option>
-                                    <option value="hospital">What hospital name were you born in?</option>
-                                    <option value="city">What city were you born in?</option>
-                                    <option value="girlfriend">What was your first ex girlfriend's name?</option>
-                                    <option value="boyfriend">What was your first ex boyfriend's name?</option>
-                                    <option value="school">What was the name of your first school?</option>
-                                    <option value="book">What was your favorite childhood book?</option>
+                                    <option value="" disabled selected>-- Select a security question --</option>
+                                    {% for key, text in question.items() %}
+                                        <option value="{{ key }}"
+                                            {% if user and user.security_question == key %} selected {% endif %}>
+                                            {{ text }}
+                                        </option>
+                                    {% endfor %}
                                 </select>
                             </p>
-
 
                             <p class="colortext">
                                 <span><strong>Security Answer (For Reset Password)</strong></span>
                                 <input type="text" name="security_answer" required>
+                            </p>
+
+                            <p class="colortext">
+                                <span><strong>Profile Picture</strong></span>
+                                <input type="file" name="picture" accept=".jpg, .png">
                             </p>
 
                             <div class="btn-group">

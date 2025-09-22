@@ -85,6 +85,7 @@ input[type="submit"].post-btn:hover {
 .meta {
     color: #888;
     font-size: 0.9em;
+    line-height: 23px;
 }
 
 .join-btn {
@@ -295,10 +296,6 @@ body.user {
     background: linear-gradient(to right, #ffffff, #ebeafd);
 }
 
-body.user {
-    background: linear-gradient(to right, #ffffff, #ebeafd);
-}
-
 body.login{
     font-family:'Rubik', sans-serif;
     font-size:16px;
@@ -321,8 +318,6 @@ body.login{
     padding: 0 30px;
     margin: 0 auto;
     margin-top: 300px;
-    
-
     margin-top: 300px;
     
 
@@ -347,8 +342,6 @@ body.login{
     margin: 0 auto;
     animation: fadeIn 0.5s ease-in-out;
     margin-left: -80px;
-    
-    
 }
 
 .login-box .form-title {
@@ -359,27 +352,23 @@ body.login{
     text-align: center;
 }
 
+
+
 body.login-page .container2 {
     margin-top: 200px;
     margin-bottom: 100px;
 }
 
-body.admin.register-page .container2 {
-    margin-top: 200px; 
-    margin-bottom: 100px;
-}
-
-body.admin.login-page .container2 {
-    margin-top: 100px; 
-    margin-bottom: 100px;
+body.admin .step2-container {
+    margin-bottom: -150px;
 }
 
 body.login-page .big-cta-btn {
     margin-top: 2px;
     padding: 0px 30px;
     line-height: 50px;
-    
 }
+
 
 #resetModal .big-cta-btn {
     margin-top: 15px;
@@ -437,6 +426,15 @@ body.user .hero::before {
     filter: blur(70px);
     transform: translate(-50%, -50%);
 }
+
+.register-page .hero {
+    margin-top:-150px; 
+}
+
+.admin .hero {
+    margin-top: 20px;
+}
+
 
 body.admin .hero::before {
     content: '';
@@ -685,7 +683,7 @@ section {
 
 .section-wrap{
     background: linear-gradient(to right, rgba(255,255,255,0.3), rgba(235,234,253,0.5));
-    height: 80vh;
+    height: 85vh;
     width: 80%;
     border: 1px solid rgba(169, 228, 246, 0.2);
     box-shadow: inset 0 0 10px rgba(85, 0, 255, 0.184);
@@ -712,35 +710,10 @@ section {
     background-size: cover;
 }
 
-.section-wrap{
-    background: linear-gradient(to right, rgba(255,255,255,0.3), rgba(235,234,253,0.5));
-    height: 80vh;
-    width: 80%;
-    border: 1px solid rgba(169, 228, 246, 0.2);
-    box-shadow: inset 0 0 10px rgba(85, 0, 255, 0.184);
-    backdrop-filter: blur(8px);
-    border-radius: 30px;
-    padding: 50px 100px;
-    overflow: hidden;
-    
-}
-
 .left{
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-}
-.right img {
-    display: block;
-    max-width: 600px;  
-    width: 100%;        
-    height: auto;      
-    filter: drop-shadow(0 0 100px #0079fb);
-
-    /* two animations with separate delays */
-    animation: 
-        rightIn 1s ease-out forwards 0.2s,
-        treeScale 20s linear infinite 1s;
 }
 
 .main-text {
@@ -823,18 +796,6 @@ section {
     opacity:0;
 }
 
-.sub-text{
-    font-size: 1rem;
-    color:#333333aa;
-    letter-spacing: 0.6px;
-    margin-bottom: 60px;
-    margin-top: 8px;
-    animation: fadeIn 1s ease-out forwards;
-    animation-delay: 0.6s;
-    opacity:0;
-
-}
-
 .powered {
   display: block;     
   margin-top: -31px;   
@@ -889,11 +850,6 @@ section {
     opacity:0;
 }
 
-.big-cta-btn:hover {
-    background-color: #08032e;
-    color: white;
-    box-shadow: 0 0 100px #0056b3;
-}
 
 .page-container {
     padding: 0 15%;
@@ -958,10 +914,9 @@ header {
   margin-top: 100px;
 }
 
-.herohome-img {
-  max-width: 100%;
+.crd-1 img {
+  width: 3500px;
   height: auto;
-  margin-top: 100px;
 }
 
 .left-content h1 {
@@ -995,6 +950,11 @@ h1 span {
     animation-delay: 0.3s;
 }
 
+
+#user-section , #about, #project {
+    background: linear-gradient(to right, #eff3fe, rgb(172, 187, 255));
+}
+
 /*About us*/
 .section-tittle{
     font-size: 3rem;
@@ -1024,17 +984,6 @@ h1 span {
     animation-delay: 1.0s;
 }
 
-#about p{
-    font-size: 1.2rem;
-    line-height: 1.6;
-    margin-bottom: 50px;
-    font-family:'Times New Roman', Times, serif;
-    color: #011d3d;
-    animation: fadeIn 1s ease-in-out forwards;
-    opacity: 0;
-    animation-delay: 1.3s;
-    animation-delay: 1.3s;
-}
 #about .section-wrap {
   box-shadow: 0 0 100px #4270e6cc; 
 }
@@ -1470,7 +1419,7 @@ html {
     
 }
 #admin-section {
-    background: #f8f9fa;
+    background: linear-gradient(to right, #ffffff60, #65c29f7b);
     padding: 60px 20px;
     text-align: center;
 }
@@ -1536,7 +1485,12 @@ html {
 .node1 { top: 15%; left: 50%; transform: translateX(-50%); }
 .node2 { bottom: 20%; right: 10%; }
 .node3 { bottom: 20%; left: 10%; }
-    
+
+#location-select {
+        max-height: 150px; /* limit dropdown height */
+        overflow-y: auto;  /* allow vertical scroll */
+    }
+
 /* Animations */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
@@ -1636,23 +1590,34 @@ html {
 .chat-container {
     max-width: 720px;
     margin: 20px auto;
-    background:#f8f9fb;
-    border: 1px solid #e4e7eb;
-    border-radius: 12px;
+    background:#fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
     display: flex;
     flex-direction: column;
     min-height: 500px;
-    box-shadow: 0 6px 18px rgba(0,0 0, 0.06);
 }
 
-.chat-container h2 {
-    font-size: 20px;
+.chat-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #ddd;
+    background: #f7f7f7;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.chat-header h2 {
+    font-size: 18px;
     margin: 0;
-    padding: 16px 20px;
-    border-bottom: 1px solid #e4e7eb;
-    background: #fff;
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
+}
+
+#chat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 #messages {
@@ -1664,7 +1629,7 @@ html {
     gap: 8px;
     flex: 1;
     overflow-y: auto;
-    background: #f8f9fb;
+    background: #fafafa;
 }
 
 #messages li {
@@ -1672,53 +1637,52 @@ html {
     border: 1px solid #d9dee6;
     padding: 8px 12px;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, .04);
+    max-width: 60%;
     word-wrap: break-word;
-    max-width: 500px;
+    font-size: 14px;
 }
 
 #messages li.system {
-    background: transparent;
-    border: 0;
-    box-shadow: none;
-    color: #6b7280;
-    font-size: 13px;
+    background: none;
+    color: #888;
+    font-size: 12px;
     text-align: center;
     align-self: center;
 }
 
 #messages li.me {
     align-self: flex-end;
-    background: #e7f1ff;
-    border-color: #d7e6ff;
+    background: #d9eaff;
+    color: black;
 }
 
 #messages li.other {
     align-self: flex-start;
+    background: #f0f0f0;
+    color: black;
 }
 
 #send-form {
     display: flex;
     gap: 8px;
     padding: 12px;
-    border-top: 1px solid #e4e7eb;
-    background: #fff;
-    border-bottom-left-radius: 12px;
-    border-bottom-right-radius: 12px;
+    border-top: 1px solid #ddd;
+    background: #f7f7f7;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
 }
 
 #send-form #msg {
     flex: 1;
-    border: 1px solid #d9dee6;
-    border-radius: 8px;
-    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 8px 10px;
     font-size: 14px;
-    outline: none;
 }
 
 #send-form #msg:focus {
-    border-color: #9ab6ff;
-    box-shadow: 0 0 0 3px rgba(60, 121, 255, .15);
+    border-color: #2f6bff;
+    outline: none;
 }
 
 #send-form button {
@@ -1736,10 +1700,23 @@ html {
     background-color: #0056b3;
 }
 
+.back-btn {
+    font-size: 28px;
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+
 /*Change title to uppercase*/
 .post h2, .container h1 {
     text-transform: uppercase;
 }
+.project-grid .card img {
+  width: auto;   /* relative to card */
+  height: 200px;
+  margin: 0 auto;  /* center image */
+}
+
 
 
 /* Admin Dashboard */
@@ -1890,3 +1867,305 @@ html {
         justify-content: center;
     }
 }
+
+/* home admin portal Image */
+.admin-mindmap {
+    width: 70%;       /* adjust size */
+    max-width: 600px; /* optional limit */
+    height: auto;
+    margin-top: 50px; /* space for buttons */
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Button group */
+.admin-btn-group {
+    margin-top: 20px;
+}
+
+/* Buttons */
+.admin-btn {
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 13px 40px;
+    background-color: transparent;
+    color: #2800c7;
+    border: 2px solid #080965;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s;
+    animation: bottomIn 1s ease-in-out forwards;
+    animation-delay: 0.3s;
+    text-decoration: none;
+    margin-bottom: 30px;
+    opacity:0;
+}
+
+.admin-btn:hover {
+    background-color: #08032e;
+    color: white;
+    box-shadow: 0 0 100px #0056b3;
+    transition: all 0.3s;
+    animation: bottomIn 1s ease-in-out forwards;
+    animation-delay: 0.3s;
+    text-decoration: none;
+    margin-right: px;
+    margin-top: 40px;
+    opacity:0;
+}
+
+.profile {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.profile-header .avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 12px;
+}
+
+.profile-header h1 {
+    font-size: 25px;
+    margin: 8px 0;
+    color: #333;
+}
+
+.profile-header .email {
+    color: #666;
+    font-size: 15px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.profile-info {
+    background: #fff;
+    padding: 18px 20px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    margin-bottom: 25px;
+}
+
+.profile-info h3 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.profile-info p {
+    margin: 8px 0;
+    line-height: 1.6;
+}
+
+.profile-posts h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.profile-posts .post {
+    margin-top: 15px;
+}
+
+.profile-gender {
+    margin: 15px 0;
+}
+
+.gender-title {
+    display: block;
+    font-size: 16px;
+    font-weight: bold;
+    color: black;
+}
+
+.gender-option {
+    display: flex;
+    gap: 20px;
+}
+
+.gender-option label {
+    font-weight: normal;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.security-option .form-control {
+    width: 100%;
+    padding: 6px;
+    font-size: 14px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.notifications-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.notification {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+}
+
+.notification.unread {
+    background: #eef6ff;
+}
+
+.notification.read {
+    color: #555;
+}
+
+.notification a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.notification .time {
+    display: block;
+    font-size: 12px;
+    color: gray;
+    margin-top: 4px;
+}.admincon{
+    padding:30px;
+}
+
+body.adminapp h1 {
+    font-size:38px;  
+    font-weight: bold;
+    color:#012e60;
+    font-family: 'Rubik', sans-serif;
+}
+
+body.adminapp h2 {
+    font-size:25px;  
+    font-weight: bold;
+    color: #606060;
+    text-align: center;
+    line-height: 65px;
+     margin-top: 30px;  
+    margin-bottom: 15px;
+    font-family: 'Times New Roman', Times, serif;
+}
+
+body.adminapp p {
+    font-size:15px;  
+    color: #000000;
+    text-align: center;
+}
+
+/* Approved status text */
+body.adminapp td.status-approved {
+    color: #248719;   /* Bootstrap green */
+    font-weight: bold;
+}
+
+/* Rejected status text */
+body.adminapp td.status-rejected {
+    color: #b80315;  
+    font-weight: bold;
+}
+
+/* Apply to all request tables */
+.requests-table th:nth-child(1), 
+.requests-table td:nth-child(1) {
+    width: 25%;   /* Email */
+}
+
+.requests-table th:nth-child(2), 
+.requests-table td:nth-child(2) {
+    width: 20%;   /* Name */
+}
+
+.requests-table th:nth-child(3), 
+.requests-table td:nth-child(3) {
+    width: 35%;   /* Reason */
+}
+
+/* Right align Email + Reason columns */
+.requests-table th:nth-child(1),
+.requests-table td:nth-child(1) {
+    padding-left: 100px;
+}
+
+.requests-table th:nth-child(3),
+.requests-table td:nth-child(3) {
+    padding-left: 200px;
+}
+
+.requests-table th:nth-child(2),
+.requests-table td:nth-child(2) {
+    padding-left: 150px;
+}
+
+.login-page .hero p {
+    line-height: 1; 
+}
+
+.login-page .hero p a {
+    display: flex;
+    margin-top: 5px; 
+}
+
+.admin .hero p {
+    line-height: 0.6; 
+}
+
+.admin .hero p a {
+    display: flex;
+    margin-top: 8px;
+}
+
+body.admin {
+    background: linear-gradient(to right, #ffffff, #e6ffea);
+}
+
+body.adminapp {
+    background: linear-gradient(to right, #ffffff, #e6ffea);
+}
+
+body.admin {
+    font-family: 'Rubik', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.8;
+    color: var(--dark-color);
+}
+
+
+body.admin .big-cta-btn {
+    margin-top: 2px;
+    padding: 0px 30px;
+    line-height: 45px;
+}
+
+body.admin .hero {
+    margin-top: -300px; 
+}
+
+.main .login-box.step1 {
+    margin-top: -300px ;
+}
+
+.main .login-box.step2 {
+    position: relative;
+    top: -10000px;
+}
+
+.readonly-input {
+    color: #2f2f2fd5;
+}
+
