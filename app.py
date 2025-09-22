@@ -829,7 +829,7 @@ def request_admin():
     step = request.form.get("step", "email")
 
     if step == "email" and request.method == "POST":
-        return render_template("request_admin.html", email=email, existing_user=existing_user)
+        return render_template("request_admin.html", email=email, existing_user=existing_user,question=question)
 
     elif step == "submit" and request.method == "POST":
         join_reason = request.form.get("join_reason", "").strip()
@@ -876,7 +876,7 @@ def request_admin():
         flash("Your admin request has been submitted.")
         return redirect(url_for("request_admin"))
 
-    return render_template("request_admin.html")
+    return render_template("request_admin.html",question=question)
 
         
 # HANDLE REQUEST (any logged-in admin can approve/reject)

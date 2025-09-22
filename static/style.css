@@ -2011,7 +2011,7 @@ body.admin .hero {
 
 .main .login-box.step2 {
     position: relative;
-    top: -10000px;
+    margin-top: -10000px !important;
 }
 
 .readonly-input {

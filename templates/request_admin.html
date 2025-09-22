@@ -112,19 +112,17 @@
                                     </p>
 
                                     <p class="colortext">
-                                        <strong>Security Question (For Reset Password)</strong>
-                                        <select name="security_question" class="form-select" required>
-                                            <option value="" disabled selected>-- Select a security question --</option>
-                                            <option value="pet">What was your first pet name?</option>
-                                            <option value="car">What was your first car?</option>
-                                            <option value="hospital">What hospital name were you born in?</option>
-                                            <option value="city">What city were you born in?</option>
-                                            <option value="girlfriend">What was your first ex girlfriend's name?</option>
-                                            <option value="boyfriend">What was your first ex boyfriend's name?</option>
-                                            <option value="school">What was the name of your first school?</option>
-                                            <option value="book">What was your favorite childhood book?</option>
-                                        </select>
-                                    </p>
+                                <strong>Security Question (For Reset Password)</strong>
+                                <select name="security_question" class="form-select" required>
+                                    <option value="" disabled selected>-- Select a security question --</option>
+                                    {% for key, text in question.items() %}
+                                        <option value="{{ key }}"
+                                            {% if user and user.security_question == key %} selected {% endif %}>
+                                            {{ text }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </p>
 
                                     <p class="colortext">
                                         <strong>Security Answer (For Reset Password)</strong>
