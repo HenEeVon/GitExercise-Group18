@@ -94,27 +94,26 @@ class JoinActivity(db.Model):
     post = db.relationship("Posts", backref="join_activities")
 
 def load_locations():
-    import csv, os
     csv_path = os.path.join("instance", "locations.csv")
     choices = []
 
-    if not os.path.exists(csv_path):
-        return [("none", "--Please select a location--")]
-
-    try:
+    if os.path.exists(csv_path):
+        locations = []
         with open(csv_path, "r", encoding="utf-8") as f:
-            csv_reader = csv.DictReader(f)
-            for row in csv_reader:
-                name = (row.get("name") or "").strip()
-                if name:
-                    # Value is just the name now
-                    choices.append((name, name))
-    except Exception as e:
-        print(f"Error loading locations: {e}")
-        choices = [("none", "Error Loading Locations")]
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row.get("name") and row.get("distance"):
+                    try:
+                        name = row["name"].strip()
+                        distance = float(row["distance"])
+                        locations.append((name, f"{name} ({distance} km)", distance))
+                    except ValueError:
+                        continue  # skip invalid distances
 
-    if not choices:
-        choices = [("none", "--Please select a location--")]
+        # sort by distance
+        locations.sort(key=lambda x: x[2])
+        # only keep (value, label)
+        choices = [(loc[0], loc[1]) for loc in locations]
 
     return choices
 
@@ -123,7 +122,7 @@ def load_locations():
 class ActivityForm(FlaskForm):
     title = StringField("Title", validators=[DataRequired()])
     content = TextAreaField("Content", validators=[DataRequired()])
-    location = SelectField("Location", choices=[])
+    location = SelectField("Location", choices=[],validators=[DataRequired()])
 
     event_date = DateField("Activity Date", format="%Y-%m-%d", validators=[DataRequired()])
     start_time = TimeField("Start Time", format="%H:%M", validators=[DataRequired()])
@@ -448,7 +447,6 @@ def create():
     return render_template("create.html", form=form)
 
 
-
 # Edit post
 @app.route("/edit/<int:post_id>", methods=["GET", "POST"])
 @login_required
@@ -724,7 +722,6 @@ def handle_request(request_id, decision):
 #admin interface
 # Create default first admin
 def create_first_admin():
-    # Check if any user already has role 'admin' or 'both'
     existing_admin = User.query.filter(User.role.in_(["admin", "both"])).first()
     
     if not existing_admin:
@@ -740,7 +737,6 @@ def create_first_admin():
         )
         db.session.add(admin_user)
         db.session.commit()
-        print("First admin created successfully!")
 
 
 # REQUEST ADMIN ACCESS
@@ -979,7 +975,6 @@ def admin_reports():
 # Upload location list
 import io
 
-# Upload location list
 @app.route("/admin/updatelocation", methods=["GET", "POST"])
 @login_required
 def upload_location_csv():
@@ -988,60 +983,56 @@ def upload_location_csv():
         return redirect(url_for("login"))
 
     if request.method == "POST":
-        if "file" not in request.files:
-            flash("Please select a file.")
-            return redirect(url_for("upload_location_csv"))
-
-        file = request.files["file"]
-        if file.filename == "":
+        file = request.files.get("file")
+        if not file or file.filename == "":
             flash("Please select a CSV file.")
             return redirect(url_for("upload_location_csv"))
 
         try:
             csv_path = os.path.join("instance", "locations.csv")
-            existing_locations = set()
 
-            # Read existing locations if file exists
+            # Load existing locations
+            locations = {}
             if os.path.exists(csv_path):
                 with open(csv_path, "r", encoding="utf-8") as f:
-                    reader = csv.DictReader(f)
-                    for row in reader:
-                        name = row.get("name")
-                        if name:
-                            existing_locations.add(name.strip())
+                    for row in csv.DictReader(f):
+                        try:
+                            locations[row["name"].strip()] = float(row["distance"])
+                        except:
+                            continue
 
-            # Read new uploaded file
-            text_stream = io.TextIOWrapper(file.stream, encoding="utf-8")
-            reader = csv.DictReader(text_stream)
-            new_rows = [row for row in reader if row.get("name")]
-
-            if not new_rows:
-                flash("Uploaded CSV has no valid 'name' column.")
+            # Read uploaded
+            reader = csv.DictReader(io.TextIOWrapper(file.stream, encoding="utf-8"))
+            if not {"name", "distance"}.issubset(reader.fieldnames):
+                flash("CSV must have 'name' and 'distance' columns.")
                 return redirect(url_for("upload_location_csv"))
 
-            # Append only new locations
-            added_count = 0
-            with open(csv_path, "a", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=["name"])
-                if os.path.getsize(csv_path) == 0:
-                    writer.writeheader()  # write header if file is empty
-                for row in new_rows:
-                    name = row["name"].strip()
-                    if name not in existing_locations:
-                        writer.writerow({"name": name})
-                        existing_locations.add(name)
-                        added_count += 1
+            new_or_updated = 0
+            for row in reader:
+                try:
+                    name, dist = row["name"].strip(), float(row["distance"])
+                    if name not in locations or locations[name] != dist:
+                        locations[name] = dist
+                        new_or_updated += 1
+                except:
+                    continue
 
-            if added_count == 0:
-                flash("No new locations were added (all already exist).")
-            else:
-                flash(f"Upload successful! {added_count} new location(s) added.")
+            if not new_or_updated:
+                flash("No new or updated locations found.")
+                return redirect(url_for("upload_location_csv"))
 
-            return redirect(url_for("upload_location_csv"))
+            # Save sorted
+            with open(csv_path, "w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=["name", "distance"])
+                writer.writeheader()
+                for n, d in sorted(locations.items(), key=lambda x: x[1]):
+                    writer.writerow({"name": n, "distance": f"{d:.2f}"})
 
+            flash(f"Upload successful! {new_or_updated} location(s) added/updated.")
         except Exception as e:
-            flash(f"Error uploading. Please try again: {e}")
-            return redirect(url_for("upload_location_csv"))
+            flash(f"Error uploading CSV: {e}")
+
+        return redirect(url_for("upload_location_csv"))
 
     return render_template("uploadlocation.html")
             
