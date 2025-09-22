@@ -122,7 +122,7 @@
 
     {% if current_user.is_authenticated and current_user.email != post.email %}
         <!--Normal user direct message the post owner-->
-        <a href="{{ url_for('chat_with_user', post_id=post.post_id, partner_email=post.user_email) }}" class="btn btn-info">Chat with Me</a>
+        <a href="{{ url_for('chat_with_user', post_id=post.post_id, partner_email=post.email) }}" class="btn btn-info">Chat with Me</a>
     {% elif current_user.is_authenticated and current_user.email == post.email %}
         <!--Owner able to open same chat room-->
         {% if owner_conversations %}

@@ -10,7 +10,7 @@ from string import ascii_uppercase
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, TextAreaField, IntegerField, DateField, TimeField,  SelectField
+from wtforms import StringField, SubmitField, TextAreaField, IntegerField, DateField, TimeField,  SelectField, RadioField
 from wtforms.validators import DataRequired, NumberRange, Length, Optional
 from flask_wtf.file import FileField, FileAllowed
 from datetime import datetime
@@ -32,6 +32,17 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
+
+Security_Questions = [
+    ("pet","What was your first pet name?"),
+    ("car","What was your first car?"),
+    ("hospital","What hospital name were you born in?"),
+    ("city", "What city were you born in?"),
+    ("girlfriend", "What was your first ex girlfriend's name?"),
+    ("boyfriend", "What was your first ex boyfriend's name?"),
+    ("school", "What was the name of your first school?"),
+    ("book", "What was your favorite childhood book?")
+]
 
 # User database
 class User(UserMixin, db.Model):
@@ -133,7 +144,7 @@ class ActivityForm(FlaskForm):
 
 #Chat database
 class ChatMessage(db.Model):
-    tablename = "chat_messages"
+    __tablename__ = "chat_messages"
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, nullable=False, index=True)
 
@@ -146,14 +157,31 @@ class ChatMessage(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
 
-#Update Profile
+#Update Profile database
 class UpdateProfileForm(FlaskForm):
     name = StringField("Full Name", validators=[DataRequired(), Length(min=2, max=50)])
-    gender = SelectField("Gender", choices=[("Male", "Male"), ("Female", "Female"), ("Other", "Other")])
+    gender = SelectField("Gender", choices=[("Male", "Male"), ("Female", "Female")])
     bio = TextAreaField("Bio", validators=[Length(max=200)])
+    security_question = SelectField("Security Question", choices=Security_Questions, validators=[DataRequired()])
+    security_answer = StringField("Security Answer", validators=[DataRequired(), Length(max=255)])
     picture = FileField("Update Profile Picture", validators=[FileAllowed(["jpg", "png"])])
     submit = SubmitField("Update")
 
+#Notification database
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(255), db.ForeignKey("users.email"), nullable=False)
+    text = db.Column(db.String(500), nullable=False)
+    link = db.Column(db.String(500), nullable=True)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+def add_notification(email, text, link=None):
+    try:
+        db.session.add(Notification(email=email, text=text, link=link))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 # User loader
 @login_manager.user_loader
@@ -206,6 +234,9 @@ def register():
 
         # Hash the password
         hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
+        picture_file = "default.png"
+        if "picture" in request.files and request.files["picture"].filename:
+            picture_file = save_picture(request.files["picture"])
 
         # Create user
         new_user = User(
@@ -522,6 +553,7 @@ def conversation_key(a_email: str, b_email: str) -> str:
     return "|".join(sorted([a_email.lower(), b_email.lower()]))
 
 @app.route("/chat/<int:post_id>/<partner_email>")
+@login_required
 def chat_with_user(post_id, partner_email):
     post = Posts.query.get_or_404(post_id)
     owner_email = post.email.lower()
@@ -572,12 +604,46 @@ def on_send_message(data):
     db.session.add(msg)
     db.session.commit()
 
+    try:
+        if partner != current_email:
+            chat_url = url_for("chat_with_user", post_id=post_id, partner_email=current_user.email)
+            add_notification(partner, f"{current_user.name} sent you a message", link=chat_url)
+    except Exception:
+        db.session.rollback()
+
     send({"user": msg.sender_name, "text": msg.text}, to=room)
 
 # Notifications
 @app.route("/notifications")
+@login_required
 def notifications():
-    return render_template("notifications.html")
+    rows = (Notification.query.filter_by(email=current_user.email).order_by(Notification.created_at.desc()).all())
+
+    for notif in rows:
+        if notif.created_at:
+            notif.local_time = pytz.utc.localize(notif.created_at).astimezone(MALAYSIA_TZ)
+        else:
+            notif.local_time = None
+
+    return render_template("notifications.html", rows=rows)
+
+@app.route("/notifications/read_all", methods=["POST"])
+@login_required
+def notifications_read_all():
+    Notification.query.filter_by(email=current_user.email, is_read=False).update({"is_read":True})
+    db.session.commit()
+    return redirect(url_for("notifications"))
+
+@app.route("/notif/<int:notif_id>")
+@login_required
+def open_notif(notif_id):
+    notif = Notification.query.get_or_404(notif_id)
+
+    if notif.email == current_user.email:
+        notif.is_read = True
+        db.session.commit()
+
+    return redirect(notif.link or url_for("notifications"))
 
 #My profile
 @app.route("/profile")
@@ -617,6 +683,8 @@ def profile_edit():
         current_user.name = form.name.data   
         current_user.gender = form.gender.data
         current_user.bio = form.bio.data or None
+        current_user.security_question = form.security_question.data
+        current_user.security_answer = (form.security_answer.data or "").strip().lower()
 
         if form.picture.data:
             filename = save_picture(form.picture.data)
@@ -630,6 +698,8 @@ def profile_edit():
         form.name.data = current_user.name  
         form.gender.data = current_user.gender
         form.bio.data = current_user.bio
+        form.security_question.data = current_user.security_question
+        form.security_answer.data = current_user.security_answer
 
     image_url = url_for(
         "static", 
@@ -678,6 +748,8 @@ def activityrequest(post_id):
         db.session.commit()
         flash("Your request has been sent to the post owner.")
 
+        add_notification(post.email, f"{current_user.name} requested to join '{post.title}'", link=url_for("post_detail", post_id=post.post_id))
+
     return redirect(url_for("post_detail", post_id=post.post_id))
 
 
@@ -704,6 +776,8 @@ def handle_request(request_id, decision):
             join_activity.status = "accepted"
             flash(f"{join_activity.user.name} has been accepted!")
 
+            add_notification(join_activity.email, f"Your request for '{post.title}' was accepted", link=url_for("post_detail", post_id=post.post_id))
+
             accepted_count += 1
             if accepted_count >= post.participants:
                 post.post_status = "closed"
@@ -714,6 +788,8 @@ def handle_request(request_id, decision):
     elif decision == "reject":
         join_activity.status = "rejected"
         flash(f"{join_activity.user.name} has been rejected.")
+
+        add_notification(join_activity.email, f"Your request for '{post.title}' was rejected")
 
     db.session.commit()
     return redirect(url_for("post_detail", post_id=post.post_id))

@@ -1,8 +1,33 @@
 {% extends "base.html" %}
 {% block title %}Notifications{% endblock %}
+
 {% block content %}
-    <div class="container">
-        <h1>Notifications</h1>
+<div class="container">
+    <h1>Notifications</h1>
+
+    {% if rows %}
+        <ul class="notifications-list">
+            {% for notif in rows %}
+                <li class="notification {{'read' if notif.is_read else 'unread'}}">
+                    {% if notif.link %}
+                        <a href="{{ url_for('open_notif', notif_id=notif.id) }}">{{ notif.text }}</a>
+                    {% else %}
+                        {{ notif.text }}
+                    {% endif %}
+                    <span class="time">
+                        {% if notif.local_time %}
+                            {{ notif.local_time.strftime('%d/%m/%Y %H:%M') }}
+                        {% endif %}
+                    </span>
+                </li>
+            {% endfor %}
+        </ul>
+
+        <form method="post" action="{{ url_for('notifications_read_all') }}">
+            <button type="submit" class="btn">Mark all as read</button>
+        </form>
+    {% else %}
         <p>No notifications yet.</p>
-    </div>
+    {% endif %}
+</div>
 {% endblock %}

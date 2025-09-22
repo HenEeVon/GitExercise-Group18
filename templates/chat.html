@@ -12,7 +12,7 @@
     <div id="chat" data-room="{{ room }}" data-username="{{ username }}" data-postid="{{ post.post_id }}" data-partner="{{ partner_email }}">
 
         <ul id="messages" class="messages">
-            {% set my_email = current_user.email|lower %}
+            {% set my_email = current_email|lower %}
             {% for msg in messages %}
                 {% if msg.sender_email|lower == my_email %}
                     <li class="me">{{ msg.text }}</li>

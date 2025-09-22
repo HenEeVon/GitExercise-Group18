@@ -51,7 +51,7 @@
                         {% endif %}
                         {% endwith %}
                         
-                        <form action="{{ url_for('register') }}" method="POST">
+                        <form action="{{ url_for('register') }}" method="POST" enctype="multipart/form-data">
                             <h2 class="form-title">Register User</h2>
 
                             <p class="colortext">
@@ -105,6 +105,11 @@
                             <p class="colortext">
                                 <span><strong>Security Answer (For Reset Password)</strong></span>
                                 <input type="text" name="security_answer" required>
+                            </p>
+
+                            <p class="colortext">
+                                <span><strong>Profile Picture</strong></span>
+                                <input type="file" name="picture" accept=".jpg, .png">
                             </p>
 
                             <div class="btn-group">
