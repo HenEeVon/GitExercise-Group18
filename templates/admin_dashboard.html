@@ -72,7 +72,7 @@
                         {% elif post.admin %} {{ post.admin.admin_name }} (Admin) {% endif %}
                     </td>
                     <td class="action-buttons">
-                        <a href="{{ url_for('post_detail', post_id=post.post_id, readonly=1) }}" class="btn btn-info">View</a>
+                        <a href="{{ url_for('post_detail', post_id=post.post_id, readonly=1, from_dashboard=1) }}" class="btn btn-info">View</a>
 
                         <a href="{{ url_for('delete', post_id=post.post_id) }}" class="delete-btn">Delete</a>
                     </td>

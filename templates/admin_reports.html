@@ -5,13 +5,15 @@
 <div class="container">
     <h1>Admin Reports</h1>
 
+    <!-- Flagged Posts -->
     {% if flagged_posts %}
+        <h3>Flagged Posts</h3>
         <table class="styled-table">
             <thead>
                 <tr>
                     <th>Title</th>
                     <th>Author</th>
-                    <th>Post Status</th>
+                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -32,25 +34,20 @@
                         {% endif %}
                     </td>
                     <td>
-                        <a href="{{ url_for('post_detail', post_id=post.post_id, readonly=1, from_reports=1) }}" class="btn btn-info">View</a>
-
                         {% if post.is_hidden %}
                             <form action="{{ url_for('reactivate_post', post_id=post.post_id) }}" method="POST" style="display:inline;">
                                 <button class="btn btn-success btn-sm">Reactivate</button>
                             </form>
                         {% endif %}
                         <form action="{{ url_for('delete', post_id=post.post_id) }}" method="POST" style="display:inline;">
-                            <button class="btn btn-danger btn-sm">Delete Post</button>
+                            <button class="btn btn-danger btn-sm">Delete</button>
                         </form>
-
-                        
+                        <a href="{{ url_for('post_detail', post_id=post.post_id, readonly=1, from_reports=1) }}" class="btn btn-info">View</a>
 
 
                         {% if post.user %}
                             {% if post.user.is_suspended %}
-                                <form action="{{ url_for('unsuspend_user', user_email=post.user.user_email) }}" method="POST" style="display:inline;">
-                                    <button class="btn btn-info btn-sm">Unsuspend User</button>
-                                </form>
+                                <span class="text-muted">User Suspended</span>
                             {% else %}
                                 <form action="{{ url_for('suspend_user', user_email=post.user.user_email) }}" method="POST" style="display:inline;">
                                     <button class="btn btn-warning btn-sm">Suspend User</button>
@@ -63,7 +60,36 @@
             </tbody>
         </table>
     {% else %}
-        <p>No reports yet.</p>
+        <p>No flagged posts.</p>
+    {% endif %}
+
+    <!-- Suspended Users -->
+    <h3 class="mt-4">Suspended Users</h3>
+    {% if suspended_users %}
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in suspended_users %}
+                <tr>
+                    <td>{{ user.user_email }}</td>
+                    <td>{{ user.user_name }}</td>
+                    <td>
+                        <form action="{{ url_for('unsuspend_user', user_email=user.user_email) }}" method="POST" style="display:inline;">
+                            <button class="btn btn-info btn-sm">Unsuspend</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No suspended users.</p>
     {% endif %}
 </div>
 {% endblock %}

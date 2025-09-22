@@ -619,6 +619,10 @@ def report_post(post_id):
 def post_detail(post_id):
     post = Posts.query.get_or_404(post_id)
 
+    readonly = request.args.get("readonly", type=int)
+    if session.get("admin_email") and readonly is None:
+        return redirect(url_for("post_detail", post_id=post_id, readonly=1, **request.args))
+
     if post.date_posted:
         utc_time = pytz.utc.localize(post.date_posted)
         post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
@@ -628,7 +632,7 @@ def post_detail(post_id):
     join_activities = JoinActivity.query.filter_by(post_id=post.post_id).all()
 
     owner_conversations = []
-    owner_email = post.user_email or post.admin_email  # ✅ pick whichever exists
+    owner_email = post.user_email or post.admin_email  
 
     if current_user.is_authenticated and current_user.user_email and owner_email:
         if current_user.user_email.lower() == owner_email.lower():
@@ -643,13 +647,6 @@ def post_detail(post_id):
                     owner_conversations.append(
                         {"email": email, "name": user.user_name if user else email}
                     )
-
-    # readonly logic
-    readonly = request.args.get("readonly", type=int)
-    if session.get("admin_email") and readonly is None:
-        readonly = 1
-    elif readonly is None:
-        readonly = 0
 
     return render_template(
         "post_detail.html",
@@ -1130,7 +1127,9 @@ def admin_reports():
         .all()
     )
 
-    return render_template("admin_reports.html", flagged_posts=flagged_posts)
+    suspended_users = User.query.filter_by(is_suspended=True).all()
+
+    return render_template("admin_reports.html", flagged_posts=flagged_posts, suspended_users=suspended_users)
 
 # Suspend user
 @app.route("/suspend/<string:user_email>", methods=["POST"])
