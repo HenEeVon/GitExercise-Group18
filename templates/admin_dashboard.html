@@ -74,7 +74,9 @@
                     <td class="action-buttons">
                         <a href="{{ url_for('post_detail', post_id=post.post_id, readonly=1, from_dashboard=1) }}" class="btn btn-info">View</a>
 
-                        <a href="{{ url_for('delete', post_id=post.post_id) }}" class="delete-btn">Delete</a>
+                        <form action="{{ url_for('delete', post_id=post.post_id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
                     </td>
                 </tr>
                 {% endfor %}

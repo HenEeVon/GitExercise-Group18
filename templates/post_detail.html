@@ -55,14 +55,15 @@
                 <div class="popup">
                     <div class="popup-content">
                         <p>{{ message }}</p>
-                        <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                        <a href="{{ url_for('post_detail', post_id=post.post_id, readonly=readonly, from_reports=from_reports, from_dashboard=from_dashboard) }}">
+                            <button class="submit">OK</button>
+                        </a>
                     </div>
                 </div>
             {% endfor %}
         {% endif %}
     {% endwith %}
 
-    
 
     {% if not readonly %}
 
@@ -132,11 +133,11 @@
         <!-- Read-only mode for admins -->
         {% if from_reports %}
             <a href="{{ url_for('admin_reports') }}" class="btn btn-secondary">Back</a>
-        {% else %}
+        {% elif from_dashboard %}
             <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back</a>
+        {% else %}
+            <a href="{{ url_for('posts') }}" class="btn btn-secondary">Back to Posts</a>
         {% endif %}
     {% endif %}
-
-
 </div>
 {% endblock %}

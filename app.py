@@ -340,12 +340,12 @@ def resetpass():
 
 
 
-# Posts page
 @app.route("/index")
 def posts():
-    posts = Posts.query.order_by(Posts.date_posted.desc()).all()
+    # Default: show only non-hidden posts
+    posts = Posts.query.filter_by(is_hidden=False).order_by(Posts.date_posted.desc()).all()
 
-    # Convert UTC to Malaysia timezone
+    # Convert UTC → Malaysia timezone
     for post in posts:
         if post.date_posted:
             utc_time = pytz.utc.localize(post.date_posted)
@@ -357,15 +357,11 @@ def posts():
     current_admin = None
     if session.get("admin_email"):
         current_admin = Admin.query.get(session.get("admin_email"))
-        posts = Posts.query.all() # admin see all posts
-    else:  # users see only non-hidden posts
-        posts = Posts.query.filter_by(is_hidden=False).all()
-    return render_template("index.html", posts=posts)
 
     return render_template(
         "index.html",
         posts=posts,
-        admin=current_admin,   # Pass admin if logged in
+        admin=current_admin,
         user=current_user if current_user.is_authenticated else None
     )
 
@@ -619,10 +615,21 @@ def report_post(post_id):
 def post_detail(post_id):
     post = Posts.query.get_or_404(post_id)
 
+    # Get query params with defaults
     readonly = request.args.get("readonly", type=int)
-    if session.get("admin_email") and readonly is None:
-        return redirect(url_for("post_detail", post_id=post_id, readonly=1, **request.args))
+    from_reports = request.args.get("from_reports", default=0, type=int)
+    from_dashboard = request.args.get("from_dashboard", default=0, type=int)
 
+    # 🔑 Force readonly for admins on first visit, while preserving origin flags
+    if session.get("admin_email") and readonly is None:
+        args = request.args.to_dict(flat=True)  # copy all current args
+        args["readonly"] = 1                   # enforce readonly
+        # If no source flag is set, keep it consistent
+        args.setdefault("from_reports", from_reports)
+        args.setdefault("from_dashboard", from_dashboard)
+        return redirect(url_for("post_detail", post_id=post_id, **args))
+
+    # Date handling
     if post.date_posted:
         utc_time = pytz.utc.localize(post.date_posted)
         post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
@@ -653,8 +660,12 @@ def post_detail(post_id):
         post=post,
         join_activities=join_activities,
         owner_conversations=owner_conversations,
-        readonly=readonly
+        readonly=readonly,
+        from_reports=from_reports,
+        from_dashboard=from_dashboard
     )
+
+
 
 
 def conversation_key(a_email: str, b_email: str) -> str:
