@@ -890,7 +890,7 @@ def activityrequest(post_id):
         join_act = JoinActivity(user_email=requester_email, post_id=post.post_id)
         db.session.add(join_act)
         db.session.commit()
-        flash(f"Your request has been sent to the post owner ({requester_name}).")
+        flash(f"Your request has been sent to the post owner .")
 
     return redirect(url_for("post_detail", post_id=post.post_id))
 
