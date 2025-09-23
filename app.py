@@ -11,9 +11,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, TextAreaField, IntegerField, DateField, TimeField,  SelectField, RadioField
-from wtforms.validators import DataRequired, NumberRange, Length, Optional
+from wtforms.validators import DataRequired, NumberRange, Length, Optional, ValidationError
 from flask_wtf.file import FileField, FileAllowed
-from datetime import datetime
+from datetime import date, datetime
 from PIL import Image
 from werkzeug.utils import secure_filename
 import pytz
@@ -170,6 +170,14 @@ class ActivityForm(FlaskForm):
     end_time = TimeField("End Time", format="%H:%M", validators=[DataRequired()])
     participants = IntegerField("Required Participants", validators=[DataRequired(), NumberRange(min=1)])
     submit = SubmitField("Post")
+
+    def validate_event_date(form, field):
+        if field.data < date.today():
+            raise ValidationError("Event date must be today or in the future.")
+
+    def validate_end_time(form, field):
+        if form.start_time.data and field.data <= form.start_time.data:
+            raise ValidationError("End time must be after start time.")
 
 
 # Chat database
@@ -511,6 +519,15 @@ def create():
         # Handle image upload
         image_file = form.image.data
         filename = None
+        start_time = form.start_time.data
+        end_time = form.end_time.data
+
+
+        if start_time and end_time:
+            if end_time <= start_time:
+                form.end_time.errors.append("End time must be after start time.")
+                return render_template("create.html", form=form)    
+            
         if image_file:
             filename = secure_filename(image_file.filename)
             image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -542,7 +559,7 @@ def create():
             print("Form validation failed. Errors:", form.errors)
             flash(f"Form errors: {form.errors}", "danger")
 
-    return render_template("create.html", form=form)
+    return render_template("create.html", form=form, current_date=date.today().isoformat())
 
 
 # Edit post
@@ -550,11 +567,11 @@ def create():
 def edit_post(post_id):
     post = Posts.query.get_or_404(post_id)
 
-    # Check if the current user is allowed to edit
+    # Permission check
     if current_user.is_authenticated:
         is_owner = (post.email == current_user.email)
     elif session.get("admin_email"):
-        is_owner = True  # ✅ admins can edit any post
+        is_owner = True  # admins can edit any post
     else:
         is_owner = False
 
@@ -564,18 +581,27 @@ def edit_post(post_id):
 
     form = ActivityForm(obj=post)
 
-    # Reload choices for edit form too
+    # Reload location choices
     form.location.choices = load_locations()
     if not form.location.choices or form.location.choices == [("none", "--Please select a location--")]:
         form.location.choices = [("Gym", "Gym"), ("Pool", "Pool")]
 
     if form.validate_on_submit():
+        start_time = form.start_time.data
+        end_time = form.end_time.data
+
+        # Validate time logic
+        if start_time and end_time and end_time <= start_time:
+            form.end_time.errors.append("End time must be after start time.")
+            return render_template("edit_post.html", form=form, post=post, current_date=date.today().isoformat())
+
+        # Update post fields
         post.title = form.title.data
         post.content = form.content.data
         post.location = form.location.data
         post.event_date = form.event_date.data
-        post.start_time = form.start_time.data
-        post.end_time = form.end_time.data
+        post.start_time = start_time
+        post.end_time = end_time
         post.participants = form.participants.data
 
         # Handle new image upload
@@ -584,7 +610,6 @@ def edit_post(post_id):
                 old_path = os.path.join(current_app.root_path, "static/uploads", post.image_filename)
                 if os.path.exists(old_path):
                     os.remove(old_path)
-
             file = form.image.data
             filename = secure_filename(file.filename)
             file.save(os.path.join(current_app.root_path, "static/uploads", filename))
@@ -594,6 +619,7 @@ def edit_post(post_id):
         flash("Post updated successfully!", "success")
         return redirect(url_for("post_detail", post_id=post.post_id))
 
+    # Pre-fill form fields on GET
     if request.method == "GET":
         form.title.data = post.title
         form.content.data = post.content
@@ -603,7 +629,8 @@ def edit_post(post_id):
         form.end_time.data = post.end_time
         form.participants.data = post.participants
 
-    return render_template("edit_post.html", form=form, post=post)
+    return render_template("edit_post.html", form=form, post=post, current_date=date.today().isoformat())
+
 
 
 # Delete post
