@@ -161,6 +161,7 @@ class ChatMessage(db.Model):
 class UpdateProfileForm(FlaskForm):
     name = StringField("Full Name", validators=[DataRequired(), Length(min=2, max=50)])
     gender = SelectField("Gender", choices=[("Male", "Male"), ("Female", "Female")])
+    sport_level = SelectField("Fitness Level", choices=[("newbie","Newbie"),("intermediate","Intermediate"),("advanced","Advanced")], validators=[DataRequired()])
     bio = TextAreaField("Bio", validators=[Length(max=200)])
     security_question = SelectField("Security Question", choices=Security_Questions, validators=[DataRequired()])
     security_answer = StringField("Security Answer", validators=[DataRequired(), Length(max=255)])
@@ -682,6 +683,7 @@ def profile_edit():
     if form.validate_on_submit():
         current_user.name = form.name.data   
         current_user.gender = form.gender.data
+        current_user.sport_level = form.sport_level.data
         current_user.bio = form.bio.data or None
         current_user.security_question = form.security_question.data
         current_user.security_answer = (form.security_answer.data or "").strip().lower()

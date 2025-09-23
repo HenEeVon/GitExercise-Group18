@@ -1847,15 +1847,6 @@ html {
     cursor: pointer;
 }
 
-.security-option .form-control {
-    width: 100%;
-    padding: 6px;
-    font-size: 14px;
-    margin-top: 5px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-}
-
 .notifications-list {
     list-style: none;
     padding: 0;
