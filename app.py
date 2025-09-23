@@ -32,6 +32,13 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
+@app.context_processor
+def notif_count():
+    if current_user.is_authenticated:
+        count = Notification.query.filter_by(email=current_user.email, is_read=False).count()
+        return {"unread_count": count}
+    return {"unread_count": 0}
+
 
 Security_Questions = [
     ("pet","What was your first pet name?"),

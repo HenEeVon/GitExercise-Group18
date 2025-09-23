@@ -1850,6 +1850,14 @@ html {
     font-weight: normal;
 }
 
+.count {
+    background: #012e60;
+    color: white;
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 12px;
+}
+
 .notifications-list {
     list-style: none;
     padding: 0;
