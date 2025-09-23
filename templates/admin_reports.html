@@ -14,6 +14,7 @@
                     <th>Title</th>
                     <th>Author</th>
                     <th>Status</th>
+                    <th>Reports</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -22,8 +23,10 @@
                 <tr>
                     <td>{{ post.title }}</td>
                     <td>
-                        {% if post.user %} 
+                        {% if post.user %}
                             {{ post.user.name }} (User)
+                        {% else %}
+                            <em>Unknown</em>
                         {% endif %}
                     </td>
                     <td>
@@ -33,6 +36,7 @@
                             <span class="text-success">Visible</span>
                         {% endif %}
                     </td>
+                    <td>{{ report_count }}</td>
                     <td>
                         {% if post.is_hidden %}
                             <form action="{{ url_for('reactivate_post', post_id=post.post_id) }}" method="POST" style="display:inline;">
@@ -48,7 +52,7 @@
                             {% if post.user.is_suspended %}
                                 <span class="text-muted">User Suspended</span>
                             {% else %}
-                                <form action="{{ url_for('suspend_user', user_email=post.user.email) }}" method="POST" style="display:inline;">
+                                <form action="{{ url_for('suspend_user', email=post.user.email) }}" method="POST" style="display:inline;">
                                     <button class="btn btn-warning btn-sm">Suspend User</button>
                                 </form>
                             {% endif %}
@@ -79,7 +83,7 @@
                     <td>{{ user.email }}</td>
                     <td>{{ user.name }}</td>
                     <td>
-                        <form action="{{ url_for('unsuspend_user', user_email=user.email) }}" method="POST" style="display:inline;">
+                        <form action="{{ url_for('unsuspend_user', email=user.email) }}" method="POST" style="display:inline;">
                             <button class="btn btn-info btn-sm">Unsuspend</button>
                         </form>
                     </td>

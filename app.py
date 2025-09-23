@@ -67,13 +67,15 @@ class User(db.Model, UserMixin):
 
 class Admin(db.Model):
     __tablename__ = "admins"   
-    admin_email = db.Column("email", db.String(255), primary_key=True)
-    admin_name = db.Column(db.String(255), nullable=False)
+
+    email = db.Column(db.String(255), primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
     password = db.Column(db.String(255), nullable=False)
 
 
 class AdminRequest(db.Model):
     __tablename__ = "admin_request"
+
     approval_id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), nullable=False, unique=True)
     name = db.Column(db.String(255), nullable=False)
@@ -99,23 +101,30 @@ class Posts(db.Model):
     participants = db.Column(db.Integer, nullable=False)
     image_filename = db.Column(db.String(200), nullable=True)   
 
+    # FK to user
     email = db.Column(db.String(255), db.ForeignKey("users.email"), nullable=False)
     user = db.relationship("User", back_populates="posts")
 
     is_hidden = db.Column(db.Boolean, default=False)
+
 
 class Reports(db.Model):
     __tablename__ = "reports"
 
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey("posts.post_id"), nullable=False)
-    reporter_email = db.Column(db.String(120), nullable=False)  # works for both users & admins
+    reporter_email = db.Column(db.String(255), nullable=False)  # works for both users & admins
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    post = db.relationship("Posts", backref=db.backref("reports", lazy=True, cascade="all, delete-orphan"))
+
+    post = db.relationship(
+        "Posts",
+        backref=db.backref("reports", lazy=True, cascade="all, delete-orphan")
+    )
 
 
 class JoinActivity(db.Model):
     __tablename__ = "join_activities"
+
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), db.ForeignKey("users.email"), nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey("posts.post_id"), nullable=False)
@@ -123,6 +132,7 @@ class JoinActivity(db.Model):
 
     user = db.relationship("User", backref="join_activities", lazy=True)
     post = db.relationship("Posts", backref="join_activities", lazy=True)
+
 
 def load_locations():
     csv_path = os.path.join("instance", "locations.csv")
@@ -154,7 +164,7 @@ class ActivityForm(FlaskForm):
     title = StringField("Title", validators=[DataRequired()])
     image = FileField("Upload Image", validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only!')])
     content = TextAreaField("Content", validators=[DataRequired()])
-    location = SelectField("Location", choices=[],validators=[DataRequired()])
+    location = SelectField("Location", choices=[], validators=[DataRequired()])
     event_date = DateField("Activity Date", format="%Y-%m-%d", validators=[DataRequired()])
     start_time = TimeField("Start Time", format="%H:%M", validators=[DataRequired()])
     end_time = TimeField("End Time", format="%H:%M", validators=[DataRequired()])
@@ -162,22 +172,22 @@ class ActivityForm(FlaskForm):
     submit = SubmitField("Post")
 
 
-#Chat database
+# Chat database
 class ChatMessage(db.Model):
     __tablename__ = "chat_messages"
+
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, nullable=False, index=True)
-
     conversation = db.Column(db.String(600), nullable=False, index=True)
 
-    sender_email = db.Column(db.String(255), nullable=False)
+    sender_email = db.Column(db.String(255), nullable=False)  # unified with email convention
     sender_name = db.Column(db.String(255), nullable=False)
     text = db.Column(db.Text, nullable=False)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
 
-#Update Profile database
+# Update Profile database
 class UpdateProfileForm(FlaskForm):
     name = StringField("Full Name", validators=[DataRequired(), Length(min=2, max=50)])
     gender = SelectField("Gender", choices=[("Male", "Male"), ("Female", "Female")])
@@ -187,7 +197,8 @@ class UpdateProfileForm(FlaskForm):
     picture = FileField("Update Profile Picture", validators=[FileAllowed(["jpg", "png"])])
     submit = SubmitField("Update")
 
-#Notification database
+
+# Notification database
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), db.ForeignKey("users.email"), nullable=False)
@@ -195,6 +206,7 @@ class Notification(db.Model):
     link = db.Column(db.String(500), nullable=True)
     is_read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 
 def add_notification(email, text, link=None):
     try:
@@ -207,6 +219,7 @@ def add_notification(email, text, link=None):
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.filter_by(email=user_id).first()
+
 
 @app.template_filter("datetimeformat")
 def datetimeformat(value, format="%d/%m/%Y"):
@@ -226,7 +239,6 @@ def datetimeformat(value, format="%d/%m/%Y"):
                 return value  # return raw if it’s not in date format
     except Exception:
         return value
-
 
 
 # Home page
@@ -276,7 +288,7 @@ def register():
 
             # ✅ Do NOT auto login
             flash("Registration successful! Please log in with your credentials.", "success")
-            return redirect(url_for("login"))  # go to login page
+            return redirect(url_for("login"))  # direct to login page
 
         except IntegrityError:
             db.session.rollback()
@@ -286,7 +298,7 @@ def register():
     return render_template("register.html", question=question)
 
 
-
+# Login page
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -300,9 +312,9 @@ def login():
             return redirect(url_for("login"))
 
         if not check_password_hash(user.password, password):
-            flash("Incorrect password. Please try again")
+            flash("Incorrect password. Please try again.")
             return redirect(url_for("login"))
-        
+
         if user.is_suspended:
             flash("Your account has been suspended. Contact admin for support.", "danger")
             return redirect(url_for("login"))
@@ -318,6 +330,7 @@ def login():
     return render_template("login.html")
 
 
+# Security questions
 question = {
     "pet": "What was your first pet name?",
     "car": "What was your first car?",
@@ -340,16 +353,20 @@ def reset_password():
             user = User.query.filter_by(email=email).first()
 
             if not user:
-                flash("Email not found.")
-                return render_template("login.html", open_reset_modal=True)
+                flash("Email not found.", "warning")
+                return render_template("login.html", open_reset_modal=True, question=question)
 
-            security_question = question.get(user.security_question.strip().lower(), "Security question not found")
+            security_question = question.get(
+                user.security_question.strip().lower(),
+                "Security question not found"
+            )
 
             return render_template(
                 "login.html",
                 open_reset_modal=True,
                 email=email,
-                security_question=security_question
+                security_question=security_question,
+                question=question
             )
 
         # Step 2: Submit answer & new password
@@ -360,36 +377,38 @@ def reset_password():
 
             user = User.query.filter_by(email=email).first()
             if not user:
-                flash("Email not found.")
-                return render_template("login.html", open_reset_modal=True)
+                flash("Email not found.", "warning")
+                return render_template("login.html", open_reset_modal=True, question=question)
 
             if user.security_answer.lower() == answer:
                 user.password = generate_password_hash(new_password, method="pbkdf2:sha256")
                 db.session.commit()
-                flash("Password updated successfully!")
+                flash("Password updated successfully!", "success")
                 return redirect(url_for("login"))
             else:
-                flash("Security answer incorrect.")
+                flash("Security answer incorrect.", "danger")
                 return render_template(
                     "login.html",
                     open_reset_modal=True,
                     email=email,
-                    security_question = question.get(user.security_question.strip().lower(), "Security question not found")
+                    security_question=question.get(
+                        user.security_question.strip().lower(),
+                        "Security question not found"
+                    ),
+                    question=question
                 )
 
     # Default: show reset modal
-    return render_template("login.html", open_reset_modal=True,question=question)
+    return render_template("login.html", open_reset_modal=True, question=question)
 
 
 @app.route("/index")
 @login_required
 def posts():
-
     # Default: show only non-hidden posts
-
     posts = Posts.query.filter_by(is_hidden=False).order_by(Posts.date_posted.desc()).all()
 
-    for post in posts: 
+    for post in posts:
         if post.date_posted:
             if post.date_posted.tzinfo is None:
                 utc_time = pytz.utc.localize(post.date_posted)
@@ -398,7 +417,6 @@ def posts():
             post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
         else:
             post.local_date_posted_value = None
-
 
     return render_template(
         "index.html",
@@ -414,7 +432,7 @@ def search():
     dateinpost = (request.args.get("date") or "").strip()
 
     searched = False
-    # join User so we can filter on user name too
+    # Join User so we can filter by user name too
     query = Posts.query.join(User).filter(Posts.is_hidden == False)
 
     # Filter by sport if provided
@@ -425,7 +443,7 @@ def search():
                 func.lower(Posts.title).like(f"%{sport}%"),
                 func.lower(Posts.content).like(f"%{sport}%"),
                 func.lower(Posts.location).like(f"%{sport}%"),
-                func.lower(User.name).like(f"%{sport}%")   # now works
+                func.lower(User.name).like(f"%{sport}%")   # ✅ works because Posts has FK -> User
             )
         )
 
@@ -436,7 +454,7 @@ def search():
             date_obj = datetime.strptime(dateinpost, "%Y-%m-%d").date()
             query = query.filter(Posts.event_date == date_obj)
         except ValueError:
-            flash("Invalid date format. Please use YYYY-MM-DD.")
+            flash("Invalid date format. Please use YYYY-MM-DD.", "warning")
 
     # Execute query
     results = query.order_by(Posts.date_posted.desc()).all()
@@ -452,7 +470,7 @@ def search():
         else:
             post.local_date_posted_value = None
 
-    # Detect if admin is logged in (but don’t override filtering now)
+    # Detect if admin is logged in (for template use)
     current_admin = None
     if session.get("admin_email"):
         current_admin = Admin.query.get(session.get("admin_email"))
@@ -508,7 +526,7 @@ def create():
                 start_time=form.start_time.data,
                 end_time=form.end_time.data,
                 participants=form.participants.data,
-                email=current_user.email,
+                email=current_user.email if current_user.is_authenticated else session.get("admin_email"),  # ✅ admin fallback
             )
             
             db.session.add(new_post)
@@ -536,7 +554,7 @@ def edit_post(post_id):
     if current_user.is_authenticated:
         is_owner = (post.email == current_user.email)
     elif session.get("admin_email"):
-        is_owner = True  # admins can edit any post
+        is_owner = True  # ✅ admins can edit any post
     else:
         is_owner = False
 
@@ -601,7 +619,7 @@ def delete(post_id):
     if current_user.is_authenticated:
         is_author = (post.email == current_user.email)
     elif session.get("admin_email"):
-        is_author = True  # admins can delete any post
+        is_author = True  # ✅ admins can delete any post
     else:
         is_author = False
 
@@ -619,11 +637,11 @@ def delete(post_id):
     db.session.commit()
     flash("Post deleted successfully!", "danger")
 
+    # If admin came from reports dashboard, send them back there
     if request.referrer and "admin/reports" in request.referrer:
         return redirect(url_for("admin_reports"))
     else:
         return redirect(url_for("posts"))
-
 
 
 # Report post
@@ -635,21 +653,21 @@ def report_post(post_id):
 
     post = Posts.query.get_or_404(post_id)
 
-    # determine who reported
+    # ✅ reporter can be either user.email or admin_email
     reporter_email = current_user.email if current_user.is_authenticated else session.get("admin_email")
 
-    # prevent duplicate reports by same reporter
+    # Prevent duplicate reports by same reporter
     existing_report = Reports.query.filter_by(post_id=post_id, reporter_email=reporter_email).first()
     if existing_report:
         flash("You already reported this post.", "warning")
         return redirect(url_for("post_detail", post_id=post_id))
 
-    # create and commit the report
+    # Create and commit the report
     new_report = Reports(post_id=post_id, reporter_email=reporter_email)
     db.session.add(new_report)
     db.session.commit()
 
-    # count total reports from Reports table and hide if threshold reached
+    # Count total reports from Reports table and hide post if threshold reached
     report_count = Reports.query.filter_by(post_id=post_id).count()
     if report_count >= 3:
         post.is_hidden = True
@@ -689,12 +707,19 @@ def post_detail(post_id):
 
     owner_email = post.email  # ✅ correct owner field
 
-    if current_user.is_authenticated and current_user.email.lower() == post.email.lower():
-        partners = db.session.query(ChatMessage.sender_email).filter_by(post_id=post.post_id).distinct()
+    # If current user is the owner → show conversations
+    if current_user.is_authenticated and current_user.email.lower() == owner_email.lower():
+        partners = (
+            db.session.query(ChatMessage.sender_email)
+            .filter_by(post_id=post.post_id)
+            .distinct()
+        )
         for (email,) in partners:
-            if email.lower() != post.email.lower():
+            if email.lower() != owner_email.lower():
                 user = User.query.get(email)
-                owner_conversations.append({"email": email, "name": user.name if user else email})
+                owner_conversations.append(
+                    {"email": email, "name": user.name if user else email}
+                )
 
     return render_template(
         "post_detail.html",
@@ -703,11 +728,12 @@ def post_detail(post_id):
         owner_conversations=owner_conversations,
         readonly=readonly,
         from_reports=from_reports,
-        from_dashboard=from_dashboard
+        from_dashboard=from_dashboard,
     )
 
 
 def conversation_key(a_email: str, b_email: str) -> str:
+    """Generate a stable key for two users’ conversation."""
     return "|".join(sorted([a_email.lower(), b_email.lower()]))
 
 
@@ -720,7 +746,7 @@ def chat_with_user(post_id, partner_email):
 
     partner_email = partner_email.lower()
 
-    # Prevent outsiders from chatting
+    # Prevent outsiders from chatting → only owner or partner allowed
     if current_email != owner_email and partner_email != owner_email:
         return redirect(url_for("chat_with_user", post_id=post_id, partner_email=owner_email))
 
@@ -740,7 +766,7 @@ def chat_with_user(post_id, partner_email):
     if current_email == owner_email:
         header_name = partner_name
     else:
-        header_name = post.user.name  # assumes Posts.user relationship exists
+        header_name = post.user.name  # ✅ uses Posts.user relationship
 
     return render_template(
         "chat.html",
@@ -750,8 +776,9 @@ def chat_with_user(post_id, partner_email):
         header_name=header_name,
         messages=messages,
         post_id=post_id,
-        partner_email=partner_email
+        partner_email=partner_email,
     )
+
 
 
 @socketio.on("join")
@@ -760,7 +787,7 @@ def on_join(data):
 
     # Identify sender
     if current_user.is_authenticated:
-        name = current_user.name  
+        name = current_user.name
         email = current_user.email
     elif session.get("admin_email"):
         email = session.get("admin_email")
@@ -772,7 +799,8 @@ def on_join(data):
     if room:
         print("JOIN ->", email, "to", room)
         join_room(room)
-        send(f"{name} joined the chat.", to=room)  
+        send(f"{name} joined the chat.", to=room)
+
 
 @socketio.on("send_message")
 def on_send_message(data):
@@ -784,29 +812,43 @@ def on_send_message(data):
     if not (room and text and post_id and partner):
         return
 
-    current_email = current_user.email.lower()
+    # ✅ Support both users and admins as senders
+    if current_user.is_authenticated:
+        current_email = current_user.email.lower()
+        sender_email = current_user.email
+        sender_name = current_user.name
+    elif session.get("admin_email"):
+        sender_email = session.get("admin_email").lower()
+        current_email = sender_email
+        admin_obj = Admin.query.get(sender_email)
+        sender_name = admin_obj.admin_name if admin_obj else "Admin"
+    else:
+        return  # nobody logged in, ignore
+
     conv = conversation_key(current_email, partner)
 
     msg = ChatMessage(
         post_id=int(post_id),
         conversation=conv,
-        sender_email=current_user.email,
-        sender_name=current_user.name,
-        text=text
+        sender_email=sender_email,
+        sender_name=sender_name,
+        text=text,
     )
     db.session.add(msg)
     db.session.commit()
 
     try:
+        # ✅ Notify partner if it’s not the same as sender
         if partner != current_email:
-            chat_url = url_for("chat_with_user", post_id=post_id, partner_email=current_user.email)
-            add_notification(partner, f"{current_user.name} sent you a message", link=chat_url)
+            chat_url = url_for("chat_with_user", post_id=post_id, partner_email=sender_email)
+            add_notification(partner, f"{sender_name} sent you a message", link=chat_url)
     except Exception:
         db.session.rollback()
 
     send({"user": msg.sender_name, "text": msg.text}, to=room)
 
-# Notifications
+
+# Notifications page
 @app.route("/notifications")
 @login_required
 def notifications():
@@ -827,7 +869,6 @@ def notifications():
 
     return render_template("notifications.html", rows=rows)
 
-
 @app.route("/notifications/read_all", methods=["POST"])
 @login_required
 def notifications_read_all():
@@ -841,7 +882,7 @@ def notifications_read_all():
 def open_notif(notif_id):
     notif = Notification.query.get_or_404(notif_id)
 
-    if notif.email == current_user.email:
+    if notif.email.lower() == current_user.email.lower():
         notif.is_read = True
         db.session.commit()
 
@@ -858,6 +899,7 @@ def profile():
         .all()
     )
 
+    # Convert posted date to Malaysia timezone
     for post in recent_posts:
         if post.date_posted:
             if post.date_posted.tzinfo is None:
@@ -893,6 +935,7 @@ def profile_edit():
         current_user.security_question = form.security_question.data
         current_user.security_answer = (form.security_answer.data or "").strip().lower()
 
+        # Handle profile picture upload
         if form.picture.data:
             filename = save_picture(form.picture.data)
             current_user.image_file = filename
@@ -933,13 +976,13 @@ def save_picture(form_picture):
 
 # Join Activity
 @app.route("/activityrequest/<int:post_id>", methods=["POST"])
+@login_required
 def activityrequest(post_id):
     post = Posts.query.get_or_404(post_id)
 
     if post.post_status == "closed":
         flash("This activity is already closed.")
         return redirect(url_for("post_detail", post_id=post.post_id))
-
 
     # Prevent duplicate request
     existing = JoinActivity.query.filter_by(email=current_user.email, post_id=post.post_id).first()
@@ -949,9 +992,13 @@ def activityrequest(post_id):
         join_act = JoinActivity(email=current_user.email, post_id=post.post_id)
         db.session.add(join_act)
         db.session.commit()
-        flash(f"Your request has been sent to the post owner .")
+        flash("Your request has been sent to the post owner.")
 
-        add_notification(post.email, f"{current_user.name} requested to join '{post.title}'", link=url_for("post_detail", post_id=post.post_id))
+        add_notification(
+            post.email,
+            f"{current_user.name} requested to join '{post.title}'",
+            link=url_for("post_detail", post_id=post.post_id)
+        )
 
     return redirect(url_for("post_detail", post_id=post.post_id))
 
@@ -963,7 +1010,7 @@ def handle_request(request_id, decision):
     join_activity = JoinActivity.query.get_or_404(request_id)
     post = join_activity.post
 
-    # Only user posted can handle
+    # Only the post owner can handle requests
     if post.email != current_user.email:
         flash("You are not authorized to manage this request.")
         return redirect(url_for("post_detail", post_id=post.post_id))
@@ -977,9 +1024,13 @@ def handle_request(request_id, decision):
 
         if accepted_count < post.participants:
             join_activity.status = "accepted"
-            flash(f"{join_activity.user.name} has been accepted!")
+            flash(f"{join_activity.user.name if join_activity.user else join_activity.email} has been accepted!")
 
-            add_notification(join_activity.email, f"Your request for '{post.title}' was accepted", link=url_for("post_detail", post_id=post.post_id))
+            add_notification(
+                join_activity.email,
+                f"Your request for '{post.title}' was accepted",
+                link=url_for("post_detail", post_id=post.post_id)
+            )
 
             accepted_count += 1
             if accepted_count >= post.participants:
@@ -990,12 +1041,13 @@ def handle_request(request_id, decision):
 
     elif decision == "reject":
         join_activity.status = "rejected"
-        flash(f"{join_activity.user.name} has been rejected.")
+        flash(f"{join_activity.user.name if join_activity.user else join_activity.email} has been rejected.")
 
         add_notification(join_activity.email, f"Your request for '{post.title}' was rejected")
 
     db.session.commit()
     return redirect(url_for("post_detail", post_id=post.post_id))
+
 
 
 #admin interface
@@ -1229,11 +1281,12 @@ def delete_user(email):
     if current_user.role != "admin":
         abort(403)
 
-    if current_user.email == email:
+    # Prevent admin from deleting their own account
+    if current_user.email.lower() == email.lower():
         flash("You cannot delete your own account.", "danger")
         return redirect(url_for("admin_dashboard"))
 
-    user = User.query.filter_by(email=email).first_or_404()
+    user = User.query.filter_by(email=email.lower()).first_or_404()
     db.session.delete(user)
     db.session.commit()
 
@@ -1255,10 +1308,14 @@ def admin_reports():
         .having(db.func.count(Reports.id) >= 3)  # threshold
         .all()
     )
+
     suspended_users = User.query.filter_by(is_suspended=True).all()
 
-    return render_template("admin_reports.html", flagged_posts=flagged_posts, suspended_users=suspended_users)
-
+    return render_template(
+        "admin_reports.html",
+        flagged_posts=flagged_posts,
+        suspended_users=suspended_users
+    )
 
 # Suspend user
 @app.route("/suspend/<string:email>", methods=["POST"])
@@ -1267,7 +1324,7 @@ def suspend_user(email):
     if current_user.role != "admin":
         abort(403)
 
-    user = User.query.filter_by(email=email).first_or_404()
+    user = User.query.filter_by(email=email.lower()).first_or_404()
     user.is_suspended = True
     db.session.commit()
 
@@ -1282,12 +1339,13 @@ def unsuspend_user(email):
     if current_user.role != "admin":
         abort(403)
 
-    user = User.query.filter_by(email=email).first_or_404()
+    user = User.query.filter_by(email=email.lower()).first_or_404()
     user.is_suspended = False
     db.session.commit()
 
     flash(f"User {user.email} has been unsuspended.", "success")
     return redirect(url_for("admin_dashboard"))
+
 
 
 # Reactivate hidden post
@@ -1300,9 +1358,10 @@ def reactivate_post(post_id):
     post = Posts.query.get_or_404(post_id)
     post.is_hidden = False
 
+    # Remove all reports tied to this post
     Reports.query.filter_by(post_id=post_id).delete()
-    db.session.commit()
 
+    db.session.commit()
     flash("Post has been reactivated and is now visible.", "success")
     return redirect(url_for("admin_reports"))
 

@@ -3,92 +3,89 @@
 
 {% block content %}
 <div class="container">
-    <h1>Create Post</h1>
+ <h1>Create Post</h1>
 
-    <form method="POST" enctype="multipart/form-data">
-        {{ form.hidden_tag() }}
+ <form method="POST" enctype="multipart/form-data">
+     {{ form.hidden_tag() }}
 
-        <div class="form-group">
-            {{ form.title.label }}<br>
-            {{ form.title(class="form-control", placeholder="Enter a short title") }}
-            {% for error in form.title.errors %}
-                <span class="text-danger">{{ error }}</span>
-            {% endfor %}
-        </div>
+     <div class="form-group">
+         {{ form.title.label(class="form-label") }}
+         {{ form.title(class="form-control", placeholder="Enter a short title") }}
+         {% for error in form.title.errors %}
+             <span class="text-danger">{{ error }}</span>
+         {% endfor %}
+     </div>
 
-        <div class="form-group">
-            {{ form.image.label }}<br>
-            {{ form.image(class="form-control-file") }}
-            {% for error in form.image.errors %}
-                <span class="text-danger">{{ error }}</span>
-            {% endfor %}
-        </div>
+     <div class="form-group">
+         {{ form.image.label(class="form-label") }}
+         {{ form.image(class="form-control-file") }}
+         {% for error in form.image.errors %}
+             <span class="text-danger">{{ error }}</span>
+         {% endfor %}
+     </div>
 
-        <div class="form-group">
-            {{ form.content.label }}<br>
-            {{ form.content(class="form-control", rows=5, placeholder="Describe your activity...") }}
-        </div>
+     <div class="form-group">
+         {{ form.content.label(class="form-label") }}
+         {{ form.content(class="form-control", rows=5, placeholder="Describe your activity...") }}
+     </div>
 
-        <div class="form-group">
-            <label for="location-select"><strong>{{ form.location.label.text }}</strong></label>
-            <select name="{{ form.location.name }}" id="location-select" class="form-select" required>
-                <option value="" disabled selected>-- Please select a location --</option>
-                {% for value, label in form.location.choices %}
-                    <option value="{{ value }}" {% if form.location.data == value %}selected{% endif %}>
-                        {{ label }}
-                    </option>
-                {% endfor %}
-            </select>
+     <div class="form-group">
+         <label for="location-select"><strong>{{ form.location.label.text }}</strong></label>
+         <select name="{{ form.location.name }}" id="location-select" class="form-select" required>
+             <option value="" disabled selected>-- Please select a location --</option>
+             {% for value, label in form.location.choices %}
+                 <option value="{{ value }}" {% if form.location.data == value %}selected{% endif %}>
+                     {{ label }}
+                 </option>
+             {% endfor %}
+         </select>
 
-            <div class="mt-2">
-                <a id="map-link" href="#" target="_blank" class="btn btn-success" style="display:none;">
-                    Search on Google Maps
-                </a>
-            </div>
-        </div>   
+         <div class="mt-2">
+             <a id="map-link" href="#" target="_blank" class="btn btn-success" style="display:none;">
+                 Search on Google Maps
+             </a>
+         </div>
+     </div>
 
-</div>
+     <div class="form-group">
+         {{ form.event_date.label(class="form-label") }}
+         {{ form.event_date(class="form-control") }}
+     </div>
 
-        <div class="form-group">
-            {{ form.event_date.label }}<br>
-            {{ form.event_date(class="form-control") }}
-        </div>
+     <div class="form-group">
+         {{ form.start_time.label(class="form-label") }}
+         {{ form.start_time(class="form-control", placeholder="Start time (24-hour format)") }}
+     </div>
 
-        <div class="form-group">
-            {{ form.start_time.label }}<br>
-            {{ form.start_time(class="form-control", placeholder="start time (24-hour format)") }}
-        </div>
+     <div class="form-group">
+         {{ form.end_time.label(class="form-label") }}
+         {{ form.end_time(class="form-control", placeholder="End time (24-hour format)") }}
+     </div>
 
-        <div class="form-group">
-            {{ form.end_time.label }}<br>
-            {{ form.end_time(class="form-control", placeholder="end time (24-hour format)") }}
-        </div>
+     <div class="form-group">
+         {{ form.participants.label(class="form-label") }}
+         {{ form.participants(class="form-control", min="1") }}
+     </div>
 
-        <div class="form-group">
-            {{ form.participants.label }}<br>
-            {{ form.participants(class="form-control", min="1") }}
-        </div>
-
-        <div class="form-group">
-            {{ form.submit(class="btn btn-primary") }}
-            <a href="{{ url_for('posts') }}" class="btn btn-secondary">Cancel</a>
-        </div>
-    </form>
-
+     <div class="form-group">
+         {{ form.submit(class="btn btn-primary") }}
+         <a href="{{ url_for('posts') }}" class="btn btn-secondary">Cancel</a>
+     </div>
+ </form>
 </div>
 
 <script>
-    const select = document.getElementById("location-select"); 
-    const link = document.getElementById("map-link");
+ const select = document.getElementById("location-select"); 
+ const link = document.getElementById("map-link");
 
-    select.addEventListener("change", () => {
-        const value = select.value;
-        if (value && value !== "none") {
-            link.href = "https://www.google.com/maps/search/" + encodeURIComponent(value);
-            link.style.display = "inline-block";
-        } else {
-            link.style.display = "none";
-        }
-    });
+ select.addEventListener("change", () => {
+     const value = select.value;
+     if (value) {
+         link.href = "https://www.google.com/maps/search/" + encodeURIComponent(value);
+         link.style.display = "inline-block";
+     } else {
+         link.style.display = "none";
+     }
+ });
 </script>
 {% endblock %}

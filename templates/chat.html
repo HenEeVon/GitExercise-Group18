@@ -5,8 +5,7 @@
 {% block content %}
 <div class="chat-container">
     <div class="chat-header">
-        {% set owner_email = post.email %}
-        <a href="{{ url_for('post_detail', post_id=post.post_id, partner_email=owner_email) }}" class="back-btn">
+        <a href="{{ url_for('post_detail', post_id=post.post_id) }}" class="back-btn">
             Chat with {{ header_name }}
         </a>
     </div>
@@ -43,25 +42,25 @@
 
     const inputEl = document.getElementById('msg');
     const messagesEl = document.getElementById('messages');
-    const sendBtn = document.getElementById('send-btn')
+    const sendBtn = document.getElementById('send-btn');
 
     function scrollToBottom() {
         messagesEl.lastElementChild?.scrollIntoView({block:'end'});
     }
 
     socket.on('connect', () => {
-        socket.emit('join',{ room:ROOM });
+        socket.emit('join', { room: ROOM });
         scrollToBottom();
     });
 
     socket.on('message', (data) => {
         let user, text;
-        if(typeof data === 'string') {
+        if (typeof data === 'string') {
             user = 'system';
             text = data;
         } else {
             user = data.user;
-            text = (user === USERNAME) ? data.text: `${data.user}: ${data.text}`;
+            text = (user === USERNAME) ? data.text : `${data.user}: ${data.text}`;
         }
 
         const li = document.createElement('li');
@@ -76,8 +75,8 @@
 
     function sendCurrentMessage() {
         const text = (inputEl.value || '').trim();
-        if(!text) return;
-        socket.emit('send_message', { room:ROOM, message:text, post_id:POST_ID, partner_email:PARTNER});
+        if (!text) return;
+        socket.emit('send_message', { room: ROOM, message: text, post_id: POST_ID, partner_email: PARTNER });
         inputEl.value = "";
         inputEl.focus();
     }
@@ -85,7 +84,7 @@
     sendBtn.addEventListener('click', sendCurrentMessage);
 
     inputEl.addEventListener('keydown', function(e) {
-        if(e.key === 'Enter') {
+        if (e.key === 'Enter') {
             e.preventDefault();
             sendCurrentMessage();
         }

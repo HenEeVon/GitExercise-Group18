@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <title>{% block title %}My App{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body class="user">
     <header>
@@ -13,7 +13,6 @@
             <a class="header-logo" href="{{ url_for('home') }}"><span>ebFit</span></a>
 
             <div class="nav-right">
-
                 <!-- Search bar -->
                 <div class="navbar-search">
                     <details>
@@ -27,14 +26,12 @@
                     </details>
                 </div>
 
-
                 {% if current_user.is_authenticated %}
                     <nav class="nav-item">
                         <a href="{{ url_for('posts') }}">Posts</a>
 
                         {% if current_user.role in ['user', 'both'] %}
                             <a href="{{ url_for('notifications') }}">Notifications</a>
-                            <a href="{{ url_for('profile') }}">My Profile</a>
                         {% endif %}
 
                         {% if current_user.role in ['admin', 'both'] %}
@@ -42,9 +39,9 @@
                             <a href="{{ url_for('admin_reports') }}">Reports</a>
                             <a href="{{ url_for('admin_approval') }}">Admin Approvals</a>
                             <a href="{{ url_for('upload_location_csv') }}">Upload Location</a>
-                            <a href="{{ url_for('profile') }}">My Profile</a>
                         {% endif %}
 
+                        <a href="{{ url_for('profile') }}">My Profile</a>
                         <a href="{{ url_for('logout') }}">Log Out</a>
                     </nav>
                 {% else %}
@@ -53,7 +50,6 @@
                         <a href="{{ url_for('register') }}">Register</a>
                     </nav>
                 {% endif %}
-
             </div>
         </div>
     </header>

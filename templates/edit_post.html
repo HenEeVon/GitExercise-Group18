@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block title %}Edit Post{% endblock %}
 
 {% block content %}
@@ -9,41 +8,38 @@
     <form method="POST" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
 
-        <div>
-            {{ form.title.label }}<br>
-            {{ form.title(size=40) }}
+        <div class="form-group">
+            {{ form.title.label(class="form-label") }}
+            {{ form.title(class="form-control", size=40) }}
         </div>
 
         {% if post.image_filename %}
-            <div class="form-group">
-                <p>Current Image:</p>
-                <img src="{{ url_for('static', filename='uploads/' ~ post.image_filename) }}"
-                     alt="Post Image"
-                     class="img-fluid rounded"
-                     style="max-width: 300px;">
-            </div>
+        <div class="form-group">
+            <p>Current Image:</p>
+            <img src="{{ url_for('static', filename='uploads/' ~ post.image_filename) }}"
+                 alt="Post Image"
+                 class="img-fluid rounded"
+                 style="max-width: 300px;">
+        </div>
         {% endif %}
 
-        <!-- Upload New Image -->
         <div class="form-group">
-            {{ form.image.label }}<br>
+            {{ form.image.label(class="form-label") }}
             {{ form.image(class="form-control-file") }}
             {% for error in form.image.errors %}
                 <span class="text-danger">{{ error }}</span>
             {% endfor %}
         </div>
 
-
-
-        <div>
-            {{ form.content.label }}<br>
-            {{ form.content(rows=5, cols=40) }}
+        <div class="form-group">
+            {{ form.content.label(class="form-label") }}
+            {{ form.content(class="form-control", rows=5) }}
         </div>
 
         <div class="form-group">
             <label for="location-select"><strong>{{ form.location.label.text }}</strong></label>
             <select name="{{ form.location.name }}" id="location-select" class="form-select" required>
-                <option value="" disabled selected>-- Please select a location --</option>
+                <option value="" disabled>-- Please select a location --</option>
                 {% for value, label in form.location.choices %}
                     <option value="{{ value }}" {% if form.location.data == value %}selected{% endif %}>
                         {{ label }}
@@ -58,42 +54,46 @@
             </div>
         </div>
 
-        <div>
-            {{ form.event_date.label }}<br>
+        <div class="form-group">
+            {{ form.event_date.label(class="form-label") }}
             {{ form.event_date(class="form-control", type="date") }}
         </div>
 
-        <div>
-            {{ form.start_time.label }}<br>
-            {{ form.start_time(class="form-control", placeholder="start time (24-hour format)") }}
+        <div class="form-group">
+            {{ form.start_time.label(class="form-label") }}
+            {{ form.start_time(class="form-control", placeholder="Start time (24-hour format)") }}
         </div>
 
-        <div>
-            {{ form.end_time.label }}<br>
-            {{ form.end_time(class="form-control", placeholder="end time (24-hour format)") }}
+        <div class="form-group">
+            {{ form.end_time.label(class="form-label") }}
+            {{ form.end_time(class="form-control", placeholder="End time (24-hour format)") }}
         </div>
 
-        
-        <div>
-            {{ form.participants.label }}<br>
+        <div class="form-group">
+            {{ form.participants.label(class="form-label") }}
             {{ form.participants(class="form-control", min="1") }}
         </div>
 
-        <div>
-            {{ form.submit(class="btn") }}
+        <div class="form-group">
+            {{ form.submit(class="btn btn-primary") }}
+            <a href="{{ url_for('post_detail', post_id=post.post_id) }}" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
-
-    <a href="{{ url_for('post_detail', post_id=post.post_id) }}" class="btn">Cancel</a>
 </div>
 
 <script>
     const select = document.getElementById("location-select"); 
     const link = document.getElementById("map-link");
 
+    // Show map link if a location is already selected
+    if (select.value) {
+        link.href = "https://www.google.com/maps/search/" + encodeURIComponent(select.value);
+        link.style.display = "inline-block";
+    }
+
     select.addEventListener("change", () => {
         const value = select.value;
-        if (value && value !== "none") {
+        if (value) {
             link.href = "https://www.google.com/maps/search/" + encodeURIComponent(value);
             link.style.display = "inline-block";
         } else {
