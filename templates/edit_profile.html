@@ -14,15 +14,18 @@
             {{ form.name(size=40) }}
         </div>
         
-       <p class="gender-row">
-            <label>Gender</label>
-            <label>
-                <input type="radio" name="gender" value="Male" required> Male
-            </label>
-            <label>
-                <input type="radio" name="gender" value="Female" required> Female
-            </label>
-        </p>
+       <div class="gender-form">
+            <label class="gender-label">Gender</label>
+            <div class="gender-options">
+                <label class="gender-option">
+                    <input type="radio" name="gender" value="Male" {% if form.gender.data == "Male" %}checked{% endif %}> Male
+                </label>
+                <label class="gender-option">
+                    <input type="radio" name="gender" value="Female" {% if form.gender.data == "Female" %}checked{% endif %}> Female
+                </label>
+            </div>
+       </div>
+
 
         <div>
             {{ form.sport_level.label }}<br>

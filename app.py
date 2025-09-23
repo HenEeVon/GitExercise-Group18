@@ -248,7 +248,8 @@ def register():
             security_question=security_question,
             security_answer=security_answer,
             password=hashed_password,
-            role="user"  # default role
+            role="user",  # default role
+            image_file=picture_file,
         )
 
         try:

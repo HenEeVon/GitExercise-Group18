@@ -1825,26 +1825,29 @@ html {
     margin-top: 15px;
 }
 
-.profile-gender {
-    margin: 15px 0;
+.gender-form {
+    margin: 12px 0;
 }
 
-.gender-title {
+.gender-label {
     display: block;
-    font-size: 16px;
     font-weight: bold;
-    color: black;
+    font-size: 15px;
+    margin-bottom: 6px;
+}
+
+.gender-options {
+    display: flex;
+    gap: 25px;
+    align-items: center;
 }
 
 .gender-option {
     display: flex;
-    gap: 20px;
-}
-
-.gender-option label {
-    font-weight: normal;
+    align-items: center;
+    gap: 5px;
     font-size: 14px;
-    cursor: pointer;
+    font-weight: normal;
 }
 
 .notifications-list {
