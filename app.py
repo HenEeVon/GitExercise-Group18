@@ -654,6 +654,23 @@ def open_notif(notif_id):
 
     return redirect(notif.link or url_for("notifications"))
 
+#Delete notification
+@app.route("/notifications/delete/<int:notif_id>", methods=["POST"])
+@login_required
+def notifications_delete(notif_id):
+    notif = Notification.query.get_or_404(notif_id)
+    if notif.email == current_user.email:
+        db.session.delete(notif)
+        db.session.commit()
+    return redirect(url_for("notifications"))
+
+@app.route("/notifications/clear", methods=["POST"])
+@login_required
+def notifications_clear():
+    Notification.query.filter_by(email=current_user.email).delete()
+    db.session.commit()
+    return redirect(url_for("notifications"))
+
 #My profile
 @app.route("/profile")
 @login_required

@@ -1690,7 +1690,6 @@ html {
 }
 
 #send-form button {
-    flex-shrink: 0;
     border: 1px solid #2f6bff;
     background: #2f6bff;
     color: #fff;
@@ -1861,6 +1860,40 @@ html {
     font-size: 12px;
     padding: 2px 6px;
     border-radius: 12px;
+}
+
+.notifications-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.action-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.delete-all-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin: 15px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.single-delete-btn {
+    background: transparent;
+    border: none;
+    color: gray;
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: underline;
 }
 
 .notifications-list {
