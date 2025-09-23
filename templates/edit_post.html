@@ -49,7 +49,14 @@
                         {{ label }}
                     </option>
                 {% endfor %}
-                </select>
+            </select>
+
+            <div class="mt-2">
+                <a id="map-link" href="#" target="_blank" class="btn btn-success" style="display:none;">
+                    Search on Google Maps
+                </a>
+            </div>
+        </div>
 
         <div>
             {{ form.event_date.label }}<br>
@@ -69,7 +76,7 @@
         
         <div>
             {{ form.participants.label }}<br>
-            {{ form.participants(size=40) }}
+            {{ form.participants(class="form-control", min="1") }}
         </div>
 
         <div>

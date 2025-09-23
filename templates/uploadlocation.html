@@ -21,21 +21,7 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
-    <!-- Navigation bar -->
-    <div class="navbar-container">
-        <a class="header-logo" href="{{ url_for('home') }}"><span>ebFit</span></a>
-        <div class="nav-right">
-            <nav class="nav-item">
-                <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
-                <a href="{{ url_for('admin_approval') }}">Admin Approval</a>
-                <a href="{{ url_for('upload_location_csv') }}">Upload Location</a>
-                {% if current_user.role in ['admin', 'both'] %}
-                    <a href="{{ url_for('posts') }}">Login As User</a>
-                {% endif %}
-                <a href="{{ url_for('logout') }}">Log Out</a>
-            </nav>
-        </div>
-    </div>
+   
 
     <div class="container">
         <h1>Update Location List CSV</h1>

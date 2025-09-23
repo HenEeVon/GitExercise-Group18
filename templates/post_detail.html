@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container">
 
-    {% set owner_email = post.user_email or post.admin_email %}
+    {% set owner_email = post.email %}
 
     <h1>{{ post.title }}</h1>
 
@@ -68,24 +68,11 @@
         {% endif %}
     {% endwith %}
 
-
-    <!-- Join activity request and status -->
-    {% if current_user.is_authenticated and current_user.email != post.email %}
-        {% set user_request = None %}
-        {% for ja in join_activities %}
-            {% if ja.email == current_user.email %}
-                {% set user_request = ja %}
-            {% endif %}
-        {% endfor %}
-
-        
     {% if not readonly %}
-
         <a href="{{ url_for('posts') }}" class="btn btn-secondary">Back to Activity Posts</a>
 
-        {# ---- OWNER ACTIONS (User or Admin) ---- #}
-        {% if (current_user.is_authenticated and current_user.user_email == owner_email) 
-              or (session.get('admin_email') and session.get('admin_email') == owner_email) %}
+        {# ---- OWNER ACTIONS ---- #}
+        {% if current_user.is_authenticated and current_user.email == owner_email %}
             <form method="POST" action="{{ url_for('delete', post_id=post.post_id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this post?');">
                 <button type="submit" class="btn delete-btn">Delete</button>
             </form>
@@ -97,7 +84,7 @@
                 <ul>
                     {% for ja in join_activities %}
                         <li>
-                            {{ ja.user.user_name }} ({{ ja.user.user_email }}) - Status: {{ ja.status }}
+                            {{ ja.user.name }} ({{ ja.user.email }}) - Status: {{ ja.status }}
                             {% if ja.status == "pending" %}
                                 <form action="{{ url_for('handle_request', request_id=ja.id, decision='accept') }}" method="post" style="display:inline;">
                                     <button type="submit" class="btn btn-success btn-sm">Accept</button>
@@ -112,13 +99,9 @@
             {% else %}
                 <p>No join requests yet.</p>
             {% endif %}
-        {% endif %}
-
-        {# ---- NON-OWNER ACTIONS (User or Admin) ---- #}
-        {% if (current_user.is_authenticated and current_user.user_email != owner_email) 
-              or (session.get('admin_email') and session.get('admin_email') != owner_email) %}
-            
-            {% set user_request = join_activities|selectattr('user_email', 'equalto', current_user.user_email if current_user.is_authenticated else session.get('admin_email'))|first %}
+        {% else %}
+            {# ---- NON-OWNER ACTIONS ---- #}
+            {% set user_request = join_activities|selectattr('user.email', 'equalto', current_user.email)|first %}
             
             {% if user_request %}
                 <p>
@@ -139,59 +122,22 @@
                 {% endif %}
             {% endif %}
 
-            {% set partner_email = post.user_email or post.admin_email %}
-            <a href="{{ url_for('chat_with_user', post_id=post.post_id, partner_email=partner_email) }}" class="btn btn-info">Chat with Me</a>
+            <a href="{{ url_for('chat_with_user', post_id=post.post_id, partner_email=post.email) }}" class="btn btn-info">Chat with Me</a>
         {% endif %}
 
-
     {% else %}
-        <!-- Read-only mode for admins -->
+        {# ---- READ-ONLY MODE ---- #}
         {% if from_reports %}
             <a href="{{ url_for('admin_reports') }}" class="btn btn-secondary">Back</a>
         {% elif from_dashboard %}
             <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back</a>
-
-    <!-- Join requests (visible only to post owner) -->
-    {% if current_user.is_authenticated and current_user.email == post.email %}
-        <hr>
-        <h3>Join Requests</h3>
-        {% if join_activities %}
-            <ul>
-                {% for ja in join_activities %}
-                    <li>
-                        {{ ja.user.name }} ({{ ja.user.email }}) - Status: {{ ja.status }}
-
-                        {% if ja.status == "pending" %}
-                            <form action="{{ url_for('handle_request', request_id=ja.id, decision='accept') }}" method="post" style="display:inline;">
-                                <button type="submit" class="btn btn-success btn-sm">Accept</button>
-                            </form>
-                            <form action="{{ url_for('handle_request', request_id=ja.id, decision='reject') }}" method="post" style="display:inline;">
-                                <button type="submit" class="btn btn-danger btn-sm">Reject</button>
-                            </form>
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
-
-        {% else %}
-            <a href="{{ url_for('posts') }}" class="btn btn-secondary">Back to Posts</a>
         {% endif %}
     {% endif %}
 
     <hr>
 
-
-    <!-- Actions -->
+    <!-- Owner-specific direct messages -->
     {% if current_user.is_authenticated and current_user.email == post.email %}
-        <a href="{{ url_for('posts') }}" class="btn btn-secondary">Back to Activity Post</a>
-        <a href="{{ url_for('edit_post', post_id=post.post_id) }}" class="btn btn-warning">Edit</a>
-    {% endif %}  
-
-    {% if current_user.is_authenticated and current_user.email != post.email %}
-        <!--Normal user direct message the post owner-->
-        <a href="{{ url_for('chat_with_user', post_id=post.post_id, partner_email=post.email) }}" class="btn btn-info">Chat with Me</a>
-    {% elif current_user.is_authenticated and current_user.email == post.email %}
-        <!--Owner able to open same chat room-->
         {% if owner_conversations %}
             <h3>Direct Messages</h3>
             <div class="direct-messages">

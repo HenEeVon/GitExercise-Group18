@@ -5,8 +5,10 @@
 {% block content %}
 <div class="chat-container">
     <div class="chat-header">
-        {% set owner_email = post.user_email or post.admin_email %}
-        <a href="{{ url_for('post_detail', post_id=post.post_id, partner_email=owner_email) }}" class="back-btn">Chat with {{ header_name }}</a>
+        {% set owner_email = post.email %}
+        <a href="{{ url_for('post_detail', post_id=post.post_id, partner_email=owner_email) }}" class="back-btn">
+            Chat with {{ header_name }}
+        </a>
     </div>
 
     <div id="chat" data-room="{{ room }}" data-username="{{ username }}" data-postid="{{ post.post_id }}" data-partner="{{ partner_email }}">
@@ -70,22 +72,22 @@
 
         messagesEl.appendChild(li);
         scrollToBottom();
-});
+    });
 
-        function sendCurrentMessage() {
+    function sendCurrentMessage() {
         const text = (inputEl.value || '').trim();
         if(!text) return;
         socket.emit('send_message', { room:ROOM, message:text, post_id:POST_ID, partner_email:PARTNER});
         inputEl.value = "";
         inputEl.focus();
-        }
+    }
 
-        sendBtn.addEventListener('click', sendCurrentMessage);
+    sendBtn.addEventListener('click', sendCurrentMessage);
 
-        inputEl.addEventListener('keydown', function(e) {
-            if(e.key === 'Enter') {
-                e.preventDefault();
-                sendCurrentMessage();
+    inputEl.addEventListener('keydown', function(e) {
+        if(e.key === 'Enter') {
+            e.preventDefault();
+            sendCurrentMessage();
         }
     });
 </script>

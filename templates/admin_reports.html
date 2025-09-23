@@ -22,8 +22,8 @@
                 <tr>
                     <td>{{ post.title }}</td>
                     <td>
-                        {% if post.user %} {{ post.user.user_name }} (User)
-                        {% elif post.admin %} {{ post.admin.admin_name }} (Admin)
+                        {% if post.user %} 
+                            {{ post.user.name }} (User)
                         {% endif %}
                     </td>
                     <td>
@@ -44,12 +44,11 @@
                         </form>
                         <a href="{{ url_for('post_detail', post_id=post.post_id, readonly=1, from_reports=1) }}" class="btn btn-info">View</a>
 
-
                         {% if post.user %}
                             {% if post.user.is_suspended %}
                                 <span class="text-muted">User Suspended</span>
                             {% else %}
-                                <form action="{{ url_for('suspend_user', user_email=post.user.user_email) }}" method="POST" style="display:inline;">
+                                <form action="{{ url_for('suspend_user', user_email=post.user.email) }}" method="POST" style="display:inline;">
                                     <button class="btn btn-warning btn-sm">Suspend User</button>
                                 </form>
                             {% endif %}
@@ -77,10 +76,10 @@
             <tbody>
                 {% for user in suspended_users %}
                 <tr>
-                    <td>{{ user.user_email }}</td>
-                    <td>{{ user.user_name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.name }}</td>
                     <td>
-                        <form action="{{ url_for('unsuspend_user', user_email=user.user_email) }}" method="POST" style="display:inline;">
+                        <form action="{{ url_for('unsuspend_user', user_email=user.email) }}" method="POST" style="display:inline;">
                             <button class="btn btn-info btn-sm">Unsuspend</button>
                         </form>
                     </td>

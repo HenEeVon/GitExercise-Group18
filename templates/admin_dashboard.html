@@ -1,19 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" rel="stylesheet">
-</head>
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
 
 {% block content %}
 <div class="admin-dashboard container">
     <h1>Admin Dashboard</h1>
     
     {% if admin %}
-        <p class="logged-in">Logged in as: <strong>{{ admin.admin_email }}</strong></p>
+        <p class="logged-in">Logged in as: <strong>{{ admin.email }}</strong></p>
     {% endif %}
 
     <!-- Overview Cards -->
@@ -42,10 +35,10 @@
             <tbody>
                 {% for user in users %}
                 <tr>
-                    <td>{{ user.user_email }}</td>
-                    <td>{{ user.user_name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.name }}</td>
                     <td class="action-buttons">
-                        <a href="{{ url_for('delete_user', user_email=user.user_email) }}" class="delete-btn">Delete</a>
+                        <a href="{{ url_for('delete_user', email=user.email) }}" class="delete-btn">Delete</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -71,8 +64,11 @@
                     <td>{{ post.title }}</td>
                     <td>{{ post.post_status }}</td>
                     <td>
-                        {% if post.user %} {{ post.user.user_name }}
-                        {% elif post.admin %} {{ post.admin.admin_name }} (Admin) {% endif %}
+                        {% if post.user %}
+                            {{ post.user.name }}
+                        {% else %}
+                            <em>Unknown</em>
+                        {% endif %}
                     </td>
                     <td class="action-buttons">
                         <a href="{{ url_for('post_detail', post_id=post.post_id, readonly=1, from_dashboard=1) }}" class="btn btn-info">View</a>

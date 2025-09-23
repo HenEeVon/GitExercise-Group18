@@ -2,44 +2,7 @@
 {% block title %}Admin Approval{% endblock %}
 
 {% block content %}
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Approval</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
-</head>
-<!-- Navigation bar -->
-  <!-- Search bar -->
-   <div class="navbar-container">
-            <!-- Logo -->
-            <a class="header-logo" href="{{ url_for('home') }}"><span>ebFit</span></a>
-
-            <div class="nav-right">
-                <div class="navbar-search">
-
-                {% if current_user.is_authenticated %}
-                    <nav class="nav-item">
-                        <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
-                        <a href="{{ url_for('admin_approval') }}">Admin Approval</a>
-                        <a href="{{ url_for('upload_location_csv') }}">Upload location</a>
-
-                        {% if current_user.role in ['admin', 'both'] %}
-                            <a href="{{ url_for('posts') }}">Login As User</a>
-                        {% endif %}
-
-
-                        <a href="{{ url_for('logout') }}">Log Out</a>
-                    </nav>
-                {% else %}
-                {% endif %}
-
-            </div>
-        </div>
-    </div>
-    </header>
-    </div>
-<body class="adminapp">
+<div class="adminapp">
     <div class="admincon">
         <!-- Flash messages -->
         {% with messages = get_flashed_messages() %}
@@ -147,5 +110,7 @@
         <p>No rejected requests.</p>
         {% endif %}
 
-    </body>
-</html>
+    </div>
+</div>
+
+{% endblock %}

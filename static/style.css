@@ -165,11 +165,12 @@ input[type="submit"].post-btn:hover {
     border-radius: 5px;
     min-width: 100px;
     z-index: 10;
-    display: none;  
+    display: none;    
 }
 
 details[open] .menu-dropdown {
-    display: block;        
+    display: block; 
+       
 }
 
 .menu-dropdown a {
