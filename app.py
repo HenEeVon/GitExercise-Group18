@@ -620,7 +620,7 @@ def on_send_message(data):
     except Exception:
         db.session.rollback()
 
-    send({"user": msg.sender_name, "text": msg.text}, to=room)
+    send({"user": msg.sender_name,"email": msg.sender_email ,"text": msg.text}, to=room)
 
 # Notifications
 @app.route("/notifications")
