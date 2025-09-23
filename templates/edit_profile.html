@@ -24,6 +24,11 @@
             </label>
         </p>
 
+        <div>
+            {{ form.sport_level.label }}<br>
+            {{ form.sport_level(class="form-select") }}
+        </div>
+
 
         <div>
             {{ form.bio.label }}<br>
@@ -33,7 +38,7 @@
         <div>
             {{ form.security_question.label }}<br>
             <div class="security-option">
-                {{ form.security_question(class="form-control") }}
+                {{ form.security_question(class="form-select") }}
             </div>
         </div>
 
