@@ -414,7 +414,8 @@ def search():
     dateinpost = (request.args.get("date") or "").strip()
 
     searched = False
-    query = Posts.query.filter_by(is_hidden=False)  # Exclude hidden posts
+    # join User so we can filter on user name too
+    query = Posts.query.join(User).filter(Posts.is_hidden == False)
 
     # Filter by sport if provided
     if sport:
@@ -424,7 +425,7 @@ def search():
                 func.lower(Posts.title).like(f"%{sport}%"),
                 func.lower(Posts.content).like(f"%{sport}%"),
                 func.lower(Posts.location).like(f"%{sport}%"),
-                func.lower(User.name).like(f"%{sport}%")
+                func.lower(User.name).like(f"%{sport}%")   # now works
             )
         )
 
@@ -441,9 +442,7 @@ def search():
     results = query.order_by(Posts.date_posted.desc()).all()
 
     # Convert posted date to Malaysia timezone
-    posts = Posts.query.filter_by(is_hidden=False).order_by(Posts.date_posted.desc()).all()
-
-    for post in posts: 
+    for post in results: 
         if post.date_posted:
             if post.date_posted.tzinfo is None:
                 utc_time = pytz.utc.localize(post.date_posted)
@@ -452,7 +451,6 @@ def search():
             post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
         else:
             post.local_date_posted_value = None
-
 
     # Detect if admin is logged in (but don’t override filtering now)
     current_admin = None
@@ -468,7 +466,6 @@ def search():
         admin=current_admin,
         user=current_user if current_user.is_authenticated else None
     )
-
 
 
 # Error page
