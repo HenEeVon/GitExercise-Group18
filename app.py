@@ -799,7 +799,7 @@ def handle_request(request_id, decision):
         join_activity.status = "rejected"
         flash(f"{join_activity.user.name} has been rejected.")
 
-        add_notification(join_activity.email, f"Your request for '{post.title}' was rejected")
+        add_notification(join_activity.email, f"Your request for '{post.title}' was rejected",link=url_for("post_detail", post_id=post.post_id))
 
     db.session.commit()
     return redirect(url_for("post_detail", post_id=post.post_id))
