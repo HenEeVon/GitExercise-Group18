@@ -6,17 +6,18 @@
 
 <div class="profile">
 
-    <div class="flash-messages">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category if category else 'info' }}">
-                        {{ message }}
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="popup">
+                    <div class="popup-content">
+                        <p>{{ message }}</p>
+                        <button class="submit" onclick="this.closest('.popup').style.display='none'">OK</button>
                     </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
     <!-- Profile picture and Name -->
     <div class="profile-header">
