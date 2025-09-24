@@ -8,6 +8,7 @@ from flask_socketio import join_room, send, SocketIO
 import random
 from string import ascii_uppercase
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, TextAreaField, IntegerField, DateField, TimeField,  SelectField, RadioField
@@ -19,7 +20,6 @@ import pytz
 import os, secrets
 from sqlalchemy import func, or_, asc, case
 import csv 
-import os
 MALAYSIA_TZ = pytz.timezone("Asia/Kuala_Lumpur")
 UTC = pytz.utc
 
@@ -586,7 +586,7 @@ def chat_with_user(post_id, partner_email):
 
     partner_user = User.query.get(partner_email)
     partner_name = partner_user.name if partner_user else partner_email
-    partner_img = url_for("static", filename=f"profile_pics/{partner_user.image_file}") if partner_user else url_for("static", filename="profile_pics/default.png")
+    partner_img = url_for("static", filename=f"profile_pics/{partner_user.image_file or 'default.png'}") if partner_user else url_for("static", filename="profile_pics/default.png")
 
     if current_email == owner_email:
         header_name = partner_name
@@ -729,12 +729,12 @@ def profile_edit():
         current_user.security_question = form.security_question.data
         current_user.security_answer = (form.security_answer.data or "").strip().lower()
 
-        if form.picture.data:
-            filename = save_picture(form.picture.data)
-            current_user.image_file = filename
+        uploaded = request.files.get("picture")
+        if uploaded and uploaded.filename:
+            current_user.image_file = save_picture(uploaded, current_user.email)
 
         db.session.commit()
-        flash("Profile updated.", "success")
+        flash("Profile updated.")
         return redirect(url_for("profile"))
     
     if request.method == "GET":
@@ -744,32 +744,20 @@ def profile_edit():
         form.security_question.data = current_user.security_question
         form.security_answer.data = current_user.security_answer
 
-    image_url = url_for(
-        "static", 
-        filename=f"profile_pics/{current_user.image_file or 'default.png'}"
-    )
+    image_url = url_for("static", filename=f"profile_pics/{current_user.image_file or 'default.png'}")
 
     return render_template("edit_profile.html", form=form, image_url=image_url)
 
+def save_picture(file, email):
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    if file_ext not in [".jpg", ".png"]:
+        file_ext = ".png"
 
-def save_picture(form_picture):
-    random_hex = secrets.token_hex(8)
-    _, f_ext = os.path.splitext(form_picture.filename)
-    picture_fn = random_hex + f_ext.lower()
-    picture_path = os.path.join(app.root_path, "static/profile_pics", picture_fn)
+    filename = secure_filename(email.replace("@", "_")) + file_ext
+    path = os.path.join(app.root_path, "static/profile_pics", filename)
 
-    try:
-        img = Image.open(form_picture)
-        img.thumbnail((256, 256))
-
-        if f_ext.lower() in [".jpg", ".png"]:
-            img.save(picture_path, optimize=True)
-        else:
-            img.save(picture_path, optimize=True)
-    except Exception as e:
-        raise ValueError("Invalid image file") from e
-    
-    return picture_fn
+    Image.open(file).resize((256, 256)).save(path, optimize=True)
+    return filename
 
 # Join Activity
 @app.route("/activityrequest/<int:post_id>", methods=["POST"])
