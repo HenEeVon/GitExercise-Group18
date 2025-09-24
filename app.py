@@ -329,11 +329,17 @@ def login():
 
         # Login successful
         login_user(user)
+
+        if user.role == 'admin':
+            session['as_admin'] = True
+        else:
+            session['as_admin'] = False
+
+
         flash(f"Welcome back, {user.name}!")
 
-        if user.role in ["admin", "both"]:
-            return redirect(url_for("admin_dashboard"))
-        return redirect(url_for("posts"))
+        next_page = request.args.get('next') or (url_for('admin_dashboard') if session.get('as_admin') else url_for('posts'))
+        return redirect(next_page)
 
     return render_template("login.html")
 
@@ -1466,7 +1472,32 @@ def upload_location_csv():
         return redirect(url_for("upload_location_csv"))
 
     return render_template("uploadlocation.html")
-            
+
+
+# Switch to admin view
+@app.route("/switch_to_admin")
+def switch_to_admin():
+    if not current_user.is_authenticated or current_user.role not in ['admin', 'both']:
+        flash("You cannot switch to admin view.", "danger")
+        return redirect(url_for('posts'))
+
+    session['as_admin'] = True
+    flash("Switched to Admin view.", "success")
+    return redirect(url_for('admin_dashboard'))
+
+# Switch to user view
+@app.route("/switch_to_user")
+def switch_to_user():
+    if not current_user.is_authenticated:
+        flash("You need to login first!", "danger")
+        return redirect(url_for('login'))
+
+    session['as_admin'] = False
+    flash("Switched to User view.", "success")
+    return redirect(url_for('posts'))
+
+
+
 
 # Run app
 if __name__ == "__main__":
