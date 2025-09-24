@@ -12,7 +12,7 @@
             </form>
 
             <!--Delete all button-->
-            <form method="post" action="{{ url_for('notifications_clear') }}">
+            <form method="post" action="{{ url_for('notifications_clear') }}" onsubmit="return confirm('Are you sure you want to delete all notifications?');">
                 <button type="submit" class="delete-all-btn">Delete all</button>
             </form>
         </div>
