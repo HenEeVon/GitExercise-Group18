@@ -64,7 +64,7 @@ class User(db.Model, UserMixin):
     security_question = db.Column(db.String(255), nullable=False)
     security_answer = db.Column(db.String(255), nullable=False)
     password = db.Column(db.String(255), nullable=False)
-    image_file = db.Column(db.String(255), nullable=False, default="default.png")
+    image_file = db.Column(db.String(255), nullable=False, default="default_image.png")
     bio = db.Column(db.Text, default="This user has not added a bio yet.", nullable=False)
     role = db.Column(db.String(20), default="user") 
     is_suspended = db.Column(db.Boolean, default=False)
@@ -242,6 +242,22 @@ def add_notification(email, text, link=None):
     except Exception:
         db.session.rollback()
 
+def save_profile_picture(uploaded, old_filename=None):
+    folder = os.path.join(current_app.root_path, "static", "profile_pics")
+    os.makedirs(folder, exist_ok=True)
+
+    prefix = secure_filename(current_user.email.split("@")[0])
+    filename = f"{prefix}_{secure_filename(uploaded.filename)}"
+    path = os.path.join(folder, filename)
+
+    if old_filename and old_filename != "default_image.png":
+        old_path = os.path.join(folder, old_filename)
+        if os.path.exists(old_path):
+            os.remove(old_path)
+
+    uploaded.save(path)
+    return filename
+
 # User loader
 @login_manager.user_loader
 def load_user(user_id):
@@ -292,9 +308,9 @@ def register():
 
         # Hash the password
         hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
-        picture_file = "default.png"
+        picture_file = "default_image.png"
         if "picture" in request.files and request.files["picture"].filename:
-            picture_file = save_picture(request.files["picture"], email)
+            picture_file = save_profile_picture(request.files["picture"], email)
 
         # Create user
         new_user = User(
@@ -802,7 +818,7 @@ def chat_with_user(post_id, partner_email):
 
     partner_user = User.query.get(partner_email)
     partner_name = partner_user.name if partner_user else partner_email
-    partner_img = url_for("static", filename=f"profile_pics/{partner_user.image_file or 'default.png'}") if partner_user else url_for("static", filename="profile_pics/default.png")
+    partner_img = url_for("static", filename=f"profile_pics/{partner_user.image_file or 'default_image.png'}") if partner_user else url_for("static", filename="profile_pics/default.png")
 
     if current_email == owner_email:
         header_name = partner_name
@@ -978,7 +994,7 @@ def profile_page(email):
     # correct image path (use their image, not always current_user)
     image_url = url_for(
         "static",
-        filename=f"profile_pics/{user.image_file or 'default.png'}"
+        filename=f"profile_pics/{user.image_file or 'default_image.png'}"
     )
 
     return render_template(
@@ -1008,7 +1024,7 @@ def profile_edit():
 
         uploaded = request.files.get("picture")
         if uploaded and uploaded.filename:
-            current_user.image_file = save_picture(uploaded, current_user.email)
+            current_user.image_file =save_profile_picture(uploaded, current_user.image_file)
 
         db.session.commit()
         flash("Profile updated.")
@@ -1021,20 +1037,9 @@ def profile_edit():
         form.security_question.data = current_user.security_question
         form.security_answer.data = current_user.security_answer
 
-    image_url = url_for("static", filename=f"profile_pics/{current_user.image_file or 'default.png'}")
+    image_url = url_for("static", filename=f"profile_pics/{current_user.image_file or 'default_image.png'}")
 
     return render_template("edit_profile.html", form=form, image_url=image_url, question=question)
-
-def save_picture(file, email):
-    file_ext = os.path.splitext(file.filename)[1].lower()
-    if file_ext not in [".jpg", ".png"]:
-        file_ext = ".png"
-
-    filename = secure_filename(email.replace("@", "_")) + file_ext
-    path = os.path.join(app.root_path, "static/profile_pics", filename)
-
-    Image.open(file).resize((256, 256)).save(path, optimize=True)
-    return filename
 
 # Join Activity
 @app.route("/activityrequest/<int:post_id>", methods=["POST"])
