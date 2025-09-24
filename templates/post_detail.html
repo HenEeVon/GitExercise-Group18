@@ -1,18 +1,38 @@
-
 {% extends "base.html" %}
 
 {% block title %}My Post{% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container post-container">
+    <!-- Profile header -->
+    <div class="profile-header">
+        <img src="{{ url_for('static', filename='profile_pics/' ~ (post.user.image_file if post.user.image_file else 'default.png')) }}" 
+             alt="{{ post.user.name }}'s profile picture"
+             class="profile-img">
+
+        <div class="profile-info"> <!--pass profile owner post email-->
+            <a href="{{ url_for('profile_page', email=post.user.email)}}" class="profile-name">
+                {{ post.user.name }}
+            </a>
+            <p class="posted-date">
+                Posted on: {{ post.local_date_posted_value.strftime('%d/%m/%Y %H:%M') if post.local_date_posted_value else '' }}
+            </p>
+        </div>
+    </div>
+
+    <hr class="meta-separator">
+
+    <!-- Post Title -->
     <h1>{{ post.title }}</h1>
 
-    <!-- Event date and location -->
+    <!-- Event date and time -->
     <p class="meta">
+        <i class="fa-solid fa-calendar"></i>
         Event Date: {{ post.event_date.strftime('%d/%m/%Y') }} |
         {{ post.start_time.strftime('%H:%M') }} - {{ post.end_time.strftime('%H:%M') }}
     </p>
         
+    <!-- Location -->
     <p class="meta">
         <i class="fa-solid fa-location-dot"></i>
         <span>Location: </span>
@@ -21,21 +41,14 @@
         </a>
     </p>
 
-    <!-- Posted date and author -->
-    <p class="meta">
-        <i class="fa-solid fa-calendar"></i>
-        Posted on:
-        {{ post.local_date_posted_value.strftime('%d/%m/%Y %H:%M') if post.local_date_posted_value else '' }}
-        by {{ post.user.name }}
-    </p>
-
     <!-- Post content -->
     <div class="content">
-        <p>Content: {{ post.content }}</p>
+        <span>Content:</span>
+        <p>{{ post.content }}</p>
     </div>
 
     <!-- Post status and participants -->
-    <p>Status: {{ post.post_status }}</p>
+    <p><strong>Status:</strong> {{ post.post_status }}</p>
     
     <p>
         <i class="fa-solid fa-person"></i>
@@ -56,7 +69,7 @@
     {% endif %}
     {% endwith %}
 
-    <!-- Join activity request and status -->
+    <!-- Join activity request (for non-owner) -->
     {% if current_user.is_authenticated and current_user.email != post.email %}
         {% set user_request = None %}
         {% for ja in join_activities %}
@@ -94,7 +107,6 @@
                 {% for ja in join_activities %}
                     <li>
                         {{ ja.user.name }} ({{ ja.user.email }}) - Status: {{ ja.status }}
-
                         {% if ja.status == "pending" %}
                             <form action="{{ url_for('handle_request', request_id=ja.id, decision='accept') }}" method="post" style="display:inline;">
                                 <button type="submit" class="btn btn-success btn-sm">Accept</button>
@@ -113,7 +125,6 @@
 
     <hr>
 
-
     <!-- Actions -->
     {% if current_user.is_authenticated and current_user.email == post.email %}
         <a href="{{ url_for('posts') }}" class="btn btn-secondary">Back to Activity Post</a>
@@ -121,10 +132,10 @@
     {% endif %}  
 
     {% if current_user.is_authenticated and current_user.email != post.email %}
-        <!--Normal user direct message the post owner-->
+        <!-- Normal user direct message -->
         <a href="{{ url_for('chat_with_user', post_id=post.post_id, partner_email=post.email) }}" class="btn btn-info">Chat with Me</a>
     {% elif current_user.is_authenticated and current_user.email == post.email %}
-        <!--Owner able to open same chat room-->
+        <!-- Owner DM list -->
         {% if owner_conversations %}
             <h3>Direct Messages</h3>
             <div class="direct-messages">
@@ -139,6 +150,5 @@
             <p>No direct messages yet.</p>
         {% endif %}
     {% endif %}
-
 </div>
 {% endblock %}

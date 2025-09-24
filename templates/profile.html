@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}My Profile{% endblock %}
+{% block title %}{{ user.name }}'s Profile{% endblock %}
 
 {% block content %}
 
@@ -20,18 +20,21 @@
 
     <!-- Profile picture and Name -->
     <div class="profile-header">
-        <img class="avatar" src="{{ url_for('static', filename='profile_pics/' ~ (current_user.image_file if current_user.image_file else 'default.png')) }}">
-        <h1>{{ current_user.name }}</h1>
-        <p class="email">{{ current_user.email }}</p>
-        <a href="{{ url_for('profile_edit') }}" class="btn">Edit Profile</a>
+        <img class="avatar" src="{{ url_for('static', filename='profile_pics/' ~ (user.image_file if user.image_file else 'default.png')) }}">
+        <h1>{{ user.name }}</h1>
+        <p class="email">{{ user.email }}</p>
+
+        {% if current_user.is_authenticated and current_user.email == user.email %}
+            <a href="{{ url_for('profile_edit') }}" class="btn">Edit Profile</a>
+        {% endif %}
     </div>
 
     <!-- Profile Info -->
     <div class="profile-info">
         <h3>Account Info</h3>
-        <p><strong>Full name:</strong> {{ current_user.name }}</p>
-        <p><strong>Gender:</strong> {{ current_user.gender }}</p>
-        <p><strong>Bio:</strong> {{ current_user.bio or "-" }}</p>
+        <p><strong>Full name:</strong> {{ user.name }}</p>
+        <p><strong>Gender:</strong> {{ user.gender }}</p>
+        <p><strong>Bio:</strong> {{ user.bio or "-" }}</p>
     </div>
 
     <!-- Recent Posts -->
@@ -41,7 +44,6 @@
         {% if recent_posts %}
             {% for post in recent_posts %}
                 <div class="post">
-
                     <div class="post-header">
                         <h2>{{ post.title }}</h2>
                         <div class="post-menu">
@@ -61,14 +63,12 @@
 
                     <p class="meta">
                         <i class="fa-solid fa-clock"></i>
-                        Event Time:
-                        {{ post.start_time.strftime('%H:%M') }} - {{ post.end_time.strftime('%H:%M') }}
+                        Event Time: {{ post.start_time.strftime('%H:%M') }} - {{ post.end_time.strftime('%H:%M') }}
                     </p>
 
                     <p class="meta">
                         <i class="fa-solid fa-newspaper"></i>
-                        Posted on:
-                        {{ post.local_date_posted_value.strftime('%d/%m/%Y %H:%M') if post.local_date_posted_value else '' }}
+                        Posted on: {{ post.local_date_posted_value.strftime('%d/%m/%Y %H:%M') if post.local_date_posted_value else '' }}
                     </p>
 
                     <p class="meta">
@@ -80,9 +80,7 @@
                     </p>
 
                     <p class="meta">
-                        Posted on:
-                        {{ post.date_posted.strftime('%d/%m/%Y %H:%M') if post.date_posted else '' }}
-                        by {{ post.user.name }}
+                        Posted by {{ post.user.name }}
                     </p>
 
                     <a href="{{ url_for('post_detail', post_id=post.post_id) }}" class="btn">Find Out More</a>
