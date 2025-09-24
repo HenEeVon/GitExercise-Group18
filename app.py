@@ -32,6 +32,8 @@ socketio = SocketIO(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
+app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 *1024
 
 @app.context_processor
 def notif_count():
@@ -292,7 +294,7 @@ def register():
         hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
         picture_file = "default.png"
         if "picture" in request.files and request.files["picture"].filename:
-            picture_file = save_picture(request.files["picture"])
+            picture_file = save_picture(request.files["picture"], email)
 
         # Create user
         new_user = User(
