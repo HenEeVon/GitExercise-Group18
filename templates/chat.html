@@ -6,7 +6,8 @@
 <div class="chat-container">
     <div class="chat-header">
         <a href="{{ url_for('post_detail', post_id=post.post_id) }}" class="back-btn">&lsaquo;</a>
-    <h2>Chat with {{ header_name }}</h2>
+        <img src="{{ partner_img }}" class="chat-avatar">
+        <h2>{{ header_name }}</h2>
     </div>
 
     <div id="chat" data-room="{{ room }}" data-username="{{ username }}" data-postid="{{ post.post_id }}" data-partner="{{ partner_email }}">

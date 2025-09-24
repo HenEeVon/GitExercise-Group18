@@ -1611,9 +1611,11 @@ html {
     border-top-right-radius: 10px;
 }
 
-.chat-header h2 {
-    font-size: 18px;
-    margin: 0;
+.chat-header .chat-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
 #chat {

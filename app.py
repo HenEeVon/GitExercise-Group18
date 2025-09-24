@@ -586,6 +586,7 @@ def chat_with_user(post_id, partner_email):
 
     partner_user = User.query.get(partner_email)
     partner_name = partner_user.name if partner_user else partner_email
+    partner_img = url_for("static", filename=f"profile_pics/{partner_user.image_file}") if partner_user else url_for("static", filename="profile_pics/default.png")
 
     if current_email == owner_email:
         header_name = partner_name
@@ -593,7 +594,7 @@ def chat_with_user(post_id, partner_email):
         header_name = post.user.name
 
     return render_template("chat.html",post=post, room=room, username=current_user.name,header_name=header_name, 
-                           messages=messages, post_id=post_id, partner_email=partner_email)
+                           messages=messages, post_id=post_id, partner_email=partner_email,partner_img=partner_img)
 
 @socketio.on("join")
 def on_join(data):
