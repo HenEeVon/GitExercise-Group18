@@ -351,6 +351,7 @@ def reset_password():
             if user.security_answer.lower() == answer:
                 user.password = generate_password_hash(new_password, method="pbkdf2:sha256")
                 db.session.commit()
+                add_notification(user.email, "Your password was reset successfully.")
                 flash("Password updated successfully!")
                 return redirect(url_for("login"))
             else:
