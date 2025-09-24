@@ -6,10 +6,12 @@
     <div class="notifications-header">
         <h1>Notifications</h1>
         <div class="action-row">
+            <!--Mark all as read button-->
             <form method="post" action="{{ url_for('notifications_read_all') }}">
                 <button type="submit" class="btn">Mark all as read</button>
             </form>
 
+            <!--Delete all button-->
             <form method="post" action="{{ url_for('notifications_clear') }}">
                 <button type="submit" class="delete-all-btn">Delete all</button>
             </form>

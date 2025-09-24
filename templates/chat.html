@@ -5,8 +5,13 @@
 {% block content %}
 <div class="chat-container">
     <div class="chat-header">
+
+        <!--Back button that return to post detail interface-->
         <a href="{{ url_for('post_detail', post_id=post.post_id) }}" class="back-btn">&lsaquo;</a>
+
+        <!--Partner's profile picture-->
         <img src="{{ partner_img }}" class="chat-avatar">
+        <!--Partner's name as header-->
         <h2>{{ header_name }}</h2>
     </div>
 
@@ -16,6 +21,7 @@
             {% set my_email = current_user.email|lower %}
             {% for msg in messages %}
                 {% if msg.sender_email|lower == my_email %}
+                    <!--Message sent by current user-->
                     <li class="me">
                         <div>{{ msg.text }}</div>
                         {% if msg.local_time %}
@@ -23,6 +29,7 @@
                         {% endif %}
                     </li>
                 {% else %}
+                    <!--Message sent by other user-->
                     <li class="other">
                         <div>{{ msg.sender_name }}: {{ msg.text }}</div>
                         {% if msg.local_time %}
@@ -33,6 +40,7 @@
             {% endfor %}
         </ul>
 
+        <!--Input and send button-->
         <div id="send-form">
             <input type="text" id="msg" placeholder="Type a message..." autocomplete="off">
             <button type="submit" id="send-btn" class="btn">Send</button>
@@ -53,20 +61,25 @@
     const input = document.getElementById('msg');
     const list = document.getElementById('messages');
 
+    //Scroll to the latest message
     function scrollToBottom() {
         if (list.lastElementChild) {
             list.lastElementChild.scrollIntoView();
         }
     }
 
+    //Join the chat room
     socket.emit('join', { room })
 
+    //Listen for incoming messages
     socket.on('message', function(data) {
         const li = document.createElement('li');
         if (typeof data === "string") {
+            // Display (user's name) joined the chat
             li.className = 'system';
             li.textContent = data;
         } else {
+            //User message
             li.className = (data.user === me) ? 'me' : 'other';
             li.innerHTML = `
                 <div>${(data.user === me) ? data.text : data.user + ': ' + data.text }</div>
@@ -77,16 +90,18 @@
         list.appendChild(li);
         scrollToBottom();
     });
-
+        //Send a message
         function send() {
         const text = input.value.trim();
         if(!text) return;
         socket.emit('send_message', { room, message:text, post_id:postId, partner_email:partner});
         input.value = "";
         }
-
+        
+        //Click button to send
         document.getElementById('send-btn').onclick = send;
 
+        // Able to press Enter to send
         input.onkeydown = function(event) {
             if(event.key === 'Enter') {
                 event.preventDefault();
