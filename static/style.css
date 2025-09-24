@@ -1940,6 +1940,8 @@ html {
 .profile-header {
     text-align: center;
     margin-bottom: 30px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .profile-header .avatar {
