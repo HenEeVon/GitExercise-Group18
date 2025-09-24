@@ -12,6 +12,16 @@
     word-break: break-word;      
 }
 
+.post h2 {
+    white-space: normal;        /* allow wrapping */
+    overflow-wrap: break-word;  /* modern way */
+    word-break: break-word;     /* fallback */
+    max-width: 100%;            /* keep it inside container */
+}
+
+
+
+
 
 .container {
     width: 60%;
