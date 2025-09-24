@@ -578,6 +578,12 @@ def chat_with_user(post_id, partner_email):
 
     messages = (ChatMessage.query.filter_by(post_id=post_id, conversation=conv).order_by(asc(ChatMessage.created_at)).all())
 
+    for msg in messages:
+        if msg.created_at:
+            msg.local_time = pytz.utc.localize(msg.created_at).astimezone(MALAYSIA_TZ).strftime("%H:%M")
+        else:
+            msg.local_time = ""
+
     partner_user = User.query.get(partner_email)
     partner_name = partner_user.name if partner_user else partner_email
 
@@ -614,6 +620,14 @@ def on_send_message(data):
     db.session.add(msg)
     db.session.commit()
 
+    if msg.created_at:
+        utc_time = pytz.utc.localize(msg.created_at)
+        local_time = utc_time.astimezone(MALAYSIA_TZ)
+    else:
+        local_time = None
+
+    ts = local_time.strftime("%H:%M") if local_time else ""
+
     try:
         if partner != current_email:
             chat_url = url_for("chat_with_user", post_id=post_id, partner_email=current_user.email)
@@ -621,7 +635,7 @@ def on_send_message(data):
     except Exception:
         db.session.rollback()
 
-    send({"user": msg.sender_name,"email": msg.sender_email ,"text": msg.text}, to=room)
+    send({"user": msg.sender_name,"email": msg.sender_email ,"text": msg.text, "time": ts}, to=room)
 
 # Notifications
 @app.route("/notifications")

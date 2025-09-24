@@ -1666,6 +1666,12 @@ html {
     color: black;
 }
 
+.msg-time {
+    font-size: 9px;
+    color: gray;
+    margin-top: 2px;
+}
+
 #send-form {
     display: flex;
     gap: 8px;
