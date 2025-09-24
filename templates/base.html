@@ -5,6 +5,7 @@
     <title>{% block title %}My App{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body class="{{ 'admin' if session.get('as_admin', False) else 'user' }}">
 <header>
@@ -12,55 +13,55 @@
         <!-- Logo -->
         <a class="header-logo" href="{{ url_for('home') }}"><span>ebFit</span></a>
 
-        <div class="nav-right">
-            <!-- Search bar for user view only -->
-            {% if not session.get('as_admin', False) %}
-            <div class="navbar-search">
-                <details>
-                    <summary class="search-toggle">Search</summary>
-                    <form method="GET" action="{{ url_for('search') }}">
-                        <input type="text" name="sport" placeholder="Search by category..." value="{{ request.args.get('sport','') }}">
-                        <input type="date" name="date" value="{{ request.args.get('date','') }}">
-                        <button type="submit" class="search-btn">Search</button>
-                    </form>
-                </details>
-            </div>
-            {% endif %}
-
-            {% if current_user.is_authenticated %}
-            <nav class="nav-item">
-                {% if session.get('as_admin', False) %}
-                    <!-- Admin view -->
-                    <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
-                    <a href="{{ url_for('admin_reports') }}">Reports</a>
-                    <a href="{{ url_for('admin_approval') }}">Admin Approvals</a>
-                    <a href="{{ url_for('upload_location_csv') }}">Upload Location</a>
-                    <a href="{{ url_for('profile') }}">My Profile</a>
-                    {% if current_user.role == 'both' %}
-                        <a href="{{ url_for('switch_to_user') }}" class="switch-btn">User Panel</a>
-                    {% endif %}
-                    <a href="{{ url_for('logout') }}">Logout</a>
-                {% else %}
-                    <!-- User view -->
-                    <a href="{{ url_for('posts') }}">Posts</a>
-                    <a href="{{ url_for('notifications') }}">Notifications</a>
-                    <a href="{{ url_for('profile') }}">My Profile</a>
-                    {% if current_user.role in ['admin','both'] %}
-                        <a href="{{ url_for('switch_to_admin') }}" class="switch-btn">Admin Panel</a>
-                    {% endif %}
-                    <a href="{{ url_for('logout') }}">Logout</a>
+            <div class="nav-right">
+                <!-- Search bar (optional) -->
+                {% if not session.get('as_admin', False) %}
+                <div class="navbar-search">
+                    <details>
+                        <summary class="search-toggle">Search</summary>
+                        <form method="GET" action="{{ url_for('search') }}">
+                            <input type="text" name="sport" placeholder="Search by category..." value="{{ request.args.get('sport','') }}">
+                            <input type="date" name="date" value="{{ request.args.get('date','') }}">
+                            <button type="submit" class="search-btn">Search</button>
+                        </form>
+                    </details>
+                </div>
                 {% endif %}
-            </nav>
-            {% else %}
-                <!-- Not logged in -->
+
+                {% if current_user.is_authenticated %}
                 <nav class="nav-item">
-                    <a href="{{ url_for('login') }}">Log In</a>
-                    <a href="{{ url_for('register') }}">Register</a>
+                    {% if session.get('as_admin', False) %}
+                        <!-- Admin view -->
+                        <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                        <a href="{{ url_for('admin_reports') }}">Reports</a>
+                        <a href="{{ url_for('admin_approval') }}">Admin Approvals</a>
+                        <a href="{{ url_for('upload_location_csv') }}">Upload Location</a>
+                        <a href="{{ url_for('profile') }}">My Profile</a>
+                        {% if current_user.role == 'admin' %}
+                            <a href="{{ url_for('switch_to_user') }}" class="switch-btn">User Panel</a>
+                        {% endif %}
+                        <a href="{{ url_for('logout') }}">Logout</a>
+                    {% else %}
+                        <!-- User view -->
+                        <a href="{{ url_for('posts') }}">Posts</a>
+                        <a href="{{ url_for('notifications') }}">Notifications</a>
+                        <a href="{{ url_for('profile') }}">My Profile</a>
+                        {% if current_user.role == 'admin' %}
+                            <a href="{{ url_for('switch_to_admin') }}" class="switch-btn">Admin Panel</a>
+                        {% endif %}
+                        <a href="{{ url_for('logout') }}">Logout</a>
+                    {% endif %}
                 </nav>
-            {% endif %}
+                {% else %}
+                    <nav class="nav-item">
+                        <a href="{{ url_for('login') }}">Log In</a>
+                        <a href="{{ url_for('register') }}">Register</a>
+                    </nav>
+                {% endif %}
+            </div>
+
         </div>
-    </div>
-</header>
+    </header>
 
 <main>
     {% block content %}{% endblock %}

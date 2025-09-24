@@ -5,44 +5,94 @@
 <div class="container">
     <h1>Admin Reports</h1>
 
-    <h2>📊 Overview</h2>
-    <ul>
-        <li>Total Users: {{ users|length }}</li>
-        <li>Admins: {{ users|selectattr('role','equalto','admin')|list|length }}</li>
-        <li>Regular Users: {{ users|selectattr('role','equalto','user')|list|length }}</li>
-        <li>Total Posts: {{ posts|length }}</li>
-        <li>Published Posts: {{ posts|selectattr('post_status','equalto','published')|list|length }}</li>
-        <li>Pending Posts: {{ posts|selectattr('post_status','equalto','pending')|list|length }}</li>
-    </ul>
+    <!-- Flagged Posts -->
+    {% if flagged_posts %}
+        <h3>Flagged Posts</h3>
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Status</th>
+                    <th>Reports</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for post, report_count in flagged_posts %}
+                <tr>
+                    <td>{{ post.title }}</td>
+                    <td>
+                        {% if post.user %}
+                            {{ post.user.name }} (User)
+                        {% else %}
+                            <em>Unknown</em>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if post.is_hidden %}
+                            <span class="text-danger">Hidden</span>
+                        {% else %}
+                            <span class="text-success">Visible</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ report_count }}</td>
+                    <td>
+                        {% if post.is_hidden %}
+                            <form action="{{ url_for('reactivate_post', post_id=post.post_id) }}" method="POST" style="display:inline;">
+                                <button class="btn btn-success btn-sm">Reactivate</button>
+                            </form>
+                        {% endif %}
+                        <form action="{{ url_for('delete', post_id=post.post_id) }}" method="POST" style="display:inline;">
+                            <button class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                        <a href="{{ url_for('post_detail', post_id=post.post_id, readonly=1, from_reports=1) }}" class="btn btn-info">View</a>
 
-    <h2>📌 Posts by Users</h2>
-    <table border="1" cellpadding="5">
-        <tr>
-            <th>User Email</th>
-            <th>Number of Posts</th>
-        </tr>
-        {% for user in users %}
-        <tr>
-            <td>{{ user.user_email }}</td>
-            <td>{{ posts|selectattr('user_email','equalto',user.user_email)|list|length }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+                        {% if post.user %}
+                            {% if post.user.is_suspended %}
+                                <span class="text-muted">User Suspended</span>
+                            {% else %}
+                                <form action="{{ url_for('suspend_user', email=post.user.email) }}" method="POST" style="display:inline;">
+                                    <button class="btn btn-warning btn-sm">Suspend User</button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No flagged posts.</p>
+    {% endif %}
 
-    <h2>👤 Users Pending Approval</h2>
-    <table border="1" cellpadding="5">
-        <tr>
-            <th>Email</th>
-            <th>Name</th>
-            <th>Status</th>
-        </tr>
-        {% for req in join_requests|selectattr('status','equalto','pending') %}
-        <tr>
-            <td>{{ req.user_email }}</td>
-            <td>{{ req.user_name }}</td>
-            <td>{{ req.status }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+    <!-- Suspended Users -->
+    <h3 class="mt-4">Suspended Users</h3>
+    {% if suspended_users %}
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in suspended_users %}
+                <tr>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.name }}</td>
+                    <td>
+                        <form action="{{ url_for('unsuspend_user', email=user.email) }}" method="POST" style="display:inline;">
+                            <button class="btn btn-info btn-sm">Unsuspend</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No suspended users.</p>
+    {% endif %}
 </div>
 {% endblock %}

@@ -9,14 +9,14 @@
         {% if messages %}
             {% for message in messages %}
                 <div class="popup">
-                        <div class="popup-content">
-                            <p>{{ message }}</p>
-                            <a href="{{ request.path }}"><button class="submit">OK</button></a>
-                        </div>
+                    <div class="popup-content">
+                        <p>{{ message }}</p>
+                        <button class="submit" onclick="this.closest('.popup').style.display='none'">OK</button>
+                    </div>
                 </div>
             {% endfor %}
         {% endif %}
-    {% endwith %}
+    {% endwith %}
 
     <h1>Activity Posts</h1>
     <a href="{{ url_for('create') }}" class="btn">Create New Post</a>
@@ -27,26 +27,27 @@
             <div class="post-header">
                 <h2>{{ post.title }}</h2>
                 <div class="post-menu">
-                    <details>
-                        <summary class="menu-btn">⋮</summary>
-                        <div class="menu-dropdown">
-                            <a href="#">Report</a>
-                        </div>
-                    </details>
+                    {% if current_user.is_authenticated and current_user.email != post.email %}
+                        <details>
+                            <summary class="menu-btn">⋮</summary>
+                            <div class="menu-dropdown">
+                                <form action="{{ url_for('report_post', post_id=post.post_id) }}" method="POST" style="margin:0;">
+                                    <button type="submit" class="menu-link">Report</button>
+                                </form>
+                            </div>
+                        </details>
+                    {% endif %}
                 </div>
             </div>
 
+
+
             <p class="meta">
                 <i class="fa-solid fa-calendar"></i>
-                Event Date: {{ post.event_date.strftime('%d/%m/%Y') }} 
+                {{ post.event_date.strftime('%d/%m/%Y') if post.event_date else '' }}
+                at {{ post.start_time.strftime('%H:%M') if post.start_time else '' }}
+                - {{ post.end_time.strftime('%H:%M') if post.end_time else '' }}
             </p>
-
-            <p class="meta">
-                <i class="fa-solid fa-clock"></i>
-                Event Time: 
-                {{ post.start_time.strftime('%H:%M') }} - {{ post.end_time.strftime('%H:%M') }} 
-            </p>
-
 
             <p class="meta">
                 <i class="fa-solid fa-newspaper"></i>

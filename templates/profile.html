@@ -10,7 +10,7 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">
+                    <div class="alert alert-{{ category if category else 'info' }}">
                         {{ message }}
                     </div>
                 {% endfor %}
@@ -47,40 +47,48 @@
                     <div class="post-header">
                         <h2>{{ post.title }}</h2>
                         <div class="post-menu">
-                            <details>
-                                <summary class="menu-btn">⋮</summary>
-                                <div class="menu-dropdown">
-                                    <a href="#">Report</a>
-                                </div>
-                            </details>
+                            {% if current_user.is_authenticated and current_user.email != post.email %}
+                                <details>
+                                    <summary class="menu-btn">⋮</summary>
+                                    <div class="menu-dropdown">
+                                        <form action="{{ url_for('report_post', post_id=post.post_id) }}" method="POST" style="margin:0;">
+                                            <button type="submit" class="menu-link">Report</button>
+                                        </form>
+                                    </div>
+                                </details>
+                            {% endif %}
                         </div>
                     </div>
 
                     <p class="meta">
                         <i class="fa-solid fa-calendar"></i>
-                        Event Date: {{ post.event_date.strftime('%d/%m/%Y') }}
+                        Event Date: {{ post.event_date.strftime('%d/%m/%Y') if post.event_date else 'N/A' }}
                     </p>
 
                     <p class="meta">
                         <i class="fa-solid fa-clock"></i>
-                        Event Time: {{ post.start_time.strftime('%H:%M') }} - {{ post.end_time.strftime('%H:%M') }}
+                        Event Time:
+                        {{ post.start_time.strftime('%H:%M') if post.start_time else 'N/A' }} - {{ post.end_time.strftime('%H:%M') if post.end_time else 'N/A' }}
                     </p>
 
                     <p class="meta">
                         <i class="fa-solid fa-newspaper"></i>
-                        Posted on: {{ post.local_date_posted_value.strftime('%d/%m/%Y %H:%M') if post.local_date_posted_value else '' }}
+                        Posted on:
+                        {{ post.local_date_posted_value.strftime('%d/%m/%Y %H:%M') if post.local_date_posted_value else 'N/A' }}
                     </p>
 
                     <p class="meta">
                         <i class="fa-solid fa-location-dot"></i>
                         <span>Location:</span>
                         <a href="https://www.google.com/maps/search/?api=1&query={{ post.location | urlencode }}" target="_blank">
-                            {{ post.location }}
+                            {{ post.location or 'N/A' }}
                         </a>
                     </p>
 
                     <p class="meta">
-                        Posted by {{ post.user.name }}
+                        Posted on:
+                        {{ post.date_posted.strftime('%d/%m/%Y %H:%M') if post.date_posted else 'N/A' }}
+                        by {{ post.user.name if post.user else post.email }}
                     </p>
 
                     <a href="{{ url_for('post_detail', post_id=post.post_id) }}" class="btn">Find Out More</a>

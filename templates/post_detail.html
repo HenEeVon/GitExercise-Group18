@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}My Post{% endblock %}
+{% block title %}Post Detail{% endblock %}
 
 {% block content %}
 <div class="container post-container">
@@ -27,9 +27,8 @@
 
     <!-- Event date and time -->
     <p class="meta">
-        <i class="fa-solid fa-calendar"></i>
-        Event Date: {{ post.event_date.strftime('%d/%m/%Y') }} |
-        {{ post.start_time.strftime('%H:%M') }} - {{ post.end_time.strftime('%H:%M') }}
+        Event Date: {{ post.event_date.strftime('%d/%m/%Y') if post.event_date else 'N/A' }} |
+        {{ post.start_time.strftime('%H:%M') if post.start_time else 'N/A' }} - {{ post.end_time.strftime('%H:%M') if post.end_time else 'N/A' }}
     </p>
         
     <!-- Location -->
@@ -37,9 +36,25 @@
         <i class="fa-solid fa-location-dot"></i>
         <span>Location: </span>
         <a href="https://www.google.com/maps/search/?api=1&query={{ post.location | urlencode }}" target="_blank">
-            {{ post.location }}
+            {{ post.location or 'N/A' }}
         </a>
     </p>
+
+    <!-- Posted date and author -->
+    <p class="meta">
+        <i class="fa-solid fa-calendar"></i>
+        Posted on:
+        {{ post.local_date_posted_value.strftime('%d/%m/%Y %H:%M') if post.local_date_posted_value else 'N/A' }}
+        by {{ post.user.name if post.user else post.email }}
+    </p>
+
+    <!-- Post image -->
+    {% if post.image_filename %}
+        <div class="post-image">
+            <img src="{{ url_for('static', filename='uploads/' ~ post.image_filename) }}" 
+                 alt="Post Image" style="max-width: 400px; height: auto; margin-bottom: 15px;">
+        </div>
+    {% endif %}
 
     <!-- Post content -->
     <div class="content">
@@ -48,78 +63,89 @@
     </div>
 
     <!-- Post status and participants -->
-    <p><strong>Status:</strong> {{ post.post_status }}</p>
-    
+    <p>Status: {{ post.post_status or 'N/A' }}</p>
     <p>
         <i class="fa-solid fa-person"></i>
-        Required Participants: {{ post.participants }}
+        Required Participants: {{ post.participants or 0 }}
     </p>
 
-    <!-- Flash message popup -->
-    {% with messages = get_flashed_messages() %}
-    {% if messages %}
-        {% for message in messages %}
-            <div class="popup">
-                <div class="popup-content">
-                    <p>{{ message }}</p>
-                    <a href="{{ request.path }}"><button class="submit">OK</button></a>
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category if category else 'info' }}">
+                    {{ message }}
                 </div>
-            </div>
-        {% endfor %}
-    {% endif %}
+            {% endfor %}
+        {% endif %}
     {% endwith %}
 
-    <!-- Join activity request (for non-owner) -->
-    {% if current_user.is_authenticated and current_user.email != post.email %}
-        {% set user_request = None %}
-        {% for ja in join_activities %}
-            {% if ja.email == current_user.email %}
-                {% set user_request = ja %}
-            {% endif %}
-        {% endfor %}
+    {% if not readonly %}
+        <a href="{{ url_for('posts') }}" class="btn btn-secondary mb-3">Back to Activity Posts</a>
 
-        {% if user_request %}
-            <p>
-                Your request status: 
-                {% if user_request.status == "pending" %}
-                    <span class="text-warning">Pending</span>
-                {% elif user_request.status == "accepted" %}
-                    <span class="text-success">Accepted</span>
-                {% elif user_request.status == "rejected" %}
-                    <span class="text-danger">Rejected</span>
-                {% endif %}
-            </p>
+        {# ---- OWNER ACTIONS ---- #}
+        {% if current_user.is_authenticated and current_email == owner_email %}
+            <form method="POST" action="{{ url_for('delete', post_id=post.post_id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this post?');">
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+            <a href="{{ url_for('edit_post', post_id=post.post_id) }}" class="btn btn-warning">Edit</a>
+
+            <hr>
+            <h3>Join Requests</h3>
+            {% if join_activities %}
+                <ul>
+                    {% for ja in join_activities %}
+                        {% set user_name = ja.user.name if ja.user else ja.email %}
+                        <li>
+                            {{ user_name }} ({{ ja.user.email if ja.user else ja.email }}) - Status: {{ ja.status }}
+                            {% if ja.status == "pending" %}
+                                <form action="{{ url_for('handle_request', request_id=ja.id, decision='accept') }}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-success btn-sm">Accept</button>
+                                </form>
+                                <form action="{{ url_for('handle_request', request_id=ja.id, decision='reject') }}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                </form>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No join requests yet.</p>
+            {% endif %}
+
         {% else %}
-            {% if post.post_status == "open" %}
-                <form action="{{ url_for('activityrequest', post_id=post.post_id) }}" method="post">
-                    <button type="submit" class="btn btn-primary">Request to Join</button>
-                </form>
+            {# ---- NON-OWNER ACTIONS ---- #}
+            {% set user_request = join_activities|selectattr('email', 'equalto', current_email)|first %}
+            {% if user_request %}
+                <p>
+                    Your request status:
+                    {% if user_request.status == "pending" %}
+                        <span class="text-warning">Pending</span>
+                    {% elif user_request.status == "accepted" %}
+                        <span class="text-success">Accepted</span>
+                    {% elif user_request.status == "rejected" %}
+                        <span class="text-danger">Rejected</span>
+                    {% endif %}
+                </p>
+            {% else %}
+                {% if post.post_status == "open" %}
+                    <form action="{{ url_for('activityrequest', post_id=post.post_id) }}" method="post">
+                        <button type="submit" class="btn btn-primary">Request to Join</button>
+                    </form>
+                {% endif %}
+            {% endif %}
+
+            {% if post.email %}
+                <a href="{{ url_for('chat_with_user', post_id=post.post_id, partner_email=post.email) }}" class="btn btn-info">Chat with Me</a>
             {% endif %}
         {% endif %}
-    {% endif %}
 
-    <!-- Join requests (visible only to post owner) -->
-    {% if current_user.is_authenticated and current_user.email == post.email %}
-        <hr>
-        <h3>Join Requests</h3>
-        {% if join_activities %}
-            <ul>
-                {% for ja in join_activities %}
-                    <li>
-                        {{ ja.user.name }} ({{ ja.user.email }}) - Status: {{ ja.status }}
-                        {% if ja.status == "pending" %}
-                            <form action="{{ url_for('handle_request', request_id=ja.id, decision='accept') }}" method="post" style="display:inline;">
-                                <button type="submit" class="btn btn-success btn-sm">Accept</button>
-                            </form>
-                            <form action="{{ url_for('handle_request', request_id=ja.id, decision='reject') }}" method="post" style="display:inline;">
-                                <button type="submit" class="btn btn-danger btn-sm">Reject</button>
-                            </form>
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No join requests yet.</p>
+    {% else %}
+        {# ---- READ-ONLY MODE ---- #}
+        {% if from_reports %}
+            <a href="{{ url_for('admin_reports') }}" class="btn btn-secondary">Back</a>
+        {% elif from_dashboard %}
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back</a>
         {% endif %}
     {% endif %}
 
