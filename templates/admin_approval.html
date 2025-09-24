@@ -1,149 +1,116 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Approval</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
-</head>
-<!-- Navigation bar -->
-  <!-- Search bar -->
-   <div class="navbar-container">
-            <!-- Logo -->
-            <a class="header-logo" href="{{ url_for('home') }}"><span>ebFit</span></a>
+{% extends "base.html" %}
+{% block title %}Admin Approval{% endblock %}
+{% block body_class %}adminapp{% endblock %}
 
-            <div class="nav-right">
-                <div class="navbar-search">
-
-                {% if current_user.is_authenticated %}
-                    <nav class="nav-item">
-                        <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
-                        <a href="{{ url_for('admin_approval') }}">Admin Approval</a>
-                        <a href="{{ url_for('upload_location_csv') }}">Upload location</a>
-
-                        {% if current_user.role in ['admin', 'both'] %}
-                            <a href="{{ url_for('posts') }}">Login As User</a>
-                        {% endif %}
-
-
-                        <a href="{{ url_for('logout') }}">Log Out</a>
-                    </nav>
-                {% else %}
-                {% endif %}
-
-            </div>
-        </div>
-    </div>
-    </header>
-    </div>
-<body class="adminapp">
-    <div class="admincon">
-        <!-- Flash messages -->
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="popup">
-                        <div class="popup-content">
-                            <p>{{ message }}</p>
-                                <a href="{{ request.path }}"><button class="submit">OK</button></a>
-                        </div>
+{% block content %}
+<div class="admincon">
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="popup">
+                    <div class="popup-content {{ category if category else '' }}">
+                        <p>{{ message }}</p>
+                        <a href="{{ request.path }}"><button class="submit">OK</button></a>
                     </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <h1>Admin Approval</h1>
-        <h2><i class="fa-solid fa-hourglass-half"></i> Pending Requests</h2>
-        {% if pending_requests %}
-        <table class="requests-table pending">
-            <thead>
-                <tr>
-                    <th>Email</th>
-                    <th>Name</th>
-                    <th>Reason</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for req in pending_requests %}
-                <tr>
-                    <td>{{ req.email }}</td>
-                    <td>{{ req.name }}</td>
-                    <td>{{ req.join_reason }}</td>
-                    <td>
-                        <form action="{{ url_for('handle_request_admin', approval_id=req.approval_id) }}" method="POST" style="display:inline;">
-                            <button type="submit" name="decision" value="accept" class="approve-btn">Approve</button>
-                        </form>
-                        <form action="{{ url_for('handle_request_admin', approval_id=req.approval_id) }}" method="POST" style="display:inline;">
-                            <button type="submit" name="decision" value="reject" class="reject-btn">Reject</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p>No pending requests.</p>
+                </div>
+            {% endfor %}
         {% endif %}
+    {% endwith %}
 
+    <h1>Admin Approval</h1>
 
-        <h2><i class="fa-solid fa-circle-check"></i> Approved Requests</h2>
-        {% if approved_requests %}
-        <table class="requests-table approved">
-            <thead>
-                <tr>
-                    <th>Email</th>
-                    <th>Name</th>
-                    <th>Reason</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for req in approved_requests %}
-                <tr>
-                    <td>{{ req.email }}</td>
-                    <td>{{ req.name }}</td>
-                    <td>{{ req.join_reason }}</td>
-                    <td class="status-approved">
-                        <i class="fa-solid fa-circle-check"></i> Approved
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p>No approved requests.</p>
-        {% endif %}
+    <!-- Pending Requests -->
+    <h2><i class="fa-solid fa-hourglass-half"></i> Pending Requests</h2>
+    {% if pending_requests %}
+    <table class="requests-table pending">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Reason</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for req in pending_requests %}
+            <tr>
+                <td>{{ req.email }}</td>
+                <td>{{ req.name }}</td>
+                <td>{{ req.join_reason }}</td>
+                <td>
+                    <form action="{{ url_for('handle_request_admin', approval_id=req.approval_id) }}" method="POST" style="display:inline;">
+                        <button type="submit" name="decision" value="accept" class="approve-btn">Approve</button>
+                    </form>
+                    <form action="{{ url_for('handle_request_admin', approval_id=req.approval_id) }}" method="POST" style="display:inline;">
+                        <button type="submit" name="decision" value="reject" class="reject-btn">Reject</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No pending requests.</p>
+    {% endif %}
 
+    <!-- Approved Requests -->
+    <h2><i class="fa-solid fa-circle-check"></i> Approved Requests</h2>
+    {% if approved_requests %}
+    <table class="requests-table approved">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Reason</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for req in approved_requests %}
+            <tr>
+                <td>{{ req.email }}</td>
+                <td>{{ req.name }}</td>
+                <td>{{ req.join_reason }}</td>
+                <td class="status-approved">
+                    <i class="fa-solid fa-circle-check"></i> Approved
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No approved requests.</p>
+    {% endif %}
 
-        <h2><i class="fa-solid fa-circle-xmark"></i> Rejected Requests</h2>
-        {% if rejected_requests %}
-        <table class="requests-table rejected">
-            <thead>
-                <tr>
-                    <th>Email</th>
-                    <th>Name</th>
-                    <th>Reason</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for req in rejected_requests %}
-                <tr>
-                    <td>{{ req.email }}</td>
-                    <td>{{ req.name }}</td>
-                    <td>{{ req.join_reason }}</td>
-                    <td class="status-rejected">
-                        <i class="fa-solid fa-circle-xmark"></i> Rejected
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p>No rejected requests.</p>
-        {% endif %}
+    <!-- Rejected Requests -->
+    <h2><i class="fa-solid fa-circle-xmark"></i> Rejected Requests</h2>
+    {% if rejected_requests %}
+    <table class="requests-table rejected">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Reason</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for req in rejected_requests %}
+            <tr>
+                <td>{{ req.email }}</td>
+                <td>{{ req.name }}</td>
+                <td>{{ req.join_reason }}</td>
+                <td class="status-rejected">
+                    <i class="fa-solid fa-circle-xmark"></i> Rejected
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No rejected requests.</p>
+    {% endif %}
+</div>
 
-    </body>
-</html>
+{% endblock %}

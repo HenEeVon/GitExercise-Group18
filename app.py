@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, session, abort, current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
     LoginManager, UserMixin, login_user, logout_user,
@@ -12,10 +12,11 @@ from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, TextAreaField, IntegerField, DateField, TimeField,  SelectField, RadioField
-from wtforms.validators import DataRequired, NumberRange, Length, Optional
+from wtforms.validators import DataRequired, NumberRange, Length, Optional, ValidationError
 from flask_wtf.file import FileField, FileAllowed
-from datetime import datetime
+from datetime import date, datetime
 from PIL import Image
+from werkzeug.utils import secure_filename
 import pytz
 import os, secrets
 from sqlalchemy import func, or_, asc, case
@@ -52,25 +53,35 @@ Security_Questions = [
 ]
 
 # User database
-class User(UserMixin, db.Model):
+class User(db.Model, UserMixin):
     __tablename__ = "users"
     email = db.Column(db.String(255), primary_key=True)
-    name = db.Column(db.String(255), nullable=False)
-    gender = db.Column(db.String(50), nullable=False)
-    sport_level = db.Column(db.String(255), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    gender = db.Column(db.String(10), nullable=False)
+    sport_level = db.Column(db.String(50), nullable=False)
     security_question = db.Column(db.String(255), nullable=False)
     security_answer = db.Column(db.String(255), nullable=False)
-    password = db.Column(db.String(255), nullable=True)
-    image_file = db.Column(db.String(255), nullable=True, default="default.png")
-    bio = db.Column(db.Text, nullable=True)
+    password = db.Column(db.String(255), nullable=False)
+    image_file = db.Column(db.String(255), nullable=False, default="default.png")
+    bio = db.Column(db.Text, default="This user has not added a bio yet.", nullable=False)
     role = db.Column(db.String(20), default="user") 
-    
+    is_suspended = db.Column(db.Boolean, default=False)
+    posts = db.relationship("Posts", back_populates="user", lazy=True, cascade="all, delete-orphan")
 
     def get_id(self):
         return self.email
 
+class Admin(db.Model):
+    __tablename__ = "admins"   
+
+    email = db.Column(db.String(255), primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+
+
 class AdminRequest(db.Model):
     __tablename__ = "admin_request"
+
     approval_id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), nullable=False, unique=True)
     name = db.Column(db.String(255), nullable=False)
@@ -83,33 +94,51 @@ class AdminRequest(db.Model):
 
 class Posts(db.Model):
     __tablename__ = "posts"
-    post_id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    location = db.Column(db.String(255), nullable=False)
 
+    post_id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    location = db.Column(db.String(100), nullable=False)
     event_date = db.Column(db.Date, nullable=False)
     start_time = db.Column(db.Time, nullable=False)
     end_time = db.Column(db.Time, nullable=False)
-
-    date_posted = db.Column(db.DateTime, default=datetime.utcnow)
+    date_posted = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     post_status = db.Column(db.String(20), default="open")
-    participants = db.Column(db.Integer, nullable=False, default=1)
+    participants = db.Column(db.Integer, nullable=False)
+    image_filename = db.Column(db.String(200), nullable=True)   
 
+    # FK to user
     email = db.Column(db.String(255), db.ForeignKey("users.email"), nullable=False)
-    user = db.relationship("User", backref="posts")
+    user = db.relationship("User", back_populates="posts")
 
+    is_hidden = db.Column(db.Boolean, default=False)
+
+
+class Reports(db.Model):
+    __tablename__ = "reports"
+
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey("posts.post_id"), nullable=False)
+    reporter_email = db.Column(db.String(255), nullable=False)  # works for both users & admins
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    post = db.relationship(
+        "Posts",
+        backref=db.backref("reports", lazy=True, cascade="all, delete-orphan")
+    )
 
 
 class JoinActivity(db.Model):
     __tablename__ = "join_activities"
+
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), db.ForeignKey("users.email"), nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey("posts.post_id"), nullable=False)
     status = db.Column(db.String(20), default="pending")  # pending / accepted / rejected
 
-    user = db.relationship("User", backref="join_activities")
-    post = db.relationship("Posts", backref="join_activities")
+    user = db.relationship("User", backref="join_activities", lazy=True)
+    post = db.relationship("Posts", backref="join_activities", lazy=True)
+
 
 def load_locations():
     csv_path = os.path.join("instance", "locations.csv")
@@ -124,7 +153,7 @@ def load_locations():
                     try:
                         name = row["name"].strip()
                         distance = float(row["distance"])
-                        locations.append((name, f"{name} ({distance} km)", distance))
+                        locations.append((name, f"{name} ({distance}km)", distance))
                     except ValueError:
                         continue  # skip invalid distances
 
@@ -139,30 +168,48 @@ def load_locations():
 # Activity Form database
 class ActivityForm(FlaskForm):
     title = StringField("Title", validators=[DataRequired()])
+    image = FileField("Upload Image", validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only!')])
     content = TextAreaField("Content", validators=[DataRequired()])
-    location = SelectField("Location", choices=[],validators=[DataRequired()])
-
+    location = SelectField("Location", choices=[], validators=[DataRequired()])
     event_date = DateField("Activity Date", format="%Y-%m-%d", validators=[DataRequired()])
     start_time = TimeField("Start Time", format="%H:%M", validators=[DataRequired()])
     end_time = TimeField("End Time", format="%H:%M", validators=[DataRequired()])
-
     participants = IntegerField("Required Participants", validators=[DataRequired(), NumberRange(min=1)])
     submit = SubmitField("Post")
 
-#Chat database
+    def validate_event_date(form, field):
+        if field.data < date.today():
+            raise ValidationError("Event date must be today or in the future.")
+
+    def validate_end_time(form, field):
+        if form.start_time.data and field.data <= form.start_time.data:
+            raise ValidationError("End time must be after start time.")
+
+
+# Chat database
 class ChatMessage(db.Model):
     __tablename__ = "chat_messages"
+
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, nullable=False, index=True)
-
     conversation = db.Column(db.String(600), nullable=False, index=True)
 
-    sender_email = db.Column(db.String(255), nullable=False)
+    sender_email = db.Column(db.String(255), nullable=False)  # unified with email convention
     sender_name = db.Column(db.String(255), nullable=False)
     text = db.Column(db.Text, nullable=False)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
+question = {
+    "pet": "What was your first pet name?",
+    "car": "What was your first car?",
+    "hospital": "What hospital name were you born in?",
+    "city": "What city were you born in?",
+    "girlfriend": "What was your first ex girlfriend's name?",
+    "boyfriend": "What was your first ex boyfriend's name?",
+    "school": "What was the name of your first school?",
+    "book": "What was your favorite childhood book?"
+}
 
 #Update Profile database
 class UpdateProfileForm(FlaskForm):
@@ -170,12 +217,13 @@ class UpdateProfileForm(FlaskForm):
     gender = SelectField("Gender", choices=[("Male", "Male"), ("Female", "Female")])
     sport_level = SelectField("Fitness Level", choices=[("newbie","Newbie"),("intermediate","Intermediate"),("advanced","Advanced")], validators=[DataRequired()])
     bio = TextAreaField("Bio", validators=[Length(max=200)])
-    security_question = SelectField("Security Question", choices=Security_Questions, validators=[DataRequired()])
+    security_question = SelectField("Security Question", choices=question, validators=[DataRequired()])
     security_answer = StringField("Security Answer", validators=[DataRequired(), Length(max=255)])
     picture = FileField("Update Profile Picture", validators=[FileAllowed(["jpg", "png"])])
     submit = SubmitField("Update")
 
-#Notification database
+
+# Notification database
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), db.ForeignKey("users.email"), nullable=False)
@@ -183,6 +231,7 @@ class Notification(db.Model):
     link = db.Column(db.String(500), nullable=True)
     is_read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 
 def add_notification(email, text, link=None):
     try:
@@ -195,6 +244,7 @@ def add_notification(email, text, link=None):
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.filter_by(email=user_id).first()
+
 
 @app.template_filter("datetimeformat")
 def datetimeformat(value, format="%d/%m/%Y"):
@@ -215,15 +265,13 @@ def datetimeformat(value, format="%d/%m/%Y"):
     except Exception:
         return value
 
-
-
 # Home page
 @app.route("/")
 def home():
     return render_template("home.html")
 
 
-#register page
+# Register page
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -263,19 +311,18 @@ def register():
             db.session.add(new_user)
             db.session.commit()
 
-            # Automatically log in new user
-            login_user(new_user)
-            flash(f"Registration successful! Welcome {new_user.name}.")
-            return redirect(url_for("posts"))
+            flash("Registration successful! Please log in.", "success")
+            return redirect(url_for("login"))  # direct to login page
 
         except IntegrityError:
             db.session.rollback()
-            flash("Email already exists. Please log in.")
+            flash("Email already exists. Please log in.", "warning")
             return redirect(url_for("login"))
 
-    return render_template("register.html",question=question)
+    return render_template("register.html", question=question)
 
 
+# Login page
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -289,30 +336,32 @@ def login():
             return redirect(url_for("login"))
 
         if not check_password_hash(user.password, password):
-            flash("Incorrect password. Please try again")
+            flash("Incorrect password. Please try again.")
+            return redirect(url_for("login"))
+
+        if user.is_suspended:
+            flash("Your account has been suspended. Contact admin for support.", "danger")
             return redirect(url_for("login"))
 
         # Login successful
         login_user(user)
+
+        if user.role == 'admin':
+            session['as_admin'] = True
+        else:
+            session['as_admin'] = False
+
+
         flash(f"Welcome back, {user.name}!")
 
-        if user.role in ["admin", "both"]:
-            return redirect(url_for("admin_approval"))
-        return redirect(url_for("posts"))
+        # Redirect based on role
+        if user.role == "user":
+            return redirect(url_for("posts"))   
+        else:
+            return redirect(url_for("admin_dashboard"))           
 
     return render_template("login.html")
 
-
-question = {
-    "pet": "What was your first pet name?",
-    "car": "What was your first car?",
-    "hospital": "What hospital name were you born in?",
-    "city": "What city were you born in?",
-    "girlfriend": "What was your first ex girlfriend's name?",
-    "boyfriend": "What was your first ex boyfriend's name?",
-    "school": "What was the name of your first school?",
-    "book": "What was your favorite childhood book?"
-}
 
 @app.route("/reset_password", methods=["GET", "POST"])
 def reset_password():
@@ -325,16 +374,20 @@ def reset_password():
             user = User.query.filter_by(email=email).first()
 
             if not user:
-                flash("Email not found.")
-                return render_template("login.html", open_reset_modal=True)
+                flash("Email not found.", "warning")
+                return render_template("login.html", open_reset_modal=True, question=question)
 
-            security_question = question.get(user.security_question.strip().lower(), "Security question not found")
+            security_question = question.get(
+                user.security_question.strip().lower(),
+                "Security question not found"
+            )
 
             return render_template(
                 "login.html",
                 open_reset_modal=True,
                 email=email,
-                security_question=security_question
+                security_question=security_question,
+                question=question
             )
 
         # Step 2: Submit answer & new password
@@ -345,8 +398,8 @@ def reset_password():
 
             user = User.query.filter_by(email=email).first()
             if not user:
-                flash("Email not found.")
-                return render_template("login.html", open_reset_modal=True)
+                flash("Email not found.", "warning")
+                return render_template("login.html", open_reset_modal=True, question=question)
 
             if user.security_answer.lower() == answer:
                 user.password = generate_password_hash(new_password, method="pbkdf2:sha256")
@@ -355,29 +408,34 @@ def reset_password():
                 flash("Password updated successfully!")
                 return redirect(url_for("login"))
             else:
-                flash("Security answer incorrect.")
+                flash("Security answer incorrect.", "danger")
                 return render_template(
                     "login.html",
                     open_reset_modal=True,
                     email=email,
-                    security_question = question.get(user.security_question.strip().lower(), "Security question not found")
+                    security_question=question.get(
+                        user.security_question.strip().lower(),
+                        "Security question not found"
+                    ),
+                    question=question
                 )
 
     # Default: show reset modal
-    return render_template("login.html", open_reset_modal=True,question=question)
+    return render_template("login.html", open_reset_modal=True, question=question)
 
 
-# Posts page
 @app.route("/index")
 @login_required
 def posts():
-    # Load all posts
-    posts = Posts.query.order_by(Posts.date_posted.desc()).all()
+    # Default: show only non-hidden posts
+    posts = Posts.query.filter_by(is_hidden=False).order_by(Posts.date_posted.desc()).all()
 
-    # Convert UTC to Malaysia timezone
     for post in posts:
         if post.date_posted:
-            utc_time = pytz.utc.localize(post.date_posted)
+            if post.date_posted.tzinfo is None:
+                utc_time = pytz.utc.localize(post.date_posted)
+            else:
+                utc_time = post.date_posted
             post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
         else:
             post.local_date_posted_value = None
@@ -396,7 +454,8 @@ def search():
     dateinpost = (request.args.get("date") or "").strip()
 
     searched = False
-    query = Posts.query.join(User)
+    # Join User so we can filter by user name too
+    query = Posts.query.join(User).filter(Posts.is_hidden == False)
 
     # Filter by sport if provided
     if sport:
@@ -406,7 +465,7 @@ def search():
                 func.lower(Posts.title).like(f"%{sport}%"),
                 func.lower(Posts.content).like(f"%{sport}%"),
                 func.lower(Posts.location).like(f"%{sport}%"),
-                func.lower(User.name).like(f"%{sport}%")
+                func.lower(User.name).like(f"%{sport}%")   # ✅ works because Posts has FK -> User
             )
         )
 
@@ -417,27 +476,36 @@ def search():
             date_obj = datetime.strptime(dateinpost, "%Y-%m-%d").date()
             query = query.filter(Posts.event_date == date_obj)
         except ValueError:
-            flash("Invalid date format. Please use YYYY-MM-DD.")
+            flash("Invalid date format. Please use YYYY-MM-DD.", "warning")
 
     # Execute query
     results = query.order_by(Posts.date_posted.desc()).all()
 
     # Convert posted date to Malaysia timezone
-    for post in results:
+    for post in results: 
         if post.date_posted:
-            utc_time = pytz.utc.localize(post.date_posted)
+            if post.date_posted.tzinfo is None:
+                utc_time = pytz.utc.localize(post.date_posted)
+            else:
+                utc_time = post.date_posted
             post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
         else:
             post.local_date_posted_value = None
 
+    # Detect if admin is logged in (for template use)
+    current_admin = None
+    if session.get("admin_email"):
+        current_admin = Admin.query.get(session.get("admin_email"))
+
     return render_template(
-        "index.html",  # keep your interface the same
+        "index.html",
         posts=results,
         searched=searched,
         sport=sport,
-        date=dateinpost
+        date=dateinpost,
+        admin=current_admin,
+        user=current_user if current_user.is_authenticated else None
     )
-
 
 
 # Error page
@@ -447,31 +515,48 @@ def page_not_found(e):
 
 
 # Create post form
-@app.route('/create', methods=['GET', 'POST'])
-@login_required
+@app.route("/create", methods=["GET", "POST"])
 def create():
-    form = ActivityForm()
+    if not current_user.is_authenticated and not session.get("admin_email"):
+        flash("You need to log in first!", "danger")
+        return redirect(url_for("login"))
     
+    form = ActivityForm()
+
     # Force reload of locations for this form instance (add safe defaults for testing)
     form.location.choices = load_locations()
     if not form.location.choices or form.location.choices == [("none", "--Please select a location--")]:
-        form.location.choices = [("Gym", "Gym"), ("Pool", "Pool")]  # fallback choices
+        form.location.choices = []  # fallback choices
     
     if form.validate_on_submit():
-        # Debug: show submitted data
-        print("Form validated! Data:", form.data)
+        # Handle image upload
+        image_file = form.image.data
+        filename = None
+        start_time = form.start_time.data
+        end_time = form.end_time.data
+
+        if start_time and end_time and end_time <= start_time:
+            flash("End time must be after start time.", "danger")
+            return render_template("create.html", form=form, current_date=date.today().isoformat())
         
+        if image_file:
+            filename = secure_filename(image_file.filename)
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            image_file.save(image_path)
+
         try:
             new_post = Posts(
                 title=form.title.data,
+                image_filename=filename,
                 content=form.content.data,
                 location=form.location.data,
                 event_date=form.event_date.data,
                 start_time=form.start_time.data,
                 end_time=form.end_time.data,
                 participants=form.participants.data,
-                email=current_user.email,
+                email=current_user.email if current_user.is_authenticated else session.get("admin_email"),
             )
+            
             db.session.add(new_post)
             db.session.commit()
             flash("Post created successfully!", "success")
@@ -479,40 +564,68 @@ def create():
         except Exception as e:
             print("Error creating post:", e)
             flash(f"Error creating post: {e}", "danger")
-    else:
-        if request.method == "POST":
-            # Form did not validate
-            print("Form validation failed. Errors:", form.errors)
-            flash(f"Form errors: {form.errors}", "danger")
-    
-    return render_template("create.html", form=form)
+
+    return render_template("create.html", form=form, current_date=date.today().isoformat())
 
 
 # Edit post
 @app.route("/edit/<int:post_id>", methods=["GET", "POST"])
-@login_required
 def edit_post(post_id):
     post = Posts.query.get_or_404(post_id)
-    form = ActivityForm()
 
-    # ✅ Reload choices for edit form too
+    # Permission check
+    if current_user.is_authenticated:
+        is_owner = (post.email == current_user.email)
+    elif session.get("admin_email"):
+        is_owner = True  # admins can edit any post
+    else:
+        is_owner = False
+
+    if not is_owner:
+        flash("You are not authorized to edit this post.", "danger")
+        return redirect(url_for("posts"))
+
+    form = ActivityForm(obj=post)
+
+    # Reload location choices
     form.location.choices = load_locations()
     if not form.location.choices or form.location.choices == [("none", "--Please select a location--")]:
         form.location.choices = [("Gym", "Gym"), ("Pool", "Pool")]
 
     if form.validate_on_submit():
+        start_time = form.start_time.data
+        end_time = form.end_time.data
+
+        # Validate time logic
+        if start_time and end_time and end_time <= start_time:
+            form.end_time.errors.append("End time must be after start time.")
+            return render_template("edit_post.html", form=form, post=post, current_date=date.today().isoformat())
+
+        # Update post fields
         post.title = form.title.data
         post.content = form.content.data
         post.location = form.location.data
         post.event_date = form.event_date.data
-        post.start_time = form.start_time.data
-        post.end_time = form.end_time.data
+        post.start_time = start_time
+        post.end_time = end_time
         post.participants = form.participants.data
 
+        # Handle new image upload
+        if form.image.data:
+            if post.image_filename:
+                old_path = os.path.join(current_app.root_path, "static/uploads", post.image_filename)
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+            file = form.image.data
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(current_app.root_path, "static/uploads", filename))
+            post.image_filename = filename
+
         db.session.commit()
-        flash("Post has been updated!", "info")
+        flash("Post updated successfully!", "success")
         return redirect(url_for("post_detail", post_id=post.post_id))
 
+    # Pre-fill form fields on GET
     if request.method == "GET":
         form.title.data = post.title
         form.content.data = post.content
@@ -522,24 +635,100 @@ def edit_post(post_id):
         form.end_time.data = post.end_time
         form.participants.data = post.participants
 
-    return render_template("edit_post.html", form=form, post=post)
+    return render_template("edit_post.html", form=form, post=post, current_date=date.today().isoformat())
+
 
 
 # Delete post
 @app.route("/delete/<int:post_id>", methods=["POST"])
-@login_required
 def delete(post_id):
+    if not current_user.is_authenticated and not session.get("admin_email"):
+        flash("You must log in first.")
+        return redirect(url_for("login"))
+
     post = Posts.query.get_or_404(post_id)
+
+    # Permission check (user OR admin)
+    if current_user.is_authenticated:
+        is_author = (post.email == current_user.email)
+    elif session.get("admin_email"):
+        is_author = True  # ✅ admins can delete any post
+    else:
+        is_author = False
+
+    if not is_author:
+        flash("You don't have permission to delete this post.", "danger")
+        return redirect(url_for("posts"))
+
+    # Delete image file if exists
+    if post.image_filename:
+        img_path = os.path.join(current_app.root_path, "static/uploads", post.image_filename)
+        if os.path.exists(img_path):
+            os.remove(img_path)
+
     db.session.delete(post)
     db.session.commit()
     flash("Post deleted successfully!", "danger")
+
+    # If admin came from reports dashboard, send them back there
+    if request.referrer and "admin/reports" in request.referrer:
+        return redirect(url_for("admin_reports"))
+    else:
+        return redirect(url_for("posts"))
+
+
+# Report post
+@app.route("/report/<int:post_id>", methods=["POST"])
+def report_post(post_id):
+    if not current_user.is_authenticated and not session.get("admin_email"):
+        flash("You must be logged in to report posts.", "danger")
+        return redirect(url_for("login"))
+
+    post = Posts.query.get_or_404(post_id)
+
+    # ✅ reporter can be either user.email or admin_email
+    reporter_email = current_user.email if current_user.is_authenticated else session.get("admin_email")
+
+    # Prevent duplicate reports by same reporter
+    existing_report = Reports.query.filter_by(post_id=post_id, reporter_email=reporter_email).first()
+    if existing_report:
+        flash("You already reported this post.", "warning")
+        return redirect(url_for("post_detail", post_id=post_id))
+
+    # Create and commit the report
+    new_report = Reports(post_id=post_id, reporter_email=reporter_email)
+    db.session.add(new_report)
+    db.session.commit()
+
+    # Count total reports from Reports table and hide post if threshold reached
+    report_count = Reports.query.filter_by(post_id=post_id).count()
+    if report_count >= 3:
+        post.is_hidden = True
+        db.session.commit()
+
+    flash("Post reported successfully.", "success")
     return redirect(url_for("posts"))
+
 
 # Post detail
 @app.route("/post/<int:post_id>")
 def post_detail(post_id):
     post = Posts.query.get_or_404(post_id)
 
+    # Get query params with defaults
+    readonly = request.args.get("readonly", type=int)
+    from_reports = request.args.get("from_reports", default=0, type=int)
+    from_dashboard = request.args.get("from_dashboard", default=0, type=int)
+
+    # Force readonly for admins on first visit, while preserving origin flags
+    if session.get("admin_email") and readonly is None:
+        args = request.args.to_dict(flat=True)  # copy all current args
+        args["readonly"] = 1                   # enforce readonly
+        args.setdefault("from_reports", from_reports)
+        args.setdefault("from_dashboard", from_dashboard)
+        return redirect(url_for("post_detail", post_id=post_id, **args))
+
+    # Date handling
     if post.date_posted:
         utc_time = pytz.utc.localize(post.date_posted)
         post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
@@ -547,20 +736,39 @@ def post_detail(post_id):
         post.local_date_posted_value = None
 
     join_activities = JoinActivity.query.filter_by(post_id=post.post_id).all()
-
     owner_conversations = []
-    if current_user.is_authenticated and current_user.email.lower() == post.email.lower():
-        partners = db.session.query(ChatMessage.sender_email).filter_by(post_id=post.post_id).distinct()
+
+    owner_email = post.email  # ✅ correct owner field
+
+    # If current user is the owner → show conversations
+    if current_user.is_authenticated and current_user.email.lower() == owner_email.lower():
+        partners = (
+            db.session.query(ChatMessage.sender_email)
+            .filter_by(post_id=post.post_id)
+            .distinct()
+        )
         for (email,) in partners:
-            if email.lower() != post.email.lower():
+            if email.lower() != owner_email.lower():
                 user = User.query.get(email)
-                owner_conversations.append({"email": email, "name":user.name if user else email})
+                owner_conversations.append(
+                    {"email": email, "name": user.name if user else email}
+                )
 
-    return render_template("post_detail.html", post=post, join_activities=join_activities, owner_conversations=owner_conversations)
+    return render_template(
+        "post_detail.html",
+        post=post,
+        join_activities=join_activities,
+        owner_conversations=owner_conversations,
+        readonly=readonly,
+        from_reports=from_reports,
+        from_dashboard=from_dashboard,
+    )
 
-#Chat feature
+
 def conversation_key(a_email: str, b_email: str) -> str:
+    """Generate a stable key for two users’ conversation."""
     return "|".join(sorted([a_email.lower(), b_email.lower()]))
+
 
 @app.route("/chat/<int:post_id>/<partner_email>")
 @login_required
@@ -568,15 +776,21 @@ def chat_with_user(post_id, partner_email):
     post = Posts.query.get_or_404(post_id)
     owner_email = post.email.lower()
     current_email = current_user.email.lower()
+
     partner_email = partner_email.lower()
 
+    # Prevent outsiders from chatting → only owner or partner allowed
     if current_email != owner_email and partner_email != owner_email:
         return redirect(url_for("chat_with_user", post_id=post_id, partner_email=owner_email))
 
     conv = conversation_key(current_email, partner_email)
     room = f"post-{post_id}-{conv}"
 
-    messages = (ChatMessage.query.filter_by(post_id=post_id, conversation=conv).order_by(asc(ChatMessage.created_at)).all())
+    messages = (
+        ChatMessage.query.filter_by(post_id=post_id, conversation=conv)
+        .order_by(asc(ChatMessage.created_at))
+        .all()
+    )
 
     for msg in messages:
         if msg.created_at:
@@ -591,7 +805,7 @@ def chat_with_user(post_id, partner_email):
     if current_email == owner_email:
         header_name = partner_name
     else:
-        header_name = post.user.name
+        header_name = post.user.name  # ✅ uses Posts.user relationship
 
     return render_template("chat.html",post=post, room=room, username=current_user.name,header_name=header_name, 
                            messages=messages, post_id=post_id, partner_email=partner_email,partner_img=partner_img)
@@ -599,25 +813,56 @@ def chat_with_user(post_id, partner_email):
 @socketio.on("join")
 def on_join(data):
     room = data.get("room")
+
+    # Identify sender
+    if current_user.is_authenticated:
+        name = current_user.name
+        email = current_user.email
+    elif session.get("admin_email"):
+        email = session.get("admin_email")
+        admin_obj = Admin.query.get(email)
+        name = admin_obj.admin_name if admin_obj else "Admin"
+    else:
+        return  # No one logged in, ignore
+
     if room:
-        print("JOIN ->", current_user.email, "to", room)
-    join_room(room)
-    send(f"{current_user.name} joined the chat.", to=room)
+        print("JOIN ->", email, "to", room)
+        join_room(room)
+        send(f"{name} joined the chat.", to=room)
+
 
 @socketio.on("send_message")
 def on_send_message(data):
     room = (data or {}).get("room")
     text = ((data or {}).get("message") or "").strip()
     post_id = (data or {}).get("post_id")
-    partner = ((data or {}).get("partner_email")or "").lower().strip()
+    partner = ((data or {}).get("partner_email") or "").lower().strip()
 
     if not (room and text and post_id and partner):
         return
 
-    current_email = current_user.email.lower()
-    conv = conversation_key(current_email,partner)
+    # ✅ Support both users and admins as senders
+    if current_user.is_authenticated:
+        current_email = current_user.email.lower()
+        sender_email = current_user.email
+        sender_name = current_user.name
+    elif session.get("admin_email"):
+        sender_email = session.get("admin_email").lower()
+        current_email = sender_email
+        admin_obj = Admin.query.get(sender_email)
+        sender_name = admin_obj.admin_name if admin_obj else "Admin"
+    else:
+        return  # nobody logged in, ignore
 
-    msg = ChatMessage(post_id=int(post_id), conversation=conv, sender_email=current_user.email, sender_name=current_user.name, text=text)
+    conv = conversation_key(current_email, partner)
+
+    msg = ChatMessage(
+        post_id=int(post_id),
+        conversation=conv,
+        sender_email=sender_email,
+        sender_name=sender_name,
+        text=text,
+    )
     db.session.add(msg)
     db.session.commit()
 
@@ -630,23 +875,32 @@ def on_send_message(data):
     ts = local_time.strftime("%H:%M") if local_time else ""
 
     try:
+        # ✅ Notify partner if it’s not the same as sender
         if partner != current_email:
-            chat_url = url_for("chat_with_user", post_id=post_id, partner_email=current_user.email)
-            add_notification(partner, f"{current_user.name} sent you a message", link=chat_url)
+            chat_url = url_for("chat_with_user", post_id=post_id, partner_email=sender_email)
+            add_notification(partner, f"{sender_name} sent you a message", link=chat_url)
     except Exception:
         db.session.rollback()
 
     send({"user": msg.sender_name,"email": msg.sender_email ,"text": msg.text, "time": ts}, to=room)
 
-# Notifications
+
+# Notifications page
 @app.route("/notifications")
 @login_required
 def notifications():
-    rows = (Notification.query.filter_by(email=current_user.email).order_by(Notification.created_at.desc()).all())
+    rows = (
+        Notification.query.filter_by(email=current_user.email)
+        .order_by(Notification.created_at.desc())
+        .all()
+    )
 
     for notif in rows:
         if notif.created_at:
-            notif.local_time = pytz.utc.localize(notif.created_at).astimezone(MALAYSIA_TZ)
+            if notif.created_at.tzinfo is None:
+                notif.local_time = pytz.utc.localize(notif.created_at).astimezone(MALAYSIA_TZ)
+            else:
+                notif.local_time = notif.created_at.astimezone(MALAYSIA_TZ)
         else:
             notif.local_time = None
 
@@ -655,16 +909,17 @@ def notifications():
 @app.route("/notifications/read_all", methods=["POST"])
 @login_required
 def notifications_read_all():
-    Notification.query.filter_by(email=current_user.email, is_read=False).update({"is_read":True})
+    Notification.query.filter_by(email=current_user.email, is_read=False).update({"is_read": True})
     db.session.commit()
     return redirect(url_for("notifications"))
+
 
 @app.route("/notif/<int:notif_id>")
 @login_required
 def open_notif(notif_id):
     notif = Notification.query.get_or_404(notif_id)
 
-    if notif.email == current_user.email:
+    if notif.email.lower() == current_user.email.lower():
         notif.is_read = True
         db.session.commit()
 
@@ -691,38 +946,58 @@ def notifications_clear():
 @app.route("/profile")
 @login_required
 def profile():
+    return redirect(url_for("profile_page", email=current_user.email))
+
+
+@app.route("/profile/<string:email>")
+@login_required
+def profile_page(email):
+    # fetch the user being viewed by email
+    user = User.query.filter_by(email=email).first_or_404()
+
+    # fetch only this user's posts
     recent_posts = (
-        Posts.query.filter_by(email=current_user.email)
+        Posts.query.filter_by(email=user.email)
         .order_by(Posts.date_posted.desc())
         .all()
     )
 
+    # Convert posted date to Malaysia timezone
     for post in recent_posts:
         if post.date_posted:
-            utc_time = pytz.utc.localize(post.date_posted)
-            post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
+            if post.date_posted.tzinfo is None:
+                utc_time = pytz.utc.localize(post.date_posted)
+                post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
+            else:
+                post.local_date_posted_value = post.date_posted.astimezone(MALAYSIA_TZ)
         else:
             post.local_date_posted_value = None
 
+    # correct image path (use their image, not always current_user)
     image_url = url_for(
         "static",
-        filename=f"profile_pics/{current_user.image_file or 'default.png'}"
+        filename=f"profile_pics/{user.image_file or 'default.png'}"
     )
 
     return render_template(
-        "profile.html", 
-        user=current_user, 
-        image_url=image_url, 
+        "profile.html",
+        user=user,
+        image_url=image_url,
         recent_posts=recent_posts
     )
+
+
 
 @app.route("/profile/edit", methods=["GET", "POST"])
 @login_required
 def profile_edit():
     form = UpdateProfileForm()
 
+     # Set the choices dynamically
+    form.security_question.choices = list(question.items())
+
     if form.validate_on_submit():
-        current_user.name = form.name.data   
+        current_user.name = form.name.data
         current_user.gender = form.gender.data
         current_user.sport_level = form.sport_level.data
         current_user.bio = form.bio.data or None
@@ -738,7 +1013,7 @@ def profile_edit():
         return redirect(url_for("profile"))
     
     if request.method == "GET":
-        form.name.data = current_user.name  
+        form.name.data = current_user.name
         form.gender.data = current_user.gender
         form.bio.data = current_user.bio
         form.security_question.data = current_user.security_question
@@ -746,7 +1021,7 @@ def profile_edit():
 
     image_url = url_for("static", filename=f"profile_pics/{current_user.image_file or 'default.png'}")
 
-    return render_template("edit_profile.html", form=form, image_url=image_url)
+    return render_template("edit_profile.html", form=form, image_url=image_url, question=question)
 
 def save_picture(file, email):
     file_ext = os.path.splitext(file.filename)[1].lower()
@@ -779,19 +1054,23 @@ def activityrequest(post_id):
         db.session.commit()
         flash("Your request has been sent to the post owner.")
 
-        add_notification(post.email, f"{current_user.name} requested to join '{post.title}'", link=url_for("post_detail", post_id=post.post_id))
+        add_notification(
+            post.email,
+            f"{current_user.name} requested to join '{post.title}'",
+            link=url_for("post_detail", post_id=post.post_id)
+        )
 
     return redirect(url_for("post_detail", post_id=post.post_id))
 
 
 # Handle Join Activity requests
-@app.route("/handle-request/<int:request_id>/<string:decision>", methods=["POST"])
+@app.route("/handleactivity/<int:request_id>/<string:decision>", methods=["POST"])
 @login_required
 def handle_request(request_id, decision):
     join_activity = JoinActivity.query.get_or_404(request_id)
     post = join_activity.post
 
-    # Only user posted can handle
+    # Only the post owner can handle requests
     if post.email != current_user.email:
         flash("You are not authorized to manage this request.")
         return redirect(url_for("post_detail", post_id=post.post_id))
@@ -805,9 +1084,13 @@ def handle_request(request_id, decision):
 
         if accepted_count < post.participants:
             join_activity.status = "accepted"
-            flash(f"{join_activity.user.name} has been accepted!")
+            flash(f"{join_activity.user.name if join_activity.user else join_activity.email} has been accepted!")
 
-            add_notification(join_activity.email, f"Your request for '{post.title}' was accepted", link=url_for("post_detail", post_id=post.post_id))
+            add_notification(
+                join_activity.email,
+                f"Your request for '{post.title}' was accepted",
+                link=url_for("post_detail", post_id=post.post_id)
+            )
 
             accepted_count += 1
             if accepted_count >= post.participants:
@@ -818,7 +1101,7 @@ def handle_request(request_id, decision):
 
     elif decision == "reject":
         join_activity.status = "rejected"
-        flash(f"{join_activity.user.name} has been rejected.")
+        flash(f"{join_activity.user.name if join_activity.user else join_activity.email} has been rejected.")
 
         add_notification(join_activity.email, f"Your request for '{post.title}' was rejected",link=url_for("post_detail", post_id=post.post_id))
 
@@ -826,10 +1109,11 @@ def handle_request(request_id, decision):
     return redirect(url_for("post_detail", post_id=post.post_id))
 
 
+
 #admin interface
 # Create default first admin
 def create_first_admin():
-    existing_admin = User.query.filter(User.role.in_(["admin", "both"])).first()
+    existing_admin = User.query.filter(User.role.in_(["admin"])).first()
     
     if not existing_admin:
         admin_user = User(
@@ -840,10 +1124,11 @@ def create_first_admin():
             sport_level="Advanced",
             security_question="book",  #  key from the question dict
             security_answer="Cinderella",
-            role="both"
+            role="admin"
         )
         db.session.add(admin_user)
         db.session.commit()
+
 
 
 # REQUEST ADMIN ACCESS
@@ -853,14 +1138,14 @@ def request_admin():
 
     # Prevent existing admins from submitting requests
     existing_user = User.query.filter_by(email=email).first()
-    if existing_user and existing_user.role in ["admin", "both"]:
+    if existing_user and existing_user.role in ["admin"]:
         flash("You are already an admin. Please log in.")
         return redirect(url_for("login"))
 
     step = request.form.get("step", "email")
 
     if step == "email" and request.method == "POST":
-        return render_template("request_admin.html", email=email, existing_user=existing_user)
+        return render_template("request_admin.html", email=email, existing_user=existing_user,question=question)
 
     elif step == "submit" and request.method == "POST":
         join_reason = request.form.get("join_reason", "").strip()
@@ -907,15 +1192,14 @@ def request_admin():
         flash("Your admin request has been submitted.")
         return redirect(url_for("request_admin"))
 
-    return render_template("request_admin.html")
+    return render_template("request_admin.html",question=question)
 
         
-# HANDLE REQUEST (any logged-in admin can approve/reject)
 # HANDLE REQUEST (any logged-in admin can approve/reject)
 @app.route("/handle-request/<int:approval_id>", methods=["GET", "POST"])
 @login_required
 def handle_request_admin(approval_id):
-    if current_user.role not in ["admin", "both"]:
+    if current_user.role not in ["admin"]:
         flash("You do not have permission to perform this action.")
         return redirect(url_for("home"))
 
@@ -932,8 +1216,6 @@ def handle_request_admin(approval_id):
                 # Existing user: only update role
                 if user.role == "user":
                     user.role = "admin"
-                elif user.role == "admin":
-                    user.role = "both"
 
                 # Ensure security question and answer exist
                 if not user.security_question or not user.security_answer:
@@ -973,7 +1255,7 @@ def handle_request_admin(approval_id):
 @login_required
 def admin_approval():
     # check role
-    if current_user.role not in ["admin", "both"]:
+    if current_user.role not in ["admin"]:
         flash("You do not have permission to access this page.")
         return redirect(url_for("home"))
 
@@ -1004,7 +1286,7 @@ def check_approval():
         else:
             # Check if user exists and has admin role
             user = User.query.filter_by(email=email).first()
-            if user and user.role in ["admin", "both"]:
+            if user and user.role in ["admin"]:
                 approval_status = "approved"
             else:
                 approval_status = "not_found"
@@ -1030,7 +1312,6 @@ def logout():
     return redirect(url_for("home"))
 
 
-
 # Admin dashboard
 @app.route("/admin/dashboard")
 @login_required
@@ -1043,40 +1324,113 @@ def admin_dashboard():
 
     return render_template(
         "admin_dashboard.html",
+        admin=current_user,
         users=users,
         posts=posts,
-        is_admin=True  # flag for template
+        is_admin=True
     )
 
 
-# admin delete user
-@app.route("/admin/delete_user/<string:email>", methods=["POST", "GET"])
+# Admin delete user
+@app.route("/admin/delete_user/<string:email>", methods=["POST"])
 @login_required
 def delete_user(email):
     if current_user.role != "admin":
         abort(403)
-    user = User.query.get_or_404(email)
+
+    # Prevent admin from deleting their own account
+    if current_user.email.lower() == email.lower():
+        flash("You cannot delete your own account.", "danger")
+        return redirect(url_for("admin_dashboard"))
+
+    user = User.query.filter_by(email=email.lower()).first_or_404()
     db.session.delete(user)
     db.session.commit()
-    flash("User deleted.", "success")
+
+    flash("User deleted successfully.", "success")
     return redirect(url_for("admin_dashboard"))
 
 
-# admin reports
+# Admin reports
 @app.route("/admin/reports")
 @login_required
 def admin_reports():
-    
-    users = User.query.all()
-    posts = Posts.query.all()
-    join_requests = JoinActivity.query.all()  
+    if current_user.role != "admin":
+        abort(403)
+
+    flagged_posts = (
+        db.session.query(Posts, db.func.count(Reports.id).label("report_count"))
+        .join(Reports, Reports.post_id == Posts.post_id)
+        .group_by(Posts.post_id)
+        .having(db.func.count(Reports.id) >= 3)  # threshold
+        .all()
+    )
+
+    suspended_users = User.query.filter_by(is_suspended=True).all()
 
     return render_template(
         "admin_reports.html",
-        users=users,
-        posts=posts,
-        join_requests=join_requests
+        flagged_posts=flagged_posts,
+        suspended_users=suspended_users
     )
+
+# Suspend user
+@app.route("/suspend/<string:email>", methods=["POST"])
+@login_required
+def suspend_user(email):
+    if current_user.role != "admin":
+        abort(403)
+
+    user = User.query.filter_by(email=email.lower()).first_or_404()
+    user.is_suspended = True
+    db.session.commit()
+
+    flash(f"User {user.email} has been suspended.", "warning")
+    return redirect(url_for("admin_reports"))
+
+
+# Unsuspend user
+@app.route("/unsuspend/<string:email>", methods=["POST"])
+@login_required
+def unsuspend_user(email):
+    if current_user.role != "admin":
+        abort(403)
+
+    user = User.query.filter_by(email=email.lower()).first_or_404()
+    user.is_suspended = False
+    db.session.commit()
+
+    flash(f"User {user.email} has been unsuspended.", "success")
+    return redirect(url_for("admin_dashboard"))
+
+
+
+# Reactivate hidden post
+@app.route("/reactivate/<int:post_id>", methods=["POST"])
+@login_required
+def reactivate_post(post_id):
+    if current_user.role != "admin":
+        abort(403)
+
+    post = Posts.query.get_or_404(post_id)
+    post.is_hidden = False
+
+    # Remove all reports tied to this post
+    Reports.query.filter_by(post_id=post_id).delete()
+
+    db.session.commit()
+    flash("Post has been reactivated and is now visible.", "success")
+    return redirect(url_for("admin_reports"))
+
+
+
+@app.context_processor
+def inject_admin():
+    email = session.get("admin_email")
+    if email:
+        current_admin = Admin.query.get(email)
+        return dict(admin=current_admin)
+    return dict(admin=None)
 
 
 # Upload location list
@@ -1085,7 +1439,7 @@ import io
 @app.route("/admin/updatelocation", methods=["GET", "POST"])
 @login_required
 def upload_location_csv():
-    if current_user.role not in ["admin", "both"]:
+    if current_user.role not in ["admin"]:
         flash("Request Denied. You are not admin.")
         return redirect(url_for("login"))
 
@@ -1142,7 +1496,37 @@ def upload_location_csv():
         return redirect(url_for("upload_location_csv"))
 
     return render_template("uploadlocation.html")
-            
+
+@app.route("/user/<string:email>")
+@login_required
+def view_user_profile(email):
+    user = User.query.get_or_404(email)
+    return render_template("profile.html", user=user)
+
+# Switch to admin view
+@app.route("/switch_to_admin")
+def switch_to_admin():
+    if not current_user.is_authenticated or current_user.role != 'admin':
+        flash("You cannot switch to admin view.", "danger")
+        return redirect(url_for('posts'))
+
+    session['as_admin'] = True
+    flash("Switched to Admin view.", "success")
+    return redirect(url_for('admin_dashboard'))
+
+
+# Switch to user view
+@app.route("/switch_to_user")
+def switch_to_user():
+    if not current_user.is_authenticated:
+        flash("You need to login first!", "danger")
+        return redirect(url_for('login'))
+
+    session['as_admin'] = False
+    flash("Switched to User view.", "success")
+    return redirect(url_for('posts'))
+
+
 
 # Run app
 if __name__ == "__main__":

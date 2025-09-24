@@ -80,43 +80,49 @@
 
                                 <input type="hidden" name="step" value="submit">
                                 <input type="hidden" name="email" value="{{ email }}">
-                                
-                                <p class="colortext">
-    <strong>Email address</strong>
-    <input type="email" value="{{ email }}" readonly class="readonly-input">
-</p>
-<p class="colortext">
-    <strong>Full Name</strong>
-    <input type="text" value="{{ existing_user.name }}" readonly class="readonly-input">
-</p>
 
-
-                                <!-- Join Reason comes after Full Name -->
+                                <!-- Email -->
                                 <p class="colortext">
-                                    <strong>Join Reason</strong>
-                                    <input type="text" name="join_reason" required>
+                                    <strong>Email address</strong>
+                                    <input type="email" value="{{ email }}" readonly class="readonly-input">
                                 </p>
 
-                                {% if not existing_user %}
+                                <!-- Existing User -->
+                                {% if existing_user %}
+                                    <p class="colortext">
+                                        <strong>Full Name</strong>
+                                        <input type="text" value="{{ existing_user.name }}" readonly class="readonly-input">
+                                    </p>
+                                {% else %}
+                                    <!-- New User Fields -->
+                                    <p class="colortext">
+                                        <strong>Full Name</strong>
+                                        <input type="text" name="name" required>
+                                    </p>
+
                                     <p class="colortext">
                                         <strong>Password</strong>
                                         <input type="password" name="password" required>
                                     </p>
 
+                                        <!-- Join Reason -->
                                     <p class="colortext">
-                                        <strong>Security Question (For Reset Password)</strong>
-                                        <select name="security_question" class="form-select" required>
-                                            <option value="" disabled selected>-- Select a security question --</option>
-                                            <option value="pet">What was your first pet name?</option>
-                                            <option value="car">What was your first car?</option>
-                                            <option value="hospital">What hospital name were you born in?</option>
-                                            <option value="city">What city were you born in?</option>
-                                            <option value="girlfriend">What was your first ex girlfriend's name?</option>
-                                            <option value="boyfriend">What was your first ex boyfriend's name?</option>
-                                            <option value="school">What was the name of your first school?</option>
-                                            <option value="book">What was your favorite childhood book?</option>
-                                        </select>
+                                        <strong>Join Reason</strong>
+                                        <input type="text" name="join_reason" required>
                                     </p>
+
+                                    <p class="colortext">
+                                <strong>Security Question (For Reset Password)</strong>
+                                <select name="security_question" class="form-select" required>
+                                    <option value="" disabled selected>-- Select a security question --</option>
+                                    {% for key, text in question.items() %}
+                                        <option value="{{ key }}"
+                                            {% if user and user.security_question == key %} selected {% endif %}>
+                                            {{ text }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </p>
 
                                     <p class="colortext">
                                         <strong>Security Answer (For Reset Password)</strong>
@@ -125,13 +131,17 @@
                                 {% endif %}
 
                                 <div class="btn-group">
-                                    <div class="btn-group">
                                     <a href="{{ url_for('request_admin') }}" class="big-cta-btn">Back</a>
                                     <input type="submit" class="big-cta-btn" value="Submit Request">
                                 </div>
                             </form>
                         </div>
                     {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Approval Modal -->
     <div id="approvalModal" class="modal">
@@ -167,5 +177,6 @@
             });
         </script>
     {% endif %}
+
 </body>
 </html>

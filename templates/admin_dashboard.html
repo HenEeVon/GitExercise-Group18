@@ -1,58 +1,102 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" rel="stylesheet">
-</head>
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
 
-<body>
-  <!-- Navigation bar -->
-   <div class="navbar-container">
-            <!-- Logo -->
-            <a class="header-logo" href="{{ url_for('home') }}"><span>ebFit</span></a>
+{% block content %}
+<div class="admin-dashboard container">
+    <h1>Admin Dashboard</h1>
+    
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="popup">
+                    <div class="popup-content {{ category if category else '' }}">
+                        <p>{{ message }}</p>
+                        <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
-            <div class="nav-right">
-                <div class="navbar-search">
+    {% if admin %}
+        <p class="logged-in">Logged in as: <strong>{{ admin.email }}</strong></p>
+    {% endif %}
 
-                {% if current_user.is_authenticated %}
-                    <nav class="nav-item">
-                        <a href="{{ url_for('admin_approval') }}">Admin Approval</a>
-
-                        {% if current_user.role in ['admin', 'both'] %}
-                            <a href="{{ url_for('create') }}">Login As User</a>
-                        {% endif %}
-
-
-                        <a href="{{ url_for('logout') }}">Log Out</a>
-                    </nav>
-                {% else %}
-                {% endif %}
-
-            </div>
+    <!-- Overview Cards -->
+    <div class="overview-cards">
+        <div class="card">
+            <h3>Total Users</h3>
+            <p>{{ users|length }}</p>
+        </div>
+        <div class="card">
+            <h3>Total Posts</h3>
+            <p>{{ posts|length }}</p>
         </div>
     </div>
-    </header>
 
+<!-- User Management Table -->
+<h3>User Management</h3>
+<div class="table-wrapper">
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.email }}</td>
+                <td>{{ user.name }}</td>
+                <td class="action-buttons">
+                    <form action="{{ url_for('delete_user', email=user.email) }}" method="POST" style="display:inline;">
+                        <button type="submit" class="delete-btn">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
-  <!-- Flash messages -->
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      {% for message in messages %}
-        <div class="popup">
-          <div class="popup-content">
-            <p>{{ message }}</p>
-            <a href="{{ request.path }}"><button class="submit">OK</button></a>
-          </div>
-        </div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
+<!-- Posts Management Table -->
+<h3>Posts Management</h3>
+<div class="table-wrapper">
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Post Status</th>
+                <th>Author</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for post in posts %}
+            <tr>
+                <td>{{ post.title }}</td>
+                <td>{{ post.post_status }}</td>
+                <td>
+                    {% if post.user %}
+                        {{ post.user.name }}
+                    {% else %}
+                        <em>Unknown</em>
+                    {% endif %}
+                </td>
+                <td class="action-buttons">
+                    <a href="{{ url_for('post_detail', post_id=post.post_id, readonly=1, from_dashboard=1) }}" class="btn btn-info">View</a>
 
-  <!-- Admin content -->
-    <h1>Welcome, {{ current_user.user_name }} (Admin)</h1>
+                    <form action="{{ url_for('delete', post_id=post.post_id) }}" method="POST" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
-</body>
-</html>
+{% endblock %}
