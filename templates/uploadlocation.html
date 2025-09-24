@@ -7,6 +7,50 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
 </head>
+<header>
+    <div class="navbar-container">
+        <a class="header-logo" href="{{ url_for('home') }}"><span>ebFit</span></a>
+
+        <div class="nav-right">
+            {% if not session.get('as_admin', False) %}
+            <div class="navbar-search">
+                <details>
+                    <summary class="search-toggle">Search</summary>
+                    <form method="GET" action="{{ url_for('search') }}">
+                        <input type="text" name="sport" placeholder="Search by category..." value="{{ request.args.get('sport','') }}">
+                        <input type="date" name="date" value="{{ request.args.get('date','') }}">
+                        <button type="submit" class="search-btn">Search</button>
+                    </form>
+                </details>
+            </div>
+            {% endif %}
+
+            <nav class="nav-item">
+                    {% if current_user.is_authenticated %}
+                {% if current_user.role == 'admin' %}
+                    {% if session.get('as_admin', True) %}
+                        <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                        <a href="{{ url_for('admin_approval') }}">Admin Approvals</a>
+                        <a href="{{ url_for('upload_location_csv') }}">Upload Location</a>
+                        <a href="{{ url_for('switch_to_user') }}">User Panel</a>
+                    {% else %}
+                        <a href="{{ url_for('posts') }}">Posts</a>
+                        <a href="{{ url_for('switch_to_admin') }}">Admin Panel</a>
+                    {% endif %}
+                {% else %}
+                    <a href="{{ url_for('posts') }}">Posts</a>
+                    <a href="{{ url_for('notifications') }}">Notifications</a>
+                    <a href="{{ url_for('profile') }}">My Profile</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}">Log Out</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Log In</a>
+                <a href="{{ url_for('register') }}">Register</a>
+            {% endif %}
+        </div>
+    </div>
+</header>
+
 <body class="adminloc">
     <!-- Flash messages -->
         {% with messages = get_flashed_messages() %}
@@ -21,21 +65,6 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
-    <!-- Navigation bar -->
-    <div class="navbar-container">
-        <a class="header-logo" href="{{ url_for('home') }}"><span>ebFit</span></a>
-        <div class="nav-right">
-            <nav class="nav-item">
-                <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
-                <a href="{{ url_for('admin_approval') }}">Admin Approval</a>
-                <a href="{{ url_for('upload_location_csv') }}">Update Location</a>
-                {% if current_user.role in ['admin', 'both'] %}
-                    <a href="{{ url_for('posts') }}">Login As User</a>
-                {% endif %}
-                <a href="{{ url_for('logout') }}">Log Out</a>
-            </nav>
-        </div>
-    </div>
 
     <div class="admincon"><h1>Update Location List</h1>
     <div class="containerloc">

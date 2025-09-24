@@ -5,6 +5,20 @@
 <div class="admin-dashboard container">
     <h1>Admin Dashboard</h1>
     
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="popup">
+                    <div class="popup-content {{ category if category else '' }}">
+                        <p>{{ message }}</p>
+                        <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     {% if admin %}
         <p class="logged-in">Logged in as: <strong>{{ admin.email }}</strong></p>
     {% endif %}

@@ -292,8 +292,7 @@ def register():
             db.session.add(new_user)
             db.session.commit()
 
-            # ✅ Do NOT auto login
-            flash("Registration successful! Please log in with your credentials.", "success")
+            flash("Registration successful! Please log in.", "success")
             return redirect(url_for("login"))  # direct to login page
 
         except IntegrityError:
@@ -340,7 +339,7 @@ def login():
         if user.role == "user":
             return redirect(url_for("posts"))   
         else:
-            return redirect(url_for("admin_approval"))           
+            return redirect(url_for("admin_dashboard"))           
 
     return render_template("login.html")
 
@@ -495,7 +494,6 @@ def page_not_found(e):
     return render_template("404.html"), 404
 
 
-
 # Create post form
 @app.route("/create", methods=["GET", "POST"])
 def create():
@@ -517,12 +515,10 @@ def create():
         start_time = form.start_time.data
         end_time = form.end_time.data
 
-
-        if start_time and end_time:
-            if end_time <= start_time:
-                form.end_time.errors.append("End time must be after start time.")
-                return render_template("create.html", form=form)    
-            
+        if start_time and end_time and end_time <= start_time:
+            flash("End time must be after start time.", "danger")
+            return render_template("create.html", form=form, current_date=date.today().isoformat())
+        
         if image_file:
             filename = secure_filename(image_file.filename)
             image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -538,7 +534,7 @@ def create():
                 start_time=form.start_time.data,
                 end_time=form.end_time.data,
                 participants=form.participants.data,
-                email=current_user.email if current_user.is_authenticated else session.get("admin_email"),  # ✅ admin fallback
+                email=current_user.email if current_user.is_authenticated else session.get("admin_email"),
             )
             
             db.session.add(new_post)
@@ -548,11 +544,6 @@ def create():
         except Exception as e:
             print("Error creating post:", e)
             flash(f"Error creating post: {e}", "danger")
-    else:
-        if request.method == "POST":
-            # Form did not validate
-            print("Form validation failed. Errors:", form.errors)
-            flash(f"Form errors: {form.errors}", "danger")
 
     return render_template("create.html", form=form, current_date=date.today().isoformat())
 
@@ -1483,13 +1474,14 @@ def view_user_profile(email):
 # Switch to admin view
 @app.route("/switch_to_admin")
 def switch_to_admin():
-    if not current_user.is_authenticated or current_user.role not in ['admin', 'both']:
+    if not current_user.is_authenticated or current_user.role != 'admin':
         flash("You cannot switch to admin view.", "danger")
         return redirect(url_for('posts'))
 
     session['as_admin'] = True
     flash("Switched to Admin view.", "success")
     return redirect(url_for('admin_dashboard'))
+
 
 # Switch to user view
 @app.route("/switch_to_user")
@@ -1501,7 +1493,6 @@ def switch_to_user():
     session['as_admin'] = False
     flash("Switched to User view.", "success")
     return redirect(url_for('posts'))
-
 
 
 

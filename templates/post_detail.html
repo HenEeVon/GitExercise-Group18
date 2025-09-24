@@ -3,26 +3,11 @@
 {% block title %}Post Detail{% endblock %}
 
 {% block content %}
-<div class="container post-container">
-    <!-- Profile header -->
-    <div class="profile-header">
-        <img src="{{ url_for('static', filename='profile_pics/' ~ (post.user.image_file if post.user.image_file else 'default.png')) }}" 
-             alt="{{ post.user.name }}'s profile picture"
-             class="profile-img">
+<div class="container">
 
-        <div class="profile-info"> <!--pass profile owner post email-->
-            <a href="{{ url_for('profile_page', email=post.user.email)}}" class="profile-name">
-                {{ post.user.name }}
-            </a>
-            <p class="posted-date">
-                Posted on: {{ post.local_date_posted_value.strftime('%d/%m/%Y %H:%M') if post.local_date_posted_value else '' }}
-            </p>
-        </div>
-    </div>
+    {% set owner_email = post.email %}
+    {% set current_email = current_user.email if current_user.is_authenticated else None %}
 
-    <hr class="meta-separator">
-
-    <!-- Post Title -->
     <h1>{{ post.title }}</h1>
 
     <!-- Event date and time -->
@@ -30,7 +15,7 @@
         Event Date: {{ post.event_date.strftime('%d/%m/%Y') if post.event_date else 'N/A' }} |
         {{ post.start_time.strftime('%H:%M') if post.start_time else 'N/A' }} - {{ post.end_time.strftime('%H:%M') if post.end_time else 'N/A' }}
     </p>
-        
+
     <!-- Location -->
     <p class="meta">
         <i class="fa-solid fa-location-dot"></i>
@@ -58,7 +43,6 @@
 
     <!-- Post content -->
     <div class="content">
-        <span>Content:</span>
         <p>{{ post.content }}</p>
     </div>
 
@@ -73,8 +57,11 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="alert alert-{{ category if category else 'info' }}">
-                    {{ message }}
+                <div class="popup">
+                    <div class="popup-content {{ category if category else '' }}">
+                        <p>{{ message }}</p>
+                        <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                    </div>
                 </div>
             {% endfor %}
         {% endif %}
@@ -151,17 +138,8 @@
 
     <hr>
 
-    <!-- Actions -->
-    {% if current_user.is_authenticated and current_user.email == post.email %}
-        <a href="{{ url_for('posts') }}" class="btn btn-secondary">Back to Activity Post</a>
-        <a href="{{ url_for('edit_post', post_id=post.post_id) }}" class="btn btn-warning">Edit</a>
-    {% endif %}  
-
-    {% if current_user.is_authenticated and current_user.email != post.email %}
-        <!-- Normal user direct message -->
-        <a href="{{ url_for('chat_with_user', post_id=post.post_id, partner_email=post.email) }}" class="btn btn-info">Chat with Me</a>
-    {% elif current_user.is_authenticated and current_user.email == post.email %}
-        <!-- Owner DM list -->
+    <!-- Owner-specific direct messages -->
+    {% if current_user.is_authenticated and current_email == owner_email %}
         {% if owner_conversations %}
             <h3>Direct Messages</h3>
             <div class="direct-messages">
@@ -176,5 +154,6 @@
             <p>No direct messages yet.</p>
         {% endif %}
     {% endif %}
+
 </div>
 {% endblock %}
