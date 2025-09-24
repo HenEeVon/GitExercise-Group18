@@ -63,6 +63,12 @@
                 </a>
             </p>
 
+             <h2>
+        <a href="{{ url_for('profile_page', email=post.user.email) }}">
+            {{ post.user.name }}
+        </a>'s Profile
+    </h2>
+
             <a href="{{ url_for('post_detail', post_id=post.post_id) }}" class="btn">Find Out More</a>
 
             {% if current_user.is_authenticated and current_user.email != post.email and post.post_status == "open" %}

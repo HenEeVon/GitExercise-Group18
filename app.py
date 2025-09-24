@@ -35,17 +35,6 @@ app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
 
-Security_Questions = [
-    ("pet","What was your first pet name?"),
-    ("car","What was your first car?"),
-    ("hospital","What hospital name were you born in?"),
-    ("city", "What city were you born in?"),
-    ("girlfriend", "What was your first ex girlfriend's name?"),
-    ("boyfriend", "What was your first ex boyfriend's name?"),
-    ("school", "What was the name of your first school?"),
-    ("book", "What was your favorite childhood book?")
-]
-
 # User database
 class User(db.Model, UserMixin):
     __tablename__ = "users"
@@ -147,7 +136,7 @@ def load_locations():
                     try:
                         name = row["name"].strip()
                         distance = float(row["distance"])
-                        locations.append((name, f"{name} ({distance} km)", distance))
+                        locations.append((name, f"{name} ({distance}km)", distance))
                     except ValueError:
                         continue  # skip invalid distances
 
@@ -194,13 +183,23 @@ class ChatMessage(db.Model):
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
+question = {
+    "pet": "What was your first pet name?",
+    "car": "What was your first car?",
+    "hospital": "What hospital name were you born in?",
+    "city": "What city were you born in?",
+    "girlfriend": "What was your first ex girlfriend's name?",
+    "boyfriend": "What was your first ex boyfriend's name?",
+    "school": "What was the name of your first school?",
+    "book": "What was your favorite childhood book?"
+}
 
-# Update Profile database
+#Update Profile database
 class UpdateProfileForm(FlaskForm):
     name = StringField("Full Name", validators=[DataRequired(), Length(min=2, max=50)])
     gender = SelectField("Gender", choices=[("Male", "Male"), ("Female", "Female")])
     bio = TextAreaField("Bio", validators=[Length(max=200)])
-    security_question = SelectField("Security Question", choices=Security_Questions, validators=[DataRequired()])
+    security_question = SelectField("Security Question", choices=question, validators=[DataRequired()])
     security_answer = StringField("Security Answer", validators=[DataRequired(), Length(max=255)])
     picture = FileField("Update Profile Picture", validators=[FileAllowed(["jpg", "png"])])
     submit = SubmitField("Update")
@@ -248,7 +247,6 @@ def datetimeformat(value, format="%d/%m/%Y"):
     except Exception:
         return value
 
-
 # Home page
 @app.route("/")
 def home():
@@ -294,8 +292,7 @@ def register():
             db.session.add(new_user)
             db.session.commit()
 
-            # ✅ Do NOT auto login
-            flash("Registration successful! Please log in with your credentials.", "success")
+            flash("Registration successful! Please log in.", "success")
             return redirect(url_for("login"))  # direct to login page
 
         except IntegrityError:
@@ -338,23 +335,14 @@ def login():
 
         flash(f"Welcome back, {user.name}!")
 
-        next_page = request.args.get('next') or (url_for('admin_dashboard') if session.get('as_admin') else url_for('posts'))
-        return redirect(next_page)
+        # Redirect based on role
+        if user.role == "user":
+            return redirect(url_for("posts"))   
+        else:
+            return redirect(url_for("admin_dashboard"))           
 
     return render_template("login.html")
 
-
-# Security questions
-question = {
-    "pet": "What was your first pet name?",
-    "car": "What was your first car?",
-    "hospital": "What hospital name were you born in?",
-    "city": "What city were you born in?",
-    "girlfriend": "What was your first ex girlfriend's name?",
-    "boyfriend": "What was your first ex boyfriend's name?",
-    "school": "What was the name of your first school?",
-    "book": "What was your favorite childhood book?"
-}
 
 @app.route("/reset_password", methods=["GET", "POST"])
 def reset_password():
@@ -506,7 +494,6 @@ def page_not_found(e):
     return render_template("404.html"), 404
 
 
-
 # Create post form
 @app.route("/create", methods=["GET", "POST"])
 def create():
@@ -519,8 +506,8 @@ def create():
     # Force reload of locations for this form instance (add safe defaults for testing)
     form.location.choices = load_locations()
     if not form.location.choices or form.location.choices == [("none", "--Please select a location--")]:
-        form.location.choices = [("Gym", "Gym"), ("Pool", "Pool")]  # fallback choices
-
+        form.location.choices = []  # fallback choices
+    
     if form.validate_on_submit():
         # Handle image upload
         image_file = form.image.data
@@ -528,12 +515,10 @@ def create():
         start_time = form.start_time.data
         end_time = form.end_time.data
 
-
-        if start_time and end_time:
-            if end_time <= start_time:
-                form.end_time.errors.append("End time must be after start time.")
-                return render_template("create.html", form=form)    
-            
+        if start_time and end_time and end_time <= start_time:
+            flash("End time must be after start time.", "danger")
+            return render_template("create.html", form=form, current_date=date.today().isoformat())
+        
         if image_file:
             filename = secure_filename(image_file.filename)
             image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -549,7 +534,7 @@ def create():
                 start_time=form.start_time.data,
                 end_time=form.end_time.data,
                 participants=form.participants.data,
-                email=current_user.email if current_user.is_authenticated else session.get("admin_email"),  # ✅ admin fallback
+                email=current_user.email if current_user.is_authenticated else session.get("admin_email"),
             )
             
             db.session.add(new_post)
@@ -559,11 +544,6 @@ def create():
         except Exception as e:
             print("Error creating post:", e)
             flash(f"Error creating post: {e}", "danger")
-    else:
-        if request.method == "POST":
-            # Form did not validate
-            print("Form validation failed. Errors:", form.errors)
-            flash(f"Form errors: {form.errors}", "danger")
 
     return render_template("create.html", form=form, current_date=date.today().isoformat())
 
@@ -926,8 +906,18 @@ def open_notif(notif_id):
 @app.route("/profile")
 @login_required
 def profile():
+    return redirect(url_for("profile_page", email=current_user.email))
+
+
+@app.route("/profile/<string:email>")
+@login_required
+def profile_page(email):
+    # fetch the user being viewed by email
+    user = User.query.filter_by(email=email).first_or_404()
+
+    # fetch only this user's posts
     recent_posts = (
-        Posts.query.filter_by(email=current_user.email)
+        Posts.query.filter_by(email=user.email)
         .order_by(Posts.date_posted.desc())
         .all()
     )
@@ -943,23 +933,28 @@ def profile():
         else:
             post.local_date_posted_value = None
 
+    # correct image path (use their image, not always current_user)
     image_url = url_for(
         "static",
-        filename=f"profile_pics/{current_user.image_file or 'default.png'}"
+        filename=f"profile_pics/{user.image_file or 'default.png'}"
     )
 
     return render_template(
         "profile.html",
-        user=current_user,
+        user=user,
         image_url=image_url,
         recent_posts=recent_posts
     )
+
 
 
 @app.route("/profile/edit", methods=["GET", "POST"])
 @login_required
 def profile_edit():
     form = UpdateProfileForm()
+
+     # Set the choices dynamically
+    form.security_question.choices = list(question.items())
 
     if form.validate_on_submit():
         current_user.name = form.name.data
@@ -975,8 +970,8 @@ def profile_edit():
 
         db.session.commit()
         flash("Profile updated.", "success")
-        return redirect(url_for("profile"))
-
+        return redirect(url_for("profile_page", email=current_user.email))
+    
     if request.method == "GET":
         form.name.data = current_user.name
         form.gender.data = current_user.gender
@@ -989,7 +984,7 @@ def profile_edit():
         filename=f"profile_pics/{current_user.image_file or 'default.png'}"
     )
 
-    return render_template("edit_profile.html", form=form, image_url=image_url)
+    return render_template("edit_profile.html", form=form, image_url=image_url, question=question)
 
 
 def save_picture(form_picture):
@@ -1037,7 +1032,7 @@ def activityrequest(post_id):
 
 
 # Handle Join Activity requests
-@app.route("/handle-request/<int:request_id>/<string:decision>", methods=["POST"])
+@app.route("/handleactivity/<int:request_id>/<string:decision>", methods=["POST"])
 @login_required
 def handle_request(request_id, decision):
     join_activity = JoinActivity.query.get_or_404(request_id)
@@ -1086,7 +1081,7 @@ def handle_request(request_id, decision):
 #admin interface
 # Create default first admin
 def create_first_admin():
-    existing_admin = User.query.filter(User.role.in_(["admin", "both"])).first()
+    existing_admin = User.query.filter(User.role.in_(["admin"])).first()
     
     if not existing_admin:
         admin_user = User(
@@ -1097,7 +1092,7 @@ def create_first_admin():
             sport_level="Advanced",
             security_question="book",  #  key from the question dict
             security_answer="Cinderella",
-            role="both"
+            role="admin"
         )
         db.session.add(admin_user)
         db.session.commit()
@@ -1111,14 +1106,14 @@ def request_admin():
 
     # Prevent existing admins from submitting requests
     existing_user = User.query.filter_by(email=email).first()
-    if existing_user and existing_user.role in ["admin", "both"]:
+    if existing_user and existing_user.role in ["admin"]:
         flash("You are already an admin. Please log in.")
         return redirect(url_for("login"))
 
     step = request.form.get("step", "email")
 
     if step == "email" and request.method == "POST":
-        return render_template("request_admin.html", email=email, existing_user=existing_user)
+        return render_template("request_admin.html", email=email, existing_user=existing_user,question=question)
 
     elif step == "submit" and request.method == "POST":
         join_reason = request.form.get("join_reason", "").strip()
@@ -1165,15 +1160,14 @@ def request_admin():
         flash("Your admin request has been submitted.")
         return redirect(url_for("request_admin"))
 
-    return render_template("request_admin.html")
+    return render_template("request_admin.html",question=question)
 
         
-
 # HANDLE REQUEST (any logged-in admin can approve/reject)
 @app.route("/handle-request/<int:approval_id>", methods=["GET", "POST"])
 @login_required
 def handle_request_admin(approval_id):
-    if current_user.role not in ["admin", "both"]:
+    if current_user.role not in ["admin"]:
         flash("You do not have permission to perform this action.")
         return redirect(url_for("home"))
 
@@ -1190,8 +1184,6 @@ def handle_request_admin(approval_id):
                 # Existing user: only update role
                 if user.role == "user":
                     user.role = "admin"
-                elif user.role == "admin":
-                    user.role = "both"
 
                 # Ensure security question and answer exist
                 if not user.security_question or not user.security_answer:
@@ -1231,7 +1223,7 @@ def handle_request_admin(approval_id):
 @login_required
 def admin_approval():
     # check role
-    if current_user.role not in ["admin", "both"]:
+    if current_user.role not in ["admin"]:
         flash("You do not have permission to access this page.")
         return redirect(url_for("home"))
 
@@ -1262,7 +1254,7 @@ def check_approval():
         else:
             # Check if user exists and has admin role
             user = User.query.filter_by(email=email).first()
-            if user and user.role in ["admin", "both"]:
+            if user and user.role in ["admin"]:
                 approval_status = "approved"
             else:
                 approval_status = "not_found"
@@ -1415,7 +1407,7 @@ import io
 @app.route("/admin/updatelocation", methods=["GET", "POST"])
 @login_required
 def upload_location_csv():
-    if current_user.role not in ["admin", "both"]:
+    if current_user.role not in ["admin"]:
         flash("Request Denied. You are not admin.")
         return redirect(url_for("login"))
 
@@ -1473,17 +1465,23 @@ def upload_location_csv():
 
     return render_template("uploadlocation.html")
 
+@app.route("/user/<string:email>")
+@login_required
+def view_user_profile(email):
+    user = User.query.get_or_404(email)
+    return render_template("profile.html", user=user)
 
 # Switch to admin view
 @app.route("/switch_to_admin")
 def switch_to_admin():
-    if not current_user.is_authenticated or current_user.role not in ['admin', 'both']:
+    if not current_user.is_authenticated or current_user.role != 'admin':
         flash("You cannot switch to admin view.", "danger")
         return redirect(url_for('posts'))
 
     session['as_admin'] = True
     flash("Switched to Admin view.", "success")
     return redirect(url_for('admin_dashboard'))
+
 
 # Switch to user view
 @app.route("/switch_to_user")
@@ -1495,7 +1493,6 @@ def switch_to_user():
     session['as_admin'] = False
     flash("Switched to User view.", "success")
     return redirect(url_for('posts'))
-
 
 
 
