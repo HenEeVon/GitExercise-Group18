@@ -43,7 +43,11 @@
                 {% else %}
                     <!-- User view -->
                     <a href="{{ url_for('posts') }}">Posts</a>
-                    <a href="{{ url_for('notifications') }}">Notifications</a>
+                    <a href="{{ url_for('notifications') }}">Notifications
+                            {% if unread_count > 0 %}
+                                <span class="count">{{ unread_count }}</span>
+                            {% endif %}
+                    </a>
                     <a href="{{ url_for('profile') }}">My Profile</a>
                     {% if current_user.role in ['admin'] %}
                         <a href="{{ url_for('switch_to_admin') }}" class="switch-btn">Admin Panel</a>
