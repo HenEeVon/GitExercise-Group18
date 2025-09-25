@@ -8,6 +8,7 @@ from flask_socketio import join_room, send, SocketIO
 import random
 from string import ascii_uppercase
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, TextAreaField, IntegerField, DateField, TimeField,  SelectField, RadioField
@@ -32,8 +33,26 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
-app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 *1024
 
+@app.context_processor
+def notif_count():
+    if current_user.is_authenticated:
+        count = Notification.query.filter_by(email=current_user.email, is_read=False).count()
+        return {"unread_count": count}
+    return {"unread_count": 0}
+
+
+Security_Questions = [
+    ("pet","What was your first pet name?"),
+    ("car","What was your first car?"),
+    ("hospital","What hospital name were you born in?"),
+    ("city", "What city were you born in?"),
+    ("girlfriend", "What was your first ex girlfriend's name?"),
+    ("boyfriend", "What was your first ex boyfriend's name?"),
+    ("school", "What was the name of your first school?"),
+    ("book", "What was your favorite childhood book?")
+]
 
 # User database
 class User(db.Model, UserMixin):
@@ -45,7 +64,7 @@ class User(db.Model, UserMixin):
     security_question = db.Column(db.String(255), nullable=False)
     security_answer = db.Column(db.String(255), nullable=False)
     password = db.Column(db.String(255), nullable=False)
-    image_file = db.Column(db.String(255), nullable=False, default="default.png")
+    image_file = db.Column(db.String(255), nullable=False, default="default_image.png")
     bio = db.Column(db.Text, default="This user has not added a bio yet.", nullable=False)
     role = db.Column(db.String(20), default="user") 
     is_suspended = db.Column(db.Boolean, default=False)
@@ -198,6 +217,7 @@ question = {
 class UpdateProfileForm(FlaskForm):
     name = StringField("Full Name", validators=[DataRequired(), Length(min=2, max=50)])
     gender = SelectField("Gender", choices=[("Male", "Male"), ("Female", "Female")])
+    sport_level = SelectField("Fitness Level", choices=[("newbie","Newbie"),("intermediate","Intermediate"),("advanced","Advanced")], validators=[DataRequired()])
     bio = TextAreaField("Bio", validators=[Length(max=200)])
     security_question = SelectField("Security Question", choices=question, validators=[DataRequired()])
     security_answer = StringField("Security Answer", validators=[DataRequired(), Length(max=255)])
@@ -221,6 +241,22 @@ def add_notification(email, text, link=None):
         db.session.commit()
     except Exception:
         db.session.rollback()
+
+def save_profile_picture(uploaded, old_filename=None):
+    folder = os.path.join(current_app.root_path, "static", "profile_pics")
+    os.makedirs(folder, exist_ok=True)
+
+    prefix = secure_filename(current_user.email.split("@")[0])
+    filename = f"{prefix}_{secure_filename(uploaded.filename)}"
+    path = os.path.join(folder, filename)
+
+    if old_filename and old_filename != "default_image.png":
+        old_path = os.path.join(folder, old_filename)
+        if os.path.exists(old_path):
+            os.remove(old_path)
+
+    uploaded.save(path)
+    return filename
 
 # User loader
 @login_manager.user_loader
@@ -272,9 +308,9 @@ def register():
 
         # Hash the password
         hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
-        picture_file = "default.png"
+        picture_file = "default_image.png"
         if "picture" in request.files and request.files["picture"].filename:
-            picture_file = save_picture(request.files["picture"])
+            picture_file = save_profile_picture(request.files["picture"], email)
 
         # Create user
         new_user = User(
@@ -285,7 +321,8 @@ def register():
             security_question=security_question,
             security_answer=security_answer,
             password=hashed_password,
-            role="user"  # default role
+            role="user",  # default role
+            image_file=picture_file,
         )
 
         try:
@@ -385,7 +422,8 @@ def reset_password():
             if user.security_answer.lower() == answer:
                 user.password = generate_password_hash(new_password, method="pbkdf2:sha256")
                 db.session.commit()
-                flash("Password updated successfully!", "success")
+                add_notification(user.email, "Your password was reset successfully.")
+                flash("Password updated successfully!")
                 return redirect(url_for("login"))
             else:
                 flash("Security answer incorrect.", "danger")
@@ -772,27 +810,23 @@ def chat_with_user(post_id, partner_email):
         .all()
     )
 
-    # Partner display name
+    for msg in messages:
+        if msg.created_at:
+            msg.local_time = pytz.utc.localize(msg.created_at).astimezone(MALAYSIA_TZ).strftime("%H:%M")
+        else:
+            msg.local_time = ""
+
     partner_user = User.query.get(partner_email)
     partner_name = partner_user.name if partner_user else partner_email
+    partner_img = url_for("static", filename=f"profile_pics/{partner_user.image_file or 'default_image.png'}") if partner_user else url_for("static", filename="profile_pics/default.png")
 
     if current_email == owner_email:
         header_name = partner_name
     else:
         header_name = post.user.name  # ✅ uses Posts.user relationship
 
-    return render_template(
-        "chat.html",
-        post=post,
-        room=room,
-        username=current_user.name,
-        header_name=header_name,
-        messages=messages,
-        post_id=post_id,
-        partner_email=partner_email,
-    )
-
-
+    return render_template("chat.html",post=post, room=room, username=current_user.name,header_name=header_name, 
+                           messages=messages, post_id=post_id, partner_email=partner_email,partner_img=partner_img)
 
 @socketio.on("join")
 def on_join(data):
@@ -850,6 +884,14 @@ def on_send_message(data):
     db.session.add(msg)
     db.session.commit()
 
+    if msg.created_at:
+        utc_time = pytz.utc.localize(msg.created_at)
+        local_time = utc_time.astimezone(MALAYSIA_TZ)
+    else:
+        local_time = None
+
+    ts = local_time.strftime("%H:%M") if local_time else ""
+
     try:
         # ✅ Notify partner if it’s not the same as sender
         if partner != current_email:
@@ -858,7 +900,7 @@ def on_send_message(data):
     except Exception:
         db.session.rollback()
 
-    send({"user": msg.sender_name, "text": msg.text}, to=room)
+    send({"user": msg.sender_name,"email": msg.sender_email ,"text": msg.text, "time": ts}, to=room)
 
 
 # Notifications page
@@ -901,8 +943,24 @@ def open_notif(notif_id):
 
     return redirect(notif.link or url_for("notifications"))
 
+#Delete notification
+@app.route("/notifications/delete/<int:notif_id>", methods=["POST"])
+@login_required
+def notifications_delete(notif_id):
+    notif = Notification.query.get_or_404(notif_id)
+    if notif.email == current_user.email:
+        db.session.delete(notif)
+        db.session.commit()
+    return redirect(url_for("notifications"))
 
-# My profile
+@app.route("/notifications/clear", methods=["POST"])
+@login_required
+def notifications_clear():
+    Notification.query.filter_by(email=current_user.email).delete()
+    db.session.commit()
+    return redirect(url_for("notifications"))
+
+#My profile
 @app.route("/profile")
 @login_required
 def profile():
@@ -936,7 +994,7 @@ def profile_page(email):
     # correct image path (use their image, not always current_user)
     image_url = url_for(
         "static",
-        filename=f"profile_pics/{user.image_file or 'default.png'}"
+        filename=f"profile_pics/{user.image_file or 'default_image.png'}"
     )
 
     return render_template(
@@ -959,18 +1017,18 @@ def profile_edit():
     if form.validate_on_submit():
         current_user.name = form.name.data
         current_user.gender = form.gender.data
+        current_user.sport_level = form.sport_level.data
         current_user.bio = form.bio.data or None
         current_user.security_question = form.security_question.data
         current_user.security_answer = (form.security_answer.data or "").strip().lower()
 
-        # Handle profile picture upload
-        if form.picture.data:
-            filename = save_picture(form.picture.data)
-            current_user.image_file = filename
+        uploaded = request.files.get("picture")
+        if uploaded and uploaded.filename:
+            current_user.image_file =save_profile_picture(uploaded, current_user.image_file)
 
         db.session.commit()
-        flash("Profile updated.", "success")
-        return redirect(url_for("profile_page", email=current_user.email))
+        flash("Profile updated.")
+        return redirect(url_for("profile"))
     
     if request.method == "GET":
         form.name.data = current_user.name
@@ -979,12 +1037,10 @@ def profile_edit():
         form.security_question.data = current_user.security_question
         form.security_answer.data = current_user.security_answer
 
-    image_url = url_for(
-        "static",
-        filename=f"profile_pics/{current_user.image_file or 'default.png'}"
-    )
+    image_url = url_for("static", filename=f"profile_pics/{current_user.image_file or 'default_image.png'}")
 
     return render_template("edit_profile.html", form=form, image_url=image_url, question=question)
+
 
 
 def save_picture(form_picture):
@@ -1001,7 +1057,6 @@ def save_picture(form_picture):
         raise ValueError("Invalid image file") from e
 
     return picture_fn
-
 # Join Activity
 @app.route("/activityrequest/<int:post_id>", methods=["POST"])
 @login_required
@@ -1071,7 +1126,7 @@ def handle_request(request_id, decision):
         join_activity.status = "rejected"
         flash(f"{join_activity.user.name if join_activity.user else join_activity.email} has been rejected.")
 
-        add_notification(join_activity.email, f"Your request for '{post.title}' was rejected")
+        add_notification(join_activity.email, f"Your request for '{post.title}' was rejected",link=url_for("post_detail", post_id=post.post_id))
 
     db.session.commit()
     return redirect(url_for("post_detail", post_id=post.post_id))

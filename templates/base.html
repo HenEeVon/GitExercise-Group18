@@ -42,28 +42,31 @@
                         <a href="{{ url_for('posts') }}">Posts</a>
                         <a href="{{ url_for('notifications') }}">Notifications</a>
                         <a href="{{ url_for('profile') }}">My Profile</a>
-                        <a href="{{ url_for('switch_to_admin') }}" class="switch-btn">Admin Panel</a>
+                        <a href="{{ url_for('admin_approval') }}">Login As Admin</a>
                     {% endif %}
                 {% else %}
-                    <!-- Normal user -->
-                    <a href="{{ url_for('posts') }}">Posts</a>
-                    <a href="{{ url_for('notifications') }}">Notifications</a>
-                    <a href="{{ url_for('profile') }}">My Profile</a>
+                        <!-- Normal user -->
+                        <a href="{{ url_for('posts') }}">Posts</a>
+                        <a href="{{ url_for('notifications') }}">Notifications
+                            {% if unread_count > 0 %}
+                                <span class="count">{{ unread_count }}</span>
+                            {% endif %}
+                        </a>
+                        <a href="{{ url_for('profile') }}">My Profile</a>
                 {% endif %}
                 <!-- Log out for everyone -->
-                <a href="{{ url_for('logout') }}">Log Out</a>
+                <a href="{{ url_for('logout') }}">Log out</a>
             </nav>
             {% else %}
             <!-- Not logged in -->
-            <nav class="nav-item">
-                <a href="{{ url_for('login') }}">Log In</a>
+             <nav class="nav-item">
+                <a href="{{ url_for('login') }}">Log in</a>
                 <a href="{{ url_for('register') }}">Register</a>
-            </nav>
-            {% endif %}
+             </nav>
+                {% endif %}
+            </div>
         </div>
-    </div>
-</header>
-
+    </header>
 
 <main>
     {% block content %}{% endblock %}
