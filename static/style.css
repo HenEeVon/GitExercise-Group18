@@ -139,6 +139,7 @@
 .btn-outline {
     border: 1px solid #2575fc;
     color: #2575fc;
+    transition: all 0.2s;
 }
 .btn-outline:hover {
     background: #2575fc;
@@ -966,16 +967,6 @@ section {
   opacity:0; 
 }
 
-/* button register or login*/
-.btn-group {
-  display: flex;
-  gap: 20px; /*space for buttons */ 
-}
-
-.btn-group .big-cta-btn {
-  position: relative;
-  z-index: 2; /* ensure above images */
-}
 
 .big-cta-btn {
     font-size: 13px;
@@ -1990,7 +1981,9 @@ html {
     transition: background-color 0.2s, transform 0.2s;
 }
 
-.action-buttons a:hover {
+.action-buttons .btn-info:hover,
+.action-buttons .delete-btn:hover,
+.action-buttons .user-delete-btn:hover {
     transform: translateY(-2px);
 }
 
@@ -2008,6 +2001,36 @@ html {
 .action-buttons .btn-info:hover {
     background-color: #138496;
 }
+
+
+.action-buttons .user-delete-btn {
+    color:white;
+    background-color:rgb(238, 54, 54);
+    padding:10px;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor:pointer;
+    transition: all 0.2s;
+}
+
+.action-buttons .user-delete-btn:hover {
+    background-color:rgb(211, 42, 42);
+}
+
+.action-buttons .delete-btn {
+    color:white;
+    background-color:rgb(238, 54, 54);
+    padding:10px;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor:pointer;
+    transition: all 0.2s;
+}
+
+.action-buttons .delete-btn:hover {
+    background-color:rgb(211, 42, 42);
+}
+
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
