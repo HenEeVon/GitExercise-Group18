@@ -30,40 +30,34 @@
             <!-- Navigation links -->
             {% if current_user.is_authenticated %}
             <nav class="nav-item">
-                {% if current_user.role == 'admin' %}
-                    {% if session.get('as_admin', True) %}
-                        <!-- Admin in admin view -->
-                        <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
-                        <a href="{{ url_for('admin_approval') }}">Admin Approvals</a>
-                        <a href="{{ url_for('upload_location_csv') }}">Upload Location</a>
+                {% if session.get('as_admin', False) %}
+                    <!-- Admin view -->
+                    <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                    <a href="{{ url_for('admin_reports') }}">Reports</a>
+                    <a href="{{ url_for('admin_approval') }}">Admin Approvals</a>
+                    <a href="{{ url_for('upload_location_csv') }}">Upload Location</a>
+                    {% if current_user.role == 'admin' %}
                         <a href="{{ url_for('switch_to_user') }}" class="switch-btn">User Panel</a>
-                    {% else %}
-                        <!-- Admin in user view -->
-                        <a href="{{ url_for('posts') }}">Posts</a>
-                        <a href="{{ url_for('notifications') }}">Notifications</a>
-                        <a href="{{ url_for('profile') }}">My Profile</a>
-                        <a href="{{ url_for('admin_approval') }}">Login As Admin</a>
                     {% endif %}
+                    <a href="{{ url_for('logout') }}">Logout</a>
                 {% else %}
-                        <!-- Normal user -->
-                        <a href="{{ url_for('posts') }}">Posts</a>
-                        <a href="{{ url_for('notifications') }}">Notifications
-                            {% if unread_count > 0 %}
-                                <span class="count">{{ unread_count }}</span>
-                            {% endif %}
-                        </a>
-                        <a href="{{ url_for('profile') }}">My Profile</a>
+                    <!-- User view -->
+                    <a href="{{ url_for('posts') }}">Posts</a>
+                    <a href="{{ url_for('notifications') }}">Notifications</a>
+                    <a href="{{ url_for('profile') }}">My Profile</a>
+                    {% if current_user.role in ['admin'] %}
+                        <a href="{{ url_for('switch_to_admin') }}" class="switch-btn">Admin Panel</a>
+                    {% endif %}
+                    <a href="{{ url_for('logout') }}">Logout</a>
                 {% endif %}
-                <!-- Log out for everyone -->
-                <a href="{{ url_for('logout') }}">Log out</a>
             </nav>
             {% else %}
-            <!-- Not logged in -->
-             <nav class="nav-item">
-                <a href="{{ url_for('login') }}">Log in</a>
-                <a href="{{ url_for('register') }}">Register</a>
-             </nav>
-                {% endif %}
+                <!-- Not logged in -->
+                <nav class="nav-item">
+                    <a href="{{ url_for('login') }}">Log In</a>
+                    <a href="{{ url_for('register') }}">Register</a>
+                </nav>
+            {% endif %}
             </div>
         </div>
     </header>

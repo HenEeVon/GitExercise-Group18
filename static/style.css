@@ -1779,7 +1779,10 @@ html {
     border-radius: 10px;
     text-align: center;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.3s, box-shadow 0.2s;
+    transition: all 0.3s;
+    animation-delay: 0.5s;
+    animation: bottomIn 1s ease-in-out forwards;
 }
 
 .overview-cards .card:hover {
@@ -2537,30 +2540,10 @@ h3.direct-messages {
     margin-top: -300px; /* move it higher */
 }
 
-.section-wrap {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 80px 20px;
-  text-align: center;
-  position: relative;
-}
-
 .features-container {
   position: relative;
   width: 100%;
   height: 500px;
-}
-
-.central-icon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.central-icon img {
-  width: 120px;
-  height: 120px;
 }
 
 .feature-item {
@@ -2585,61 +2568,8 @@ h3.direct-messages {
   height: 30px;
 }
 
-/* Positioning around central icon */
-.top-left {
-  top: 10%;
-  left: 15%;
-}
-
-.top-right {
-  top: 10%;
-  right: 15%;
-}
-
-.bottom-left {
-  bottom: 10%;
-  left: 25%;
-}
-
-.central-icon {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #000;
-    font-size: 1.8rem;
-    font-weight: bold;
-    text-align: center;
-    width: 280px;
-    height: 100px;
-    margin: 0 auto;
-}
-
-.central-icon::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 280px;
-    height: 100px;
-    background: linear-gradient(to right, var(--primary-color), #c471ed, #f64f59);
-    transform: translate(-50%, -50%);
-    filter: blur(70px);
-    z-index: -1; /* Glow is behind the text */
-    border-radius: 20px;
-}
-
-
-.central-icon .welcome-ebfit span:first-child {
-    font-weight: 700;
-}
-
-.central-icon .welcome-ebfit span:last-child {
-    font-weight: 300;
-}
-
 .icon-circle i {
-    color: white;
+    color: rgb(255, 255, 255);
 }
 
 .features-container {
@@ -2654,28 +2584,50 @@ h3.direct-messages {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 2rem;
+    gap: 3rem;
+    margin-top: 38px; 
+    position: relative;
 }
 
-.feature-item {
-    background: #f8f8f8;
-    border-radius: 12px;
-    padding: 20px;
-    width: 250px;
-    text-align: center;
-    transition: transform 0.3s ease, background 0.3s ease, color 0.3s ease;
-    cursor: pointer;
+.feature-item {      
+    background-color: #e0f0ff;   
+    border-radius: 20px;
+    overflow: hidden;             
+    position: relative; 
+    transition: transform 0.3s ease;
+    border: 2px solid #ffffff;
+     background-color: #e0f0ff; 
+    border-radius: 10px;
+    padding: 15px;
+    transition: transform 0.3s, box-shadow 0.3s; 
+    max-height: 250px;
 }
 
 .feature-item:hover {
-    transform: scale(1.1); /* Enlarge on hover */
-    background: linear-gradient(135deg, #6a11cb, #2575fc); /* Gradient background */
-    color: #fff;
+    transform: scale(1.1); /* Only scale the card */
 }
 
-.feature-item:hover .icon-circle i {
-    color: #fff; /* Icon color changes on hover */
+/* Glow effect using pseudo-element */
+.feature-item::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 280px;
+    height: 100px;
+    background: linear-gradient(to right, var(--primary-color), #e6e3ff, #b2ffb1);
+    filter: blur(70px);
+    transform: translate(-50%, -50%);
+    z-index: -1;
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
+
+.feature-item:hover::before {
+    opacity: 1; /* Show glow on hover */
+}
+
 
 .icon-circle {
     width: 60px;
@@ -2690,10 +2642,15 @@ h3.direct-messages {
 }
 
 .feature-item:hover .icon-circle {
-    background: rgba(255, 255, 255, 0.2);
+    background-color: #030657; 
+    transition: background-color 0.3s ease; /* Smooth transition */
 }
+
 
 .feature-item h4, 
 .feature-item p {
     transition: color 0.3s ease;
+     position: relative;  
+    z-index: 2;   
 }
+
