@@ -2165,6 +2165,87 @@ html {
     opacity:0;
 }
 
+/* Admin reports interface buttons */
+.delete-btn {
+    color:white;
+    background-color:rgb(238, 54, 54);
+    padding:10px;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor:pointer;
+    transition: all 0.2s;
+}
+
+.delete-btn:hover {
+    color:white;
+    background-color:rgb(211, 42, 42); 
+}
+
+.reactivate-btn {
+    color:white;
+    background-color:rgb(57, 200, 0);
+    padding:10px;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor:pointer;
+    transition: all 0.2s;
+}
+
+.reactivate-btn:hover {
+    color:white;
+    background-color:rgb(2, 174, 2);
+}
+
+.view-btn {
+    color:white;
+    background-color:#17a2b8;
+    padding-top:5px;
+    padding-bottom:6px;
+    padding-left:10px;
+    padding-right:10px;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor:pointer;
+    transition: all 0.2s;
+}
+
+.view-btn:hover {
+    color:white;
+    background-color:#138496;
+}
+
+.suspend-btn {
+    color:white;
+    background-color:rgb(158, 158, 158);
+    padding:10px;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor:pointer;
+    transition: all 0.2s;
+}
+
+.suspend-btn:hover {
+    color:white;
+    background-color:#7e7e7e;
+}
+
+
+.unsuspend-btn {
+    color:white;
+    background-color:rgb(158, 158, 158);
+    padding:10px;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor:pointer;
+    transition: all 0.2s;
+}
+
+.unsuspend-btn:hover {
+    color:white;
+    background-color:#7e7e7e;
+}
+
+
 .profile {
     max-width: 900px;
     margin: 30px auto;

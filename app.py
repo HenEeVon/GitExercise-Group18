@@ -1424,7 +1424,7 @@ def unsuspend_user(email):
     db.session.commit()
 
     flash(f"User {user.email} has been unsuspended.", "success")
-    return redirect(url_for("admin_dashboard"))
+    return redirect(url_for("admin_reports"))
 
 
 

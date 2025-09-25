@@ -5,6 +5,20 @@
 <div class="container">
     <h1>Admin Reports</h1>
 
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="popup">
+                    <div class="popup-content {{ category if category else '' }}">
+                        <p>{{ message }}</p>
+                        <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     <!-- Flagged Posts -->
     {% if flagged_posts %}
         <h3>Flagged Posts</h3>
@@ -40,13 +54,13 @@
                     <td>
                         {% if post.is_hidden %}
                             <form action="{{ url_for('reactivate_post', post_id=post.post_id) }}" method="POST" style="display:inline;">
-                                <button class="btn btn-success btn-sm">Reactivate</button>
+                                <button class="btn reactivate-btn">Reactivate</button>
                             </form>
                         {% endif %}
                         <form action="{{ url_for('delete', post_id=post.post_id) }}" method="POST" style="display:inline;">
                             <button class="btn delete-btn">Delete</button>
                         </form>
-                        <a href="{{ url_for('post_detail', post_id=post.post_id, readonly=1, from_reports=1) }}" class="btn btn-info">View</a>
+                        <a href="{{ url_for('post_detail', post_id=post.post_id, readonly=1, from_reports=1) }}" class="btn view-btn">View</a>
 
                         {% if post.user %}
                             {% if post.user.is_suspended %}
