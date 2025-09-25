@@ -74,7 +74,7 @@
                         </div>
                     {% else %}
                         <!-- Step 2: Admin request details -->
-                        <div class="login-box">
+                        <div class="login-box {% if existing_user %}existing-user{% endif %}">
                             <form action="{{ url_for('request_admin') }}" method="POST">
                                 <h2 class="form-title">Request Admin Access</h2>
 
@@ -87,14 +87,19 @@
                                     <input type="email" value="{{ email }}" readonly class="readonly-input">
                                 </p>
 
-                                <!-- Existing User -->
                                 {% if existing_user %}
+                                    <!-- Existing user: only show name readonly -->
                                     <p class="colortext">
                                         <strong>Full Name</strong>
                                         <input type="text" value="{{ existing_user.name }}" readonly class="readonly-input">
                                     </p>
+
+                                    <p class="colortext">
+                                        <strong>Join Reason</strong>
+                                        <input type="text" name="join_reason" required>
+                                    </p>
                                 {% else %}
-                                    <!-- New User Fields -->
+                                    <!-- New user: need to fill in these fields -->
                                     <p class="colortext">
                                         <strong>Full Name</strong>
                                         <input type="text" name="name" required>
@@ -105,24 +110,20 @@
                                         <input type="password" name="password" required>
                                     </p>
 
-                                        <!-- Join Reason -->
                                     <p class="colortext">
                                         <strong>Join Reason</strong>
                                         <input type="text" name="join_reason" required>
                                     </p>
 
                                     <p class="colortext">
-                                <strong>Security Question (For Reset Password)</strong>
-                                <select name="security_question" class="form-select" required>
-                                    <option value="" disabled selected>-- Select a security question --</option>
-                                    {% for key, text in question.items() %}
-                                        <option value="{{ key }}"
-                                            {% if user and user.security_question == key %} selected {% endif %}>
-                                            {{ text }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            </p>
+                                        <strong>Security Question (For Reset Password)</strong>
+                                        <select name="security_question" class="form-select" required>
+                                            <option value="" disabled selected>-- Select a security question --</option>
+                                            {% for key, text in question.items() %}
+                                                <option value="{{ key }}">{{ text }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </p>
 
                                     <p class="colortext">
                                         <strong>Security Answer (For Reset Password)</strong>
@@ -136,6 +137,7 @@
                                 </div>
                             </form>
                         </div>
+
                     {% endif %}
 
                 </div>
