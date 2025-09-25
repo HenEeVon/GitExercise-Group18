@@ -253,7 +253,19 @@ def save_profile_picture(uploaded, old_filename=None):
     if old_filename and old_filename != "default_image.png":
         old_path = os.path.join(folder, old_filename)
         if os.path.exists(old_path):
-            os.remove(old_path)
+            try:
+                os.remove(old_path)
+            except PermissionError:
+                tmp = old_path + ".old"
+                try:
+                    os.replace(old_path, tmp)
+                    os.remove(tmp)
+                except Exception:
+                    pass
+    try:
+        uploaded.stream.seek(0)
+    except Exception:
+        pass
 
     uploaded.save(path)
     return filename

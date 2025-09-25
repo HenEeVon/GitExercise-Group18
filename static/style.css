@@ -2251,6 +2251,7 @@ html {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
     margin-bottom: 20px;
 }
 
@@ -2261,54 +2262,77 @@ html {
     margin-bottom: 14px;
 }
 
-.delete-all-btn {
-    background: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 15px;
-    margin: 15px;
-    font-size: 14px;
-    cursor: pointer;
-}
-
-.single-delete-btn {
-    background: transparent;
-    border: none;
-    color: gray;
+.single-delete-btn.xsmall {
+    padding: 4px 8px;
     font-size: 12px;
+    border-radius: 6px;
     cursor: pointer;
-    text-decoration: underline;
 }
 
 .notifications-list {
     list-style: none;
     padding: 0;
-    margin: 20px 0;
+    margin: 10px 0 30px;
 }
 
-.notification {
-    background: #f9f9f9;
-    border: 1px solid #ddd;
-    padding: 10px 15px;
+.notifications-list .notification {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: #fff;
+    border: 1px solid #e9e9f3;
+    border-radius: 12px;
+    padding: 12px 14px;
     margin-bottom: 10px;
-    border-radius: 6px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
     word-wrap: break-word;
     overflow-wrap: break-word;
-    max-width: 100%;     
+    max-width: 100%;
+}
+
+.notifications-list .notification:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 
 .notification.unread {
-    background: #eef6ff;
+    background: #f6f9ff;
+    border-color: #dfe7ff;
+}
+
+.notif-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
+}
+
+.notif-icon {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #eef2ff;
+    box-shadow: inset 0 0 0 2px #e1e6ff;
+    font-size: 18px;
+    line-height: 1;
 }
 
 .notification.read {
     color: #555;
 }
 
-.notification a {
-    color: #007bff;
+.notif-text a {
+    color: var(--primary-color);
     text-decoration: none;
+}
+
+.notif-text a:hover {
+    border-bottom-color: var(--primary-color);
 }
 
 .notification .time {
@@ -2316,6 +2340,18 @@ html {
     font-size: 12px;
     color: gray;
     margin-top: 4px;
+
+.notif-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.notif-actions form {
+    display: inline;
+}
+    
 }.admincon{
     padding:30px;
 }
