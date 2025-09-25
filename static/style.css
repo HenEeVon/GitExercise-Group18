@@ -106,19 +106,21 @@
     font-size: 1.2rem;
     font-weight: bold;
     margin-bottom: 10px;
+    margin-top: 10px;
     word-break: break-word; 
     overflow-wrap: break-word;
     white-space: normal;        
     max-width: 100%;
     text-transform: uppercase;
     letter-spacing: 0.5px; 
+    color:#02254d;
 }
 
 /* Meta info */
 .meta {
     font-size: 0.9rem;
     color: #666;
-    margin: 5px 0;
+    margin: 3px 0;
 }
 .author {
     font-size: 0.9rem;
@@ -2826,5 +2828,41 @@ h3.direct-messages {
     transition: color 0.3s ease;
      position: relative;  
     z-index: 2;   
+}
+
+.solid-line2 {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 3px 0;
+}
+
+.author-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px; 
+     position: relative;
+}
+
+.author-link {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+    color: inherit;
+}
+
+.author-menu {
+    margin-left: auto; /* pushes the three-dot menu to the far right */
+}
+
+
+details > summary {
+    list-style: none;      
+    -webkit-appearance: none; 
+    appearance: none;        
+}
+
+details > summary:focus {
+    outline: none;
 }
 

@@ -49,12 +49,12 @@
     <!-- Event date -->
     <p class="meta3">
         <i class="fa-solid fa-calendar"></i>
-        Event Date: {{ post.event_date.strftime('%d/%m/%Y') if post.event_date else 'N/A' }} 
+        Activity Date: {{ post.event_date.strftime('%d/%m/%Y') if post.event_date else 'N/A' }} 
     </p>
 
     <p class="meta3">
         <i class="fa-solid fa-clock"></i>
-        Event Time:
+        Activity Time:
         {{ post.start_time.strftime('%H:%M') if post.start_time else 'N/A' }} -
         {{ post.end_time.strftime('%H:%M') if post.end_time else 'N/A' }}
     </p>
