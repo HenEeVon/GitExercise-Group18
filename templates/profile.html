@@ -28,12 +28,31 @@
     </div>
 
     <!-- Profile Info -->
-    <h2 class="section-title">Account Info</h3>
-    <div class="profile-info">
-        <p><strong>Full name:</strong> {{ current_user.name }}</p>
-        <p><strong>Gender:</strong> {{ current_user.gender }}</p>
-        <p><strong>Fitness Level:</strong> {{ current_user.sport_level }}</p>
-        <p><strong>Bio:</strong> {{ current_user.bio or "-" }}</p>
+    <h2 class="section-title">Account Info</h2>
+    <div class="profile-info info-grid">
+        <div class="info-row">
+            <div class="info-icon"><i class="fa-solid fa-user"></i></div>
+            <div class="info-label">Full name</div>
+            <div class="info-value">{{ current_user.name }}</div>
+        </div>
+
+        <div class="info-row">
+            <div class="info-icon"><i class="fa-solid fa-venus-mars"></i></div>
+            <div class="info-label">Gender</div>
+            <div class="info-value">{{ current_user.gender }}</div>
+        </div>
+
+        <div class="info-row">
+            <div class="info-icon"><i class="fa-solid fa-dumbbell"></i></div>
+            <div class="info-label">Fitness Level</div>
+            <div class="info-value">{{ current_user.sport_level }}</div>
+        </div>
+
+        <div class="info-row info-row-bio">
+            <div class="info-icon"><i class="fa-solid fa-message"></i></div>
+            <div class="info-label">Bio</div>
+            <div class="info-value">{{ current_user.bio or "-" }}</div>
+        </div>
     </div>
 
     <!-- Recent Posts -->
