@@ -2301,8 +2301,8 @@ html {
 }
 
 .notification.unread {
-    background: #f6f9ff;
-    border-color: #dfe7ff;
+    background: #f0f6ff;
+    border-color: #cfdfff;
 }
 
 .notif-left {
@@ -2355,6 +2355,23 @@ html {
 
 .notif-actions form {
     display: inline;
+}
+
+.no-notif {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    border-radius: 12px;
+    background: white;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 30px;
+    color: gray;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    animation: fadeIn 0.4s ease-in-out;
 }
     
 .admincon{
