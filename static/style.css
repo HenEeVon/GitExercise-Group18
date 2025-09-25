@@ -146,6 +146,18 @@
 .btn-primary:hover {
     background: #2575fc;
 }
+
+.btn-secondary {
+    background: #3183ff;
+    color: white;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #2575fc;
+    
+}
+
 .btn-outline {
     border: 1px solid #2575fc;
     color: #2575fc;
@@ -322,6 +334,7 @@ details[open] .menu-dropdown {
     display: block;
     width: 100%;
     text-align: left;
+    text-decoration: none; 
     padding: 10px 14px;
     background: none;
     border: none;
@@ -1961,13 +1974,25 @@ html {
 .styled-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 600px;
-    font-size: 0.95rem;
+    margin-bottom: 30px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
 .styled-table th, .styled-table td {
     padding: 12px 15px;
     text-align: left;
+    vertical-align: top;
+    word-wrap: break-word;    
+    overflow-wrap: break-word; 
+    white-space: normal; 
+}
+
+/* Optional: control how wide the title column can get */
+.styled-table td:first-child {
+    max-width: 300px;   /* adjust as needed */
 }
 
 .styled-table thead tr {
@@ -2268,6 +2293,9 @@ html {
     padding: 10px 15px;
     margin-bottom: 10px;
     border-radius: 6px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;     
 }
 
 .notification.unread {
