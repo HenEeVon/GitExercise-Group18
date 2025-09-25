@@ -3,7 +3,20 @@
 
 {% block content %}
 <div class="container">
-    <h1>Notifications</h1>
+    <div class="notifications-header">
+        <h1>Notifications</h1>
+        <div class="action-row">
+            <!--Mark all as read button-->
+            <form method="post" action="{{ url_for('notifications_read_all') }}">
+                <button type="submit" class="btn">Mark all as read</button>
+            </form>
+
+            <!--Delete all button-->
+            <form method="post" action="{{ url_for('notifications_clear') }}" onsubmit="return confirm('Are you sure you want to delete all notifications?');">
+                <button type="submit" class="delete-all-btn">Delete all</button>
+            </form>
+        </div>
+    </div>
 
     {% if rows %}
         <ul class="notifications-list">
@@ -19,13 +32,14 @@
                             {{ notif.local_time.strftime('%d/%m/%Y %H:%M') }}
                         {% endif %}
                     </span>
+
+                    <!--Delete single notification-->
+                    <form method="post" action="{{ url_for('notifications_delete', notif_id=notif.id) }}">
+                        <button type="submit" class="single-delete-btn">delete</button>
+                    </form>
                 </li>
             {% endfor %}
         </ul>
-
-        <form method="post" action="{{ url_for('notifications_read_all') }}">
-            <button type="submit" class="btn">Mark all as read</button>
-        </form>
     {% else %}
         <p>No notifications yet.</p>
     {% endif %}

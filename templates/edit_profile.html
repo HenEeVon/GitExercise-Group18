@@ -6,9 +6,11 @@
 <div class="container">
     <h1>Edit Profile</h1>
 
+    <!--Profile edit form, multipart because includes file upload-->
     <form method="POST" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
 
+        <!--User's full name-->
         <div class="form-group">
             {{ form.name.label }}<br>
             {{ form.name(class="form-control") }}
@@ -16,35 +18,56 @@
                 <span class="text-danger">{{ error }}</span>
             {% endfor %}
         </div>
+        
+        <!--Gender with radio button option-->
+       <div class="gender-form">
+            <label class="gender-label">Gender</label>
+            <div class="gender-options">
+                <label class="gender-option">
+                    <input type="radio" name="gender" value="Male" {% if form.gender.data == "Male" %}checked{% endif %}> Male
+                </label>
+                <label class="gender-option">
+                    <input type="radio" name="gender" value="Female" {% if form.gender.data == "Female" %}checked{% endif %}> Female
+                </label>
+            </div>
+       </div>
 
-        <div class="form-group">
-            {{ form.gender.label }}<br>
-            {{ form.gender(class="form-check-input") }}
-            {% for error in form.gender.errors %}
-                <span class="text-danger">{{ error }}</span>
-            {% endfor %}
+       <!--Sport level dropdown-->
+        <div>
+            {{ form.sport_level.label }}<br>
+            {{ form.sport_level(class="form-select") }}
         </div>
 
+        <!--Bio-->
         <div class="form-group">
             {{ form.bio.label }}<br>
             {{ form.bio(class="form-control", rows=5) }}
         </div>
 
+        <!--Security question-->
         <div class="form-group">
             {{ form.security_question.label }}<br>
-            {{ form.security_question(class="form-control") }}
+            <div class="security-option">
+                {{ form.security_question(class="form-select") }}
+            </div>
         </div>
 
+        <!--Security answer-->
         <div class="form-group">
             {{ form.security_answer.label }}<br>
             {{ form.security_answer(class="form-control") }}
         </div>
 
+        <!--Upload new profile picture-->
         <div class="form-group">
             {{ form.picture.label }}<br>
             {{ form.picture(class="form-control-file") }}
+            {% for error in form.picture.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
         </div>
 
+        <!--Submit or Cancel editing the form-->
         <div class="form-group">
             {{ form.submit(class="btn btn-primary") }}
             <a href="{{ url_for('profile') }}" class="btn btn-secondary">Cancel</a>
