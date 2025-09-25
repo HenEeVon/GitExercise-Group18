@@ -3,8 +3,10 @@
 
 {% block content %}
 <div class="container">
-    <div class="notifications-header">
-        <h1>Notifications</h1>
+    <div class="welcome">
+        <h1>🔔 Notifications</h1>
+        <p>Stay updated with your latest activity</p>
+    </div>
         <div class="action-row">
             <!--Mark all as read button-->
             <form method="post" action="{{ url_for('notifications_read_all') }}">
@@ -16,7 +18,6 @@
                 <button type="submit" class="btn btn-outline small">Delete all</button>
             </form>
         </div>
-    </div>
 
     {% if rows %}
         <ul class="notifications-list">
@@ -55,7 +56,7 @@
                     <!--Delete single notification-->
                     <div class="notif-actions">
                         <form method="post" action="{{ url_for('notifications_delete', notif_id=notif.id) }}">
-                            <button type="submit" class="single-delete-btn xsmall">Delete</button>
+                            <button type="submit" class="single-delete-btn">x</button>
                         </form>
                     </div>
                 </li>

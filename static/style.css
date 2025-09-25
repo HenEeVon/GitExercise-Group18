@@ -2247,26 +2247,30 @@ html {
     border-radius: 12px;
 }
 
-.notifications-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 20px;
-}
 
 .action-row {
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
     gap: 10px;
     margin-bottom: 14px;
 }
 
-.single-delete-btn.xsmall {
-    padding: 4px 8px;
-    font-size: 12px;
-    border-radius: 6px;
+.single-delete-btn {
+    background: transparent;
+    border: none;
+    color: #999;
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 1;
     cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 50%;
+    transition: background 0.2s, color 0.2s;
+}
+
+.single-delete-btn {
+    background: #f0f0f0;
+    color: gray;
 }
 
 .notifications-list {
@@ -2340,6 +2344,7 @@ html {
     font-size: 12px;
     color: gray;
     margin-top: 4px;
+}
 
 .notif-actions {
     display: flex;
@@ -2352,7 +2357,7 @@ html {
     display: inline;
 }
     
-}.admincon{
+.admincon{
     padding:30px;
 }
 
