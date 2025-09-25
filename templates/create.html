@@ -64,7 +64,9 @@
             {{ form.start_time.label(class="form-label") }}
             {{ form.start_time(class="form-control") }}
             {% for error in form.start_time.errors %}
-                <span class="text-danger">{{ error }}</span>
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i> {{ error }}
+                </div>
             {% endfor %}
         </div>
 
@@ -73,9 +75,12 @@
             {{ form.end_time.label(class="form-label") }}
             {{ form.end_time(class="form-control") }}
             {% for error in form.end_time.errors %}
-                <span class="text-danger">{{ error }}</span>
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i> {{ error }}
+                </div>
             {% endfor %}
         </div>
+
 
         <!-- Participants -->
         <div class="form-group">
@@ -88,8 +93,8 @@
 
         <!-- Submit -->
         <div class="form-group">
-            {{ form.submit(class="btn btn-primary") }}
-            <a href="{{ url_for('posts') }}" class="btn btn-secondary">Cancel</a>
+            {{ form.submit(class="btn post-btn") }}
+            <a href="{{ url_for('posts') }}" class="btn cancel-btn">Cancel</a>
         </div>
     </form>
 </div>

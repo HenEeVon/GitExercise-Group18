@@ -670,7 +670,7 @@ def delete(post_id):
     if current_user.is_authenticated:
         is_author = (post.email == current_user.email)
     elif session.get("admin_email"):
-        is_author = True  # ✅ admins can delete any post
+        is_author = True  #  admins can delete any post
     else:
         is_author = False
 
@@ -704,7 +704,7 @@ def report_post(post_id):
 
     post = Posts.query.get_or_404(post_id)
 
-    # ✅ reporter can be either user.email or admin_email
+    # reporter can be either user.email or admin_email
     reporter_email = current_user.email if current_user.is_authenticated else session.get("admin_email")
 
     # Prevent duplicate reports by same reporter
@@ -859,7 +859,7 @@ def on_send_message(data):
     if not (room and text and post_id and partner):
         return
 
-    # ✅ Support both users and admins as senders
+    # Support both users and admins as senders
     if current_user.is_authenticated:
         current_email = current_user.email.lower()
         sender_email = current_user.email
@@ -1041,6 +1041,22 @@ def profile_edit():
 
     return render_template("edit_profile.html", form=form, image_url=image_url, question=question)
 
+
+
+def save_picture(form_picture):
+    random_hex = secrets.token_hex(8)
+    _, f_ext = os.path.splitext(form_picture.filename)
+    picture_fn = random_hex + f_ext.lower()
+    picture_path = os.path.join(app.root_path, "static/profile_pics", picture_fn)
+
+    try:
+        img = Image.open(form_picture)
+        img.thumbnail((256, 256))
+        img.save(picture_path, optimize=True)
+    except Exception as e:
+        raise ValueError("Invalid image file") from e
+
+    return picture_fn
 # Join Activity
 @app.route("/activityrequest/<int:post_id>", methods=["POST"])
 @login_required
@@ -1054,7 +1070,7 @@ def activityrequest(post_id):
     # Prevent duplicate request
     existing = JoinActivity.query.filter_by(email=current_user.email, post_id=post.post_id).first()
     if existing:
-        flash("You already requested this activity. Please wait for the post owner to approve")
+        flash("You already requested this activity.")
     else:
         join_act = JoinActivity(email=current_user.email, post_id=post.post_id)
         db.session.add(join_act)
@@ -1167,8 +1183,8 @@ def request_admin():
             # Existing user: take info from User table
             password_hash = existing_user.password
             name = existing_user.name
-            sec_question = existing_user.security_question
-            sec_answer = existing_user.security_answer
+            sec_question = existing_user.security_question #pass as hidden input as existing user alr key in whe register
+            sec_answer = existing_user.security_answer #hidden input
             join_reason = request.form.get("join_reason", "").strip()
         else:
             # New user must provide all info
