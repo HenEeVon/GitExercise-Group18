@@ -20,11 +20,11 @@
     {% endwith %}
 
     <!-- Profile picture and Name -->
-    <div class="profile-header">
+    <div class="welcome profile-header">
         <img class="avatar" src="{{ url_for('static', filename='profile_pics/' ~ (user.image_file or 'default.png')) }}">
         <h1>{{ current_user.name }}</h1>
         <p class="email">{{ current_user.email }}</p>
-        <a href="{{ url_for('profile_edit') }}" class="btn">Edit Profile</a>
+        <a href="{{ url_for('profile_edit') }}" class="btn btn-primary">Edit Profile</a>
     </div>
 
     <!-- Profile Info -->

@@ -318,6 +318,7 @@ details[open] .menu-dropdown {
 /* Menu items */
 .menu-link,
 .menu-dropdown button {
+    text-decoration: none;
     display: block;
     width: 100%;
     text-align: left;
@@ -2150,11 +2151,11 @@ html {
 .profile-header h1 {
     font-size: 25px;
     margin: 8px 0;
-    color: #333;
+    color: white;
 }
 
 .profile-header .email {
-    color: #666;
+    color: white;
     font-size: 15px;
     margin-bottom: 10px;
     display: block;
@@ -2166,6 +2167,7 @@ html {
     border-radius: 10px;
     border: 1px solid #ddd;
     margin-bottom: 25px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .profile-info h3 {
