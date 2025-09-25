@@ -19,7 +19,7 @@
                 <details>
                     <summary class="search-toggle">Search</summary>
                     <form method="GET" action="{{ url_for('search') }}">
-                        <input type="text" name="sport" placeholder="Search by category..." value="{{ request.args.get('sport','') }}">
+                        <input type="text" name="sport" placeholder="Search by keyword..." value="{{ request.args.get('sport','') }}">
                         <input type="date" name="date" value="{{ request.args.get('date','') }}">
                         <button type="submit" class="search-btn">Search</button>
                     </form>
