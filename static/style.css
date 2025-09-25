@@ -2266,6 +2266,9 @@ html {
     padding: 10px 15px;
     margin-bottom: 10px;
     border-radius: 6px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;     
 }
 
 .notification.unread {
