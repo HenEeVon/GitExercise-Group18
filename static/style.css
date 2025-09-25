@@ -224,7 +224,11 @@ input[type="submit"].post-btn:hover {
 
 
 .delete-btn:hover {
-    background: #a71d2a;
+    color: #a71d2a;
+}
+
+.report-btn:hover {
+    color: #a71d2a;
 }
 
 
@@ -751,6 +755,24 @@ body.register-page .big-cta-btn {
     color:red;
     font-weight: bold;
 }
+
+.error-message {
+    margin-top: 4px;
+    padding: 6px 10px;
+    background: #ffe5e5;
+    border-left: 4px solid #e63946;
+    color: #a4161a;
+    font-size: 0.9rem;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.error-message i {
+    color: #e63946;
+}
+
 
 .reset{
     color:rgb(213, 0, 0);
