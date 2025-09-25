@@ -28,8 +28,8 @@
     </div>
 
     <!-- Profile Info -->
+    <h2 class="section-title">Account Info</h3>
     <div class="profile-info">
-        <h3>Account Info</h3>
         <p><strong>Full name:</strong> {{ current_user.name }}</p>
         <p><strong>Gender:</strong> {{ current_user.gender }}</p>
         <p><strong>Fitness Level:</strong> {{ current_user.sport_level }}</p>
@@ -38,7 +38,7 @@
 
     <!-- Recent Posts -->
     <div class="profile-posts">
-        <h3>Recent Posts</h3>
+        <h2 class="section-title">Recent Posts</h2>
 
         {% if recent_posts %}
             <div class="posts-grid">

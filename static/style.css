@@ -2128,9 +2128,9 @@ html {
 }
 
 .profile {
-    max-width: 900px;
-    margin: 30px auto;
-    padding: 0 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
 }
 
 .profile-header {
@@ -2474,7 +2474,7 @@ input[type="file"] {
     margin-top: 20px;
 }
 
-.btnloc, .btnpost, .btnpost2, .btnpost5 {
+.btnloc, .btnpost, .btnpost2, .btnpost5, .input.btnpost[type="submit"] {
     font-size: 12px;
     font-weight: 500;
     text-transform: uppercase;
@@ -2484,7 +2484,14 @@ input[type="file"] {
     border-radius: 50px;
     margin-top: 20px;
     text-decoration: none;
+    display: inline-block;
+    width: auto;
     color: #2800c7;
+}
+
+.btnpost
+input.btnpost[type="submit"] {
+    line-height: 1px;
 }
 
 .btnloc, .btnpost {
