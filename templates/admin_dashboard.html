@@ -52,9 +52,8 @@
                     <td>{{ user.email }}</td>
                     <td>{{ user.name }}</td>
                     <td class="action-buttons">
-                        <form action="{{ url_for('delete_user', email=user.email) }}" method="POST" style="display:inline;">
-                            <button type="submit" class="user-delete-btn">Delete</button>
-                        </form>
+                        <a href="{{ url_for('profile_page', email=user.email, readonly=1, from_dashboard=1) }}" 
+                        class="btn btn-info">View</a>
                     </td>
                 </tr>
                 {% endfor %}

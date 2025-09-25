@@ -2039,6 +2039,14 @@ html {
     transition: background-color 0.2s, transform 0.2s;
 }
 
+.action-buttons a,
+.action-buttons button {
+    padding: 8px 12px !important;
+    min-height: 38px;
+    line-height: 1.2;
+}
+
+
 .action-buttons .btn-info:hover,
 .action-buttons .delete-btn:hover,
 .action-buttons .user-delete-btn:hover {
@@ -2060,6 +2068,12 @@ html {
     background-color: #138496;
 }
 
+.action-buttons .btn-info,
+.action-buttons .delete-btn {
+    padding: 8px 12px; 
+    min-height: 38px;    
+    line-height: 1.2;    
+}
 
 .action-buttons .user-delete-btn {
     color:white;

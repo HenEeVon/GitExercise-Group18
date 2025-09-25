@@ -22,18 +22,21 @@
     <!-- Profile picture and Name -->
     <div class="profile-header">
         <img class="avatar" src="{{ url_for('static', filename='profile_pics/' ~ (user.image_file or 'default.png')) }}">
-        <h1>{{ current_user.name }}</h1>
-        <p class="email">{{ current_user.email }}</p>
-        <a href="{{ url_for('profile_edit') }}" class="btn">Edit Profile</a>
+        <h1>{{ user.name }}</h1>
+        <p class="email">{{ user.email }}</p>
+
+        {% if current_user.is_authenticated and current_user.email == user.email %}
+            <a href="{{ url_for('profile_edit') }}" class="btn">Edit Profile</a>
+        {% endif %}
     </div>
 
     <!-- Profile Info -->
     <div class="profile-info">
         <h3>Account Info</h3>
-        <p><strong>Full name:</strong> {{ current_user.name }}</p>
-        <p><strong>Gender:</strong> {{ current_user.gender }}</p>
-        <p><strong>Fitness Level:</strong> {{ current_user.sport_level }}</p>
-        <p><strong>Bio:</strong> {{ current_user.bio or "-" }}</p>
+        <p><strong>Full name:</strong> {{ user.name }}</p>
+        <p><strong>Gender:</strong> {{ user.gender }}</p>
+        <p><strong>Fitness Level:</strong> {{ user.sport_level }}</p>
+        <p><strong>Bio:</strong> {{ user.bio or "-" }}</p>
     </div>
 
     <!-- Recent Posts -->
@@ -85,9 +88,7 @@
                     </p>
 
                     <p class="meta">
-                        Posted on:
-                        {{ post.date_posted.strftime('%d/%m/%Y %H:%M') if post.date_posted else 'N/A' }}
-                        by {{ post.user.name if post.user else post.email }}
+                        Posted by {{ post.user.name if post.user else post.email }}
                     </p>
 
                     <a href="{{ url_for('post_detail', post_id=post.post_id) }}" class="btn">Find Out More</a>

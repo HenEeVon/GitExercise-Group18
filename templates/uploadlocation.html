@@ -30,6 +30,7 @@
                 {% if current_user.role == 'admin' %}
                     {% if session.get('as_admin', True) %}
                         <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                        <a href="{{ url_for('admin_reports') }}">Reports</a>
                         <a href="{{ url_for('admin_approval') }}">Admin Approvals</a>
                         <a href="{{ url_for('upload_location_csv') }}">Upload Location</a>
                         <a href="{{ url_for('switch_to_user') }}">User Panel</a>
