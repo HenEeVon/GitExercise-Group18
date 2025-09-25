@@ -189,7 +189,7 @@
     <hr>
 
     <!-- Owner-specific direct messages -->
-    {% if current_user.is_authenticated and current_email == owner_email %}
+    {% if current_user.is_authenticated and current_email == owner_email and not readonly %}
     <h3 class="direct-messages">Direct Messages</h3>
         {% if owner_conversations %}
             <div class="direct-messages">
