@@ -3,7 +3,7 @@
 {% block title %}Chat{% endblock %}
 
 {% block content %}
-const socket = io("https://ebfit.onrender.com");
+
 <div class="chat-container">
     <div class="chat-header">
 
@@ -52,7 +52,10 @@ const socket = io("https://ebfit.onrender.com");
 
 {% block page_scripts %}
 <script>
-    const socket = io();
+    const socket = io("https://ebfit.onrender.com", {
+    transports: ["websocket", "polling"]
+});
+
     const chat = document.getElementById('chat');
     const room = chat.dataset.room;
     const me = chat.dataset.username;
