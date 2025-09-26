@@ -927,7 +927,7 @@ section {
     max-width: 600px;  
     width: 100%;        
     height: auto;      
-    filter: drop-shadow(0 0 100px #0079fb);
+    filter: drop-shadow(0 0 100px #0079fb9b);
 
     /* two animations with separate delays */
     animation: 
