@@ -34,7 +34,7 @@
 
                     {% set author = post.user %}
                     {% set author_name = author.name if author else post.email %}
-                    {% set author_image = author.image_file if author and author.image_file else 'default.png' %}
+                    {% set author_image = author.image_file if author and author.image_file else 'default_image.png' %}
                     {% set author_email = author.email if author else post.email %}
 
                     <!-- Author and Menu -->
