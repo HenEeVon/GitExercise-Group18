@@ -97,7 +97,7 @@
                         </p>
 
                         <!-- Actions -->
-                        <a href="{{ url_for('post_detail', post_id=post.post_id) }}" class="btn btn-outline">Find Out More</a>
+                        <a href="{{ url_for('post_detail', post_id=post.post_id, next=request.path) }}" class="btn btn-outline">Find Out More</a>
 
                     </div>
                 {% endfor %}

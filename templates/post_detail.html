@@ -5,12 +5,13 @@
 {% block content %}
 <div class="container5">
 
-
+    
 {% if not readonly and not from_dashboard and not from_reports %}
-    <a href="{{ url_for('posts') }}" class="backbtn" title="Back to Activity Posts">
+    <a href="{{ next_url }}" class="backbtn" title="Back">
         <i class="fa-solid fa-circle-xmark"></i>
     </a>
 {% endif %}
+
 
 
     {% set owner_email = post.email %}

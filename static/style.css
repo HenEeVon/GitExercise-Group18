@@ -348,6 +348,7 @@ details[open] .menu-dropdown {
 
 .menu-link:hover,
 .menu-dropdown button:hover {
+    color: rgb(204, 0, 0);
     background: #e2e2e2;
 }
 

@@ -57,9 +57,14 @@
                                 <button class="btn reactivate-btn">Reactivate</button>
                             </form>
                         {% endif %}
-                        <form action="{{ url_for('delete', post_id=post.post_id) }}" method="POST" style="display:inline;">
+                        {% set next_url = url_for('admin_reports') %}
+                        <form action="{{ url_for('delete', post_id=post.post_id, admin=1, next=next_url) }}" 
+                            method="POST" style="display:inline;">
                             <button class="btn delete-btn">Delete</button>
                         </form>
+
+
+
                         <a href="{{ url_for('post_detail', post_id=post.post_id, readonly=1, from_reports=1) }}" class="btn view-btn">View</a>
 
                         {% if post.user %}
