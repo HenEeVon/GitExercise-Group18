@@ -1935,7 +1935,7 @@ html {
 .styled-table th, .styled-table td {
     padding: 12px 15px;
     text-align: left;
-    vertical-align: top;
+    vertical-align: middle;
     word-wrap: break-word;    
     overflow-wrap: break-word; 
     white-space: normal; 
@@ -1971,37 +1971,35 @@ html {
 
 /* Action Buttons */
 .action-buttons {
-    display: flex;       
-    gap: 5px;             
-    align-items: stretch; 
+    display: flex;                    
+    align-items: center; 
+    gap: 6px;
 }
 
-
-.action-buttons a {
-    padding: 8px 12px;
+.admin-dashboard .action-buttons a,
+.admin-dashboard .action-buttons button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    padding: 0px 14px;
+    margin: 0;
+    line-height: 1;
     border-radius: 5px;
-    text-decoration: none;
     color: #fff;
-    font-size: 0.9rem;
-    display: flex;          
-    align-items: center;    
-    justify-content: center; 
-    min-height: 38px;       
+    cursor: pointer;
+    border: none;
     box-sizing: border-box;
     transition: background-color 0.2s, transform 0.2s;
 }
 
-.action-buttons a,
-.action-buttons button {
-    padding: 8px 12px !important;
-    min-height: 38px;
-    line-height: 1.2;
+.action-buttons form {
+    margin: 0;
+    display: contents;
 }
 
-
 .action-buttons .btn-info:hover,
-.action-buttons .delete-btn:hover,
-.action-buttons .user-delete-btn:hover {
+.action-buttons .delete-btn:hover {
     transform: translateY(-2px);
 }
 
@@ -2026,35 +2024,6 @@ html {
     min-height: 38px;    
     line-height: 1.2;    
 }
-
-.action-buttons .user-delete-btn {
-    color:white;
-    background-color:rgb(238, 54, 54);
-    padding:10px;
-    border-radius: 5px;
-    text-decoration: none;
-    cursor:pointer;
-    transition: all 0.2s;
-}
-
-.action-buttons .user-delete-btn:hover {
-    background-color:rgb(211, 42, 42);
-}
-
-.action-buttons .delete-btn {
-    color:white;
-    background-color:rgb(238, 54, 54);
-    padding:10px;
-    border-radius: 5px;
-    text-decoration: none;
-    cursor:pointer;
-    transition: all 0.2s;
-}
-
-.action-buttons .delete-btn:hover {
-    background-color:rgb(211, 42, 42);
-}
-
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
