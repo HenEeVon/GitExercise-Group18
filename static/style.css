@@ -2825,7 +2825,7 @@ h3.direct-messages {
     position: relative; 
     transition: transform 0.3s ease;
     border: 2px solid #ffffff;
-     background-color: #e0f0ff; 
+    background-color: #e0f0ff; 
     border-radius: 10px;
     padding: 15px;
     transition: transform 0.3s, box-shadow 0.3s; 
