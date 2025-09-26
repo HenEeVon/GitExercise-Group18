@@ -1328,9 +1328,6 @@ animation-delay: 1.3s;
     cursor: pointer;
     transition: color 0.3s;
 }
-.header-logo:hover {
-    color: #4460f1;
-}
 
 /* Navbar links (for logged in users) */
 .nav-right {
