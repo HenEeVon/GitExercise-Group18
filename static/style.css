@@ -2082,32 +2082,43 @@ html {
     padding: 20px;
 }
 
-.profile-header {
-    text-align: center;
-    margin-bottom: 30px;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
+.welcome.profile-hero {
+    position: relative;
+    padding-top: 84px;
+    overflow: visible;
 }
 
-.profile-header .avatar {
+.avatar-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: -58px;
+    margin-bottom: 8px;
+}
+
+.avatar {
+    display: block;
     width: 120px;
     height: 120px;
     border-radius: 50%;
     object-fit: cover;
-    margin-bottom: 12px;
+    padding: 4px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    outline: 3px solid transparent;
+    background-image: linear-gradient(#fff,#fff),linear-gradient(135deg, #6a11cb,#2575fc);
+    background-origin: border-box;
+    background-clip: content-box, border-box;
 }
 
-.profile-header h1 {
-    font-size: 25px;
-    margin: 8px 0;
-    color: rgb(255, 255, 255);
+.email i {
+    margin-right: 6px;
+    color: #ddd;
+    font-size: 14px;
 }
 
-.profile-header .email {
-    color: rgb(255, 255, 255);
-    font-size: 15px;
-    margin-bottom: 10px;
+.profile-hero .btn.btn-primary {
     display: block;
+    margin: 10px auto 0;
+    max-width: 200px;
 }
 
 .info-grid {

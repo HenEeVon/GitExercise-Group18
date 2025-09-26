@@ -19,10 +19,15 @@
     {% endwith %}
 
     <!-- Profile Header -->
-    <div class="welcome profile-header">
-        <img class="avatar" src="{{ url_for('static', filename='profile_pics/' ~ (user.image_file or 'default.png')) }}">
+    <div class="welcome profile-hero">
+        <div class="avatar-wrap">
+            <img class="avatar" src="{{ url_for('static', filename='profile_pics/' ~ (user.image_file or 'default.png')) }}">
+        </div>
+        
         <h1>{{ user.name }}</h1>
-        <p class="email">{{ user.email }}</p>
+        <p class="email">
+            <i class="fa-solid fa-envelope"></i>{{ user.email }}
+        </p>
         {% if current_user.email == user.email %}
             <a href="{{ url_for('profile_edit') }}" class="btn btn-primary">Edit Profile</a>
         {% endif %}
