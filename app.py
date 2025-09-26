@@ -675,29 +675,26 @@ def edit_post(post_id):
     return render_template("edit_post.html", form=form, post=post, current_date=date.today().isoformat())
 
 
-
-# Delete post
+# admin delete post
 @app.route("/delete/<int:post_id>", methods=["POST"])
 def delete(post_id):
-    if not current_user.is_authenticated and not session.get("admin_email"):
+    if not current_user.is_authenticated and not session.get("as_admin"):
         flash("You must log in first.")
         return redirect(url_for("login"))
 
     post = Posts.query.get_or_404(post_id)
 
-    # Permission check (user OR admin)
-    if current_user.is_authenticated:
-        is_author = (post.email == current_user.email)
-    elif session.get("admin_email"):
-        is_author = True  #  admins can delete any post
+    # ✅ If admin, allow delete
+    if session.get("as_admin"):
+        can_delete = True
     else:
-        is_author = False
+        can_delete = (post.email == current_user.email)
 
-    if not is_author:
+    if not can_delete:
         flash("You don't have permission to delete this post.", "danger")
         return redirect(url_for("posts"))
 
-    # Delete image file if exists
+    # Delete image if exists
     if post.image_filename:
         img_path = os.path.join(current_app.root_path, "static/uploads", post.image_filename)
         if os.path.exists(img_path):
@@ -705,13 +702,21 @@ def delete(post_id):
 
     db.session.delete(post)
     db.session.commit()
-    flash("Post deleted successfully!", "danger")
+    flash("Post deleted successfully!", "success")
 
-    # If admin came from reports dashboard, send them back there
-    if request.referrer and "admin/reports" in request.referrer:
-        return redirect(url_for("admin_reports"))
-    else:
-        return redirect(url_for("posts"))
+    # Redirect admin properly
+    if session.get("as_admin"):
+        if request.args.get("next"):
+            return redirect(request.args.get("next"))
+        elif request.referrer and "admin/reports" in request.referrer:
+            return redirect(url_for("admin_reports"))
+        elif request.referrer and "admin/dashboard" in request.referrer:
+            return redirect(url_for("admin_dashboard"))
+        else:
+            return redirect(url_for("admin_dashboard"))
+
+    # Normal user
+    return redirect(url_for("posts"))
 
 
 # Report post
@@ -756,6 +761,7 @@ def post_detail(post_id):
     readonly = request.args.get("readonly", type=int)
     from_reports = request.args.get("from_reports", default=0, type=int)
     from_dashboard = request.args.get("from_dashboard", default=0, type=int)
+    next_url = request.args.get("next", url_for("posts"))
 
     # Force readonly for admins on first visit, while preserving origin flags
     if session.get("admin_email") and readonly is None:
@@ -799,6 +805,7 @@ def post_detail(post_id):
         readonly=readonly,
         from_reports=from_reports,
         from_dashboard=from_dashboard,
+        next_url=next_url, 
     )
 
 
@@ -1382,26 +1389,6 @@ def admin_dashboard():
     )
 
 
-# Admin delete user
-@app.route("/admin/delete_user/<string:email>", methods=["POST"])
-@login_required
-def delete_user(email):
-    if current_user.role != "admin":
-        abort(403)
-
-    # Prevent admin from deleting their own account
-    if current_user.email.lower() == email.lower():
-        flash("You cannot delete your own account.", "danger")
-        return redirect(url_for("admin_dashboard"))
-
-    user = User.query.filter_by(email=email.lower()).first_or_404()
-    db.session.delete(user)
-    db.session.commit()
-
-    flash("User deleted successfully.", "success")
-    return redirect(url_for("admin_dashboard"))
-
-
 # Admin reports
 @app.route("/admin/reports")
 @login_required
@@ -1452,7 +1439,7 @@ def unsuspend_user(email):
     db.session.commit()
 
     flash(f"User {user.email} has been unsuspended.", "success")
-    return redirect(url_for("admin_dashboard"))
+    return redirect(url_for("admin_reports"))
 
 
 

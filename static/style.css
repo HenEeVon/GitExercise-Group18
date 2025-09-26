@@ -348,6 +348,7 @@ details[open] .menu-dropdown {
 
 .menu-link:hover,
 .menu-dropdown button:hover {
+    color: rgb(204, 0, 0);
     background: #e2e2e2;
 }
 
@@ -945,7 +946,7 @@ section {
     max-width: 600px;  
     width: 100%;        
     height: auto;      
-    filter: drop-shadow(0 0 100px #0079fb);
+    filter: drop-shadow(0 0 100px #0079fb9b);
 
     /* two animations with separate delays */
     animation: 
@@ -1042,7 +1043,7 @@ section {
 }
 
 .big-cta-btn:hover {
-    background-color: #08032e;
+    background-color: #10065c;
     color: white;
     box-shadow: 0 0 100px #0056b3;
     transition: all 0.3s;
@@ -1990,6 +1991,14 @@ html {
     transition: background-color 0.2s, transform 0.2s;
 }
 
+.action-buttons a,
+.action-buttons button {
+    padding: 8px 12px !important;
+    min-height: 38px;
+    line-height: 1.2;
+}
+
+
 .action-buttons .btn-info:hover,
 .action-buttons .delete-btn:hover,
 .action-buttons .user-delete-btn:hover {
@@ -2011,6 +2020,12 @@ html {
     background-color: #138496;
 }
 
+.action-buttons .btn-info,
+.action-buttons .delete-btn {
+    padding: 8px 12px; 
+    min-height: 38px;    
+    line-height: 1.2;    
+}
 
 .action-buttons .user-delete-btn {
     color:white;
@@ -2102,6 +2117,87 @@ html {
     opacity:0;
 }
 
+/* Admin reports interface buttons */
+.delete-btn {
+    color:white;
+    background-color:rgb(238, 54, 54);
+    padding:10px;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor:pointer;
+    transition: all 0.2s;
+}
+
+.delete-btn:hover {
+    color:white;
+    background-color:rgb(211, 42, 42); 
+}
+
+.reactivate-btn {
+    color:white;
+    background-color:rgb(57, 200, 0);
+    padding:10px;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor:pointer;
+    transition: all 0.2s;
+}
+
+.reactivate-btn:hover {
+    color:white;
+    background-color:rgb(2, 174, 2);
+}
+
+.view-btn {
+    color:white;
+    background-color:#17a2b8;
+    padding-top:5px;
+    padding-bottom:6px;
+    padding-left:10px;
+    padding-right:10px;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor:pointer;
+    transition: all 0.2s;
+}
+
+.view-btn:hover {
+    color:white;
+    background-color:#138496;
+}
+
+.suspend-btn {
+    color:white;
+    background-color:rgb(158, 158, 158);
+    padding:10px;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor:pointer;
+    transition: all 0.2s;
+}
+
+.suspend-btn:hover {
+    color:white;
+    background-color:#7e7e7e;
+}
+
+
+.unsuspend-btn {
+    color:white;
+    background-color:rgb(158, 158, 158);
+    padding:10px;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor:pointer;
+    transition: all 0.2s;
+}
+
+.unsuspend-btn:hover {
+    color:white;
+    background-color:#7e7e7e;
+}
+
+
 .profile {
     max-width: 1000px;
     margin: 0 auto;
@@ -2174,13 +2270,30 @@ html {
 .info-icon {
     width: 36px;
     height: 36px;
-    display: grid;
-    place-items: center;
-    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;      
     background: #eef2ff;
     box-shadow: inset 0 0 0 2px #e1e6ff;
     color: #4460f1;
+    font-size: 18px;        
 }
+    
+
+.info-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+  margin-top:10px;
+}
+
+.info-text {
+  white-space: nowrap;
+}
+
 
 .info-label {
     font-weight: 600;
@@ -2873,7 +2986,7 @@ h3.direct-messages {
     position: relative; 
     transition: transform 0.3s ease;
     border: 2px solid #ffffff;
-     background-color: #e0f0ff; 
+    background-color: #e0f0ff; 
     border-radius: 10px;
     padding: 15px;
     transition: transform 0.3s, box-shadow 0.3s; 
