@@ -1176,7 +1176,8 @@ def create_first_admin():
 # REQUEST ADMIN ACCESS
 @app.route("/request_admin", methods=["GET", "POST"])
 def request_admin():
-    email = request.form.get("email", "").strip().lower()
+    # Get email from form (POST) or query string (GET)
+    email = request.form.get("email", "").strip().lower() if request.method == "POST" else request.args.get("email", "").strip().lower()
 
     # Prevent existing admins from submitting requests
     existing_user = User.query.filter_by(email=email).first()
@@ -1184,11 +1185,19 @@ def request_admin():
         flash("You are already an admin. Please log in.")
         return redirect(url_for("login"))
 
+    # Determine step: default to "email"
     step = request.form.get("step", "email")
 
-    if step == "email" and request.method == "POST":
-        return render_template("request_admin.html", email=email, existing_user=existing_user,question=question)
+    # Step 1: show email / pre-filled form
+    if step == "email" and request.method == "POST" or request.method == "GET":
+        return render_template(
+            "request_admin.html",
+            email=email,
+            existing_user=existing_user,
+            question=question
+        )
 
+    # Step 2: submit admin request
     elif step == "submit" and request.method == "POST":
         join_reason = request.form.get("join_reason", "").strip()
 
@@ -1202,9 +1211,8 @@ def request_admin():
             # Existing user: take info from User table
             password_hash = existing_user.password
             name = existing_user.name
-            sec_question = existing_user.security_question #pass as hidden input as existing user alr key in whe register
-            sec_answer = existing_user.security_answer #hidden input
-            join_reason = request.form.get("join_reason", "").strip()
+            sec_question = existing_user.security_question  # already stored
+            sec_answer = existing_user.security_answer      # already stored
         else:
             # New user must provide all info
             name = request.form.get("name", "").strip()
@@ -1218,7 +1226,7 @@ def request_admin():
 
             password_hash = generate_password_hash(password, method="pbkdf2:sha256")
 
-        # Create admin request
+        # Create new admin request
         new_request = AdminRequest(
             email=email,
             name=name,
@@ -1234,7 +1242,8 @@ def request_admin():
         flash("Your admin request has been submitted.")
         return redirect(url_for("request_admin"))
 
-    return render_template("request_admin.html",question=question)
+    # Default render
+    return render_template("request_admin.html", question=question, email=email, existing_user=existing_user)
 
         
 # HANDLE REQUEST (any logged-in admin can approve/reject)

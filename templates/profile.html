@@ -3,7 +3,6 @@
 {% block title %}{{ user.name }}'s Profile{% endblock %}
 
 {% block content %}
-
 <div class="profile">
 
     {% with messages = get_flashed_messages() %}
@@ -19,13 +18,16 @@
         {% endif %}
     {% endwith %}
 
-    <!-- Profile picture and Name -->
+    <!-- Profile Header -->
     <div class="welcome profile-header">
         <img class="avatar" src="{{ url_for('static', filename='profile_pics/' ~ (user.image_file or 'default.png')) }}">
-        <h1>{{ current_user.name }}</h1>
-        <p class="email">{{ current_user.email }}</p>
-        <a href="{{ url_for('profile_edit') }}" class="btn btn-primary">Edit Profile</a>
+        <h1>{{ user.name }}</h1>
+        <p class="email">{{ user.email }}</p>
+        {% if current_user.email == user.email %}
+            <a href="{{ url_for('profile_edit') }}" class="btn btn-primary">Edit Profile</a>
+        {% endif %}
     </div>
+
 
     <!-- Profile Info -->
     <h2 class="section-title">Account Info</h2>
@@ -63,7 +65,7 @@
             <div class="posts-grid">
                 {% for post in recent_posts %}
                     <div class="post-card">
-                
+
                         <!-- Post Header -->
                         <div class="post-header">
                             <h3 class="post-title">
@@ -78,7 +80,6 @@
                                     <details>
                                         <summary class="menu-btn">⋮</summary>
                                         <div class="menu-dropdown">
-
                                             {% if current_user.email == post.email %}
                                                 <!-- Post author menu -->
                                                 <a href="{{ url_for('edit_post', post_id=post.post_id) }}" class="menu-link">Edit</a>
@@ -92,7 +93,6 @@
                                                     <button type="submit" class="menu-link report-btn">Report</button>
                                                 </form>
                                             {% endif %}
-
                                         </div>
                                     </details>
                                 {% endif %}
@@ -100,7 +100,8 @@
                         </div>
 
                         <!-- Post Meta -->
-                        <p class="meta"><i class="fa-solid fa-calendar"></i>
+                        <p class="meta">
+                            <i class="fa-solid fa-calendar"></i>
                             Activity Date: {{ post.event_date.strftime('%d/%m/%Y') if post.event_date else '' }}
                         </p>
 
@@ -123,6 +124,8 @@
             </div>
         {% else %}
             <p>No activity posts yet.</p>
-    {% endif %}
+        {% endif %}
+    </div>
+
 </div>
 {% endblock %}
