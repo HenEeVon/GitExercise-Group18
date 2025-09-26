@@ -141,21 +141,22 @@
                     </div>
 
                     <!-- Post Meta -->
-                    <p class="meta">
-                        <i class="fa-solid fa-calendar"></i>
-                        Activity Date: {{ post.event_date.strftime('%d/%m/%Y') if post.event_date else '' }}
+                    <p class="meta"><i class="fa-solid fa-calendar"></i>
+                        <strong>Activity Date: </strong><br>
+                        <span>{{ post.event_date.strftime('%d/%m/%Y') if post.event_date else '' }}</span>
                     </p>
 
                     <p class="meta">
                         <i class="fa-solid fa-clock"></i>
-                        Posted on: {{ post.local_date_posted_value.strftime('%d/%m/%Y %H:%M') if post.local_date_posted_value else '' }}
+                        <strong>Posted on:</strong><br>
+                        <span>{{ post.local_date_posted_value.strftime('%d/%m/%Y %H:%M') if post.local_date_posted_value else '' }}</span>
                     </p>
 
-                    <p class="meta"><i class="fa-solid fa-location-dot"></i> {{ post.location }}</p>
-
-                    <p class="author">
-                        Posted by <a href="{{ url_for('profile_page', email=post.user.email) }}">{{ post.user.name }}</a>
-                    </p>
+                    <p class="meta">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <strong>Location:</strong><br>
+                        <span>{{ post.location or 'N/A' }}</span>
+                    </p>                    
 
                     <!-- Actions -->
                     <a href="{{ url_for('post_detail', post_id=post.post_id) }}" class="btn btn-outline">Find Out More</a>
