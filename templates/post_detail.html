@@ -4,9 +4,15 @@
 
 {% block content %}
 <div class="container5">
-    <a href="{{ url_for('posts') }}" class="backbtn" title="Back to Activity Posts">
+
+    
+{% if not readonly and not from_dashboard and not from_reports %}
+    <a href="{{ next_url }}" class="backbtn" title="Back">
         <i class="fa-solid fa-circle-xmark"></i>
     </a>
+{% endif %}
+
+
 
     {% set owner_email = post.email %}
     {% set current_email = current_user.email if current_user.is_authenticated else None %}
@@ -184,7 +190,7 @@
     <hr>
 
     <!-- Owner-specific direct messages -->
-    {% if current_user.is_authenticated and current_email == owner_email %}
+    {% if current_user.is_authenticated and current_email == owner_email and not readonly %}
     <h3 class="direct-messages">Direct Messages</h3>
         {% if owner_conversations %}
             <div class="direct-messages">

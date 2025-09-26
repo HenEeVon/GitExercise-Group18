@@ -52,9 +52,8 @@
                     <td>{{ user.email }}</td>
                     <td>{{ user.name }}</td>
                     <td class="action-buttons">
-                        <form action="{{ url_for('delete_user', email=user.email) }}" method="POST" style="display:inline;">
-                            <button type="submit" class="user-delete-btn">Delete</button>
-                        </form>
+                        <a href="{{ url_for('profile_page', email=user.email, readonly=1, from_dashboard=1, next=request.path) }}" 
+                        class="btn btn-info">View</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -87,11 +86,14 @@
                         {% endif %}
                     </td>
                     <td class="action-buttons">
-                        <a href="{{ url_for('post_detail', post_id=post.post_id, readonly=1, from_dashboard=1) }}" class="btn btn-info">View</a>
+                        <a href="{{ url_for('post_detail', post_id=post.post_id, readonly=1, from_dashboard=1, next=request.path) }}" class="btn btn-info">View</a>
 
-                        <form action="{{ url_for('delete', post_id=post.post_id) }}" method="POST" style="display:inline;">
-                            <button type="submit" class="btn delete-btn">Delete</button>
+                        {% set next_url = url_for('admin_dashboard') %}
+                        <form action="{{ url_for('delete', post_id=post.post_id, admin=1, next=next_url) }}" 
+                            method="POST" style="display:inline;">
+                            <button class="btn delete-btn">Delete</button>
                         </form>
+
                     </td>
                 </tr>
                 {% endfor %}
