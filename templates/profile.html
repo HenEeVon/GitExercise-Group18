@@ -40,25 +40,25 @@
         <div class="info-row">
             <div class="info-icon"><i class="fa-solid fa-user"></i></div>
             <div class="info-label">Full name</div>
-            <div class="info-value">{{ current_user.name }}</div>
+            <div class="info-value">{{ user.name }}</div>
         </div>
 
         <div class="info-row">
             <div class="info-icon"><i class="fa-solid fa-venus-mars"></i></div>
             <div class="info-label">Gender</div>
-            <div class="info-value">{{ current_user.gender }}</div>
+            <div class="info-value">{{ user.gender }}</div>
         </div>
 
         <div class="info-row">
             <div class="info-icon"><i class="fa-solid fa-dumbbell"></i></div>
             <div class="info-label">Fitness Level</div>
-            <div class="info-value">{{ current_user.sport_level }}</div>
+            <div class="info-value">{{ user.sport_level }}</div>
         </div>
 
         <div class="info-row info-row-bio">
             <div class="info-icon"><i class="fa-solid fa-message"></i></div>
             <div class="info-label">Bio</div>
-            <div class="info-value">{{ current_user.bio or "-" }}</div>
+            <div class="info-value">{{ user.bio or "-" }}</div>
         </div>
     </div>
 
