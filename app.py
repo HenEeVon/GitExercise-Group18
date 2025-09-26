@@ -242,18 +242,37 @@ def add_notification(email, text, link=None):
     except Exception:
         db.session.rollback()
 
-def save_profile_picture(uploaded, old_filename=None):
+def save_profile_picture(uploaded, owner_email=None,old_filename=None):
     folder = os.path.join(current_app.root_path, "static", "profile_pics")
     os.makedirs(folder, exist_ok=True)
 
-    prefix = secure_filename(current_user.email.split("@")[0])
+    if owner_email:
+        prefix_src = owner_email
+    elif getattr(current_user, "is_authenticated", False):
+        prefix_src = current_user.email
+    else:
+        prefix_src = "user"
+
+    prefix = secure_filename(prefix_src.split("@")[0])
     filename = f"{prefix}_{secure_filename(uploaded.filename)}"
     path = os.path.join(folder, filename)
 
     if old_filename and old_filename != "default_image.png":
         old_path = os.path.join(folder, old_filename)
         if os.path.exists(old_path):
-            os.remove(old_path)
+            try:
+                os.remove(old_path)
+            except PermissionError:
+                tmp = old_path + ".old"
+                try:
+                    os.replace(old_path, tmp)
+                    os.remove(tmp)
+                except Exception:
+                    pass
+    try:
+        uploaded.stream.seek(0)
+    except Exception:
+        pass
 
     uploaded.save(path)
     return filename
@@ -1031,7 +1050,7 @@ def profile_edit():
 
         uploaded = request.files.get("picture")
         if uploaded and uploaded.filename:
-            current_user.image_file =save_profile_picture(uploaded, current_user.image_file)
+            current_user.image_file = save_profile_picture(uploaded, current_user.email, current_user.image_file)
 
         db.session.commit()
         flash("Profile updated.")
