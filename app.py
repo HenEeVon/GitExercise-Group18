@@ -205,7 +205,7 @@ class ActivityForm(FlaskForm):
         if form.start_time.data and field.data <= form.start_time.data:
             raise ValidationError("End time must be after start time.")
 
-
+# done by Hen Ee Von (StudentID: 243FC243KK)
 # --- Chat message model ---
 class ChatMessage(db.Model):
     __tablename__ = "chat_messages"
@@ -229,6 +229,7 @@ question = {
     "book": "What was your favorite childhood book?"
 }
 
+# done by Hen Ee Von (StudentID: 243FC243KK)
 # --- Update Profile database ---
 class UpdateProfileForm(FlaskForm):
     name = StringField("Full Name", validators=[DataRequired(), Length(min=2, max=50)]) #User's full name
@@ -240,7 +241,7 @@ class UpdateProfileForm(FlaskForm):
     picture = FileField("Update Profile Picture", validators=[FileAllowed(["jpg", "png"])]) #Upload new profile picture
     submit = SubmitField("Update") #Button to save profile updates
 
-
+# done by Hen Ee Von (StudentID: 243FC243KK)
 # --- Notifications model ---
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True) #unique ID for each notification
@@ -509,7 +510,7 @@ def posts():
         is_admin=current_user.role == "admin" if current_user.is_authenticated else False # Pass a flag to template: is the user an admin?
     )
 
-
+# done by Hen Ee Von (StudentID: 243FC243KK)
 # --- Search posts by keyword or event date
 @app.route("/search", methods=["GET"])
 def search(): 
@@ -881,6 +882,7 @@ def post_detail(post_id):
 def conversation_key(a_email: str, b_email: str) -> str:
     return "|".join(sorted([a_email.lower(), b_email.lower()]))
 
+# done by Hen Ee Von (StudentID: 243FC243KK)
 # --- Chat between post owner and a partner ---
 @app.route("/chat/<int:post_id>/<partner_email>")
 @login_required
@@ -925,6 +927,7 @@ def chat_with_user(post_id, partner_email): #Load all chat messages between curr
     return render_template("chat.html",post=post, room=room, username=current_user.name,header_name=header_name, 
                            messages=messages, post_id=post_id, partner_email=partner_email,partner_img=partner_img) # Render room, messages, name, profile picture
 
+# done by Hen Ee Von (StudentID: 243FC243KK)
 # --- Socket.IO(user joins a chat room)
 @socketio.on("join")
 def on_join(data):
@@ -946,6 +949,7 @@ def on_join(data):
         join_room(room) # Join Socket.IO room
         send(f"{name} joined the chat.", to=room) #Broadcast system message
 
+# done by Hen Ee Von (StudentID: 243FC243KK)
 # --- Socket.IO to handle sending a new message
 @socketio.on("send_message")
 def on_send_message(data):
@@ -1000,7 +1004,7 @@ def on_send_message(data):
 
     send({"user": msg.sender_name,"email": msg.sender_email ,"text": msg.text, "time": ts}, to=room) # Emit the message to everyone in the room
 
-
+# done by Hen Ee Von (StudentID: 243FC243KK)
 # --- Show all notifications for the logged-in user ---
 @app.route("/notifications")
 @login_required
@@ -1023,6 +1027,7 @@ def notifications():
 
     return render_template("notifications.html", rows=rows) # Render list page
 
+# done by Hen Ee Von (StudentID: 243FC243KK)
 # --- Mark all notifications as read(one-click)---
 @app.route("/notifications/read_all", methods=["POST"])
 @login_required
@@ -1031,6 +1036,7 @@ def notifications_read_all():
     db.session.commit() #Save changes
     return redirect(url_for("notifications")) #Back to list
 
+# done by Hen Ee Von (StudentID: 243FC243KK)
 # --- Open a single notification and redirect to its link ---
 @app.route("/notif/<int:notif_id>")
 @login_required
@@ -1043,6 +1049,7 @@ def open_notif(notif_id):
 
     return redirect(notif.link or url_for("notifications")) # Go to target link, fallback to list
 
+# done by Hen Ee Von (StudentID: 243FC243KK)
 #Delete single notification
 @app.route("/notifications/delete/<int:notif_id>", methods=["POST"])
 @login_required
@@ -1053,6 +1060,7 @@ def notifications_delete(notif_id):
         db.session.commit()
     return redirect(url_for("notifications")) #Back to list
 
+# done by Hen Ee Von (StudentID: 243FC243KK)
 #Delete all notifications
 @app.route("/notifications/clear", methods=["POST"])
 @login_required
@@ -1061,12 +1069,14 @@ def notifications_clear():
     db.session.commit()
     return redirect(url_for("notifications")) # Back to list
 
+# done by Hen Ee Von (StudentID: 243FC243KK)
 # ---My profile ---
 @app.route("/profile") # Redirecr to own profile by email
 @login_required
 def profile():
     return redirect(url_for("profile_page", email=current_user.email)) # Convinience redirect
 
+# done by Hen Ee Von (StudentID: 243FC243KK)
 # --- View a user's profile page ---
 @app.route("/profile/<string:email>")
 @login_required
@@ -1105,6 +1115,7 @@ def profile_page(email): #Show a user's account information and their recent pos
     ) # Render profile template
 
 
+# done by Hen Ee Von (StudentID: 243FC243KK)
 # --- Edit Profile(update name/gender/lvl/security Q&A/bio/profile pic) - Done by Hen Ee Von ---
 @app.route("/profile/edit", methods=["GET", "POST"])
 @login_required

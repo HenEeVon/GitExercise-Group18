@@ -167,7 +167,9 @@
                     {% if approval_status == "approved" %}
                         <a href="{{ url_for('login') }}" class="big-cta-btn">Done</a> <!--link to login if status is approved after done-->
                     {% else %}
-                        <button type="button" class="big-cta-btn" onclick="document.getElementById('approvalModal').style.display='none'">Done</button> <!--show normal back button if rejected-->
+                        <div class="btn-group">
+                            <a href="{{ url_for('request_admin', email=submitted_email) }}" class="big-cta-btn">Done</a>
+                        </div> <!--show normal back button if rejected-->
                     {% endif %}
                 </div>
             {% endif %}
