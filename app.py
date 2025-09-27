@@ -35,6 +35,7 @@ login_manager.login_view = "login"
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 *1024
 
+#--- Navbar unread notifications counter - Done by Hen Ee Von ---
 @app.context_processor
 def notif_count():
     if current_user.is_authenticated:
@@ -225,7 +226,7 @@ class UpdateProfileForm(FlaskForm):
     submit = SubmitField("Update")
 
 
-# Notification database
+# --- Notifications model(who get what msg and read status) - Done by Hen Ee Von ---
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), db.ForeignKey("users.email"), nullable=False)
@@ -234,7 +235,7 @@ class Notification(db.Model):
     is_read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-
+# --- Helper to create notifications safely - Done by Hen Ee Von ---
 def add_notification(email, text, link=None):
     try:
         db.session.add(Notification(email=email, text=text, link=link))
@@ -484,7 +485,7 @@ def posts():
     )
 
 
-# Search feature
+# --- Search by keyword (title/content/location/author) and event date filter - Done by Hen Ee Von ---
 @app.route("/search", methods=["GET"])
 def search():
     sport = (request.args.get("sport") or "").strip().lower()
@@ -929,7 +930,7 @@ def on_send_message(data):
     send({"user": msg.sender_name,"email": msg.sender_email ,"text": msg.text, "time": ts}, to=room)
 
 
-# Notifications page
+# --- Notifications page(lists all notifications(unread + read)) - Done by Hen Ee Von ---
 @app.route("/notifications")
 @login_required
 def notifications():
@@ -950,6 +951,7 @@ def notifications():
 
     return render_template("notifications.html", rows=rows)
 
+
 @app.route("/notifications/read_all", methods=["POST"])
 @login_required
 def notifications_read_all():
@@ -957,7 +959,7 @@ def notifications_read_all():
     db.session.commit()
     return redirect(url_for("notifications"))
 
-
+# --- Notifications page (open a notification(mark read and redirect link)) - Done by Hen Ee Von
 @app.route("/notif/<int:notif_id>")
 @login_required
 def open_notif(notif_id):
@@ -992,7 +994,7 @@ def notifications_clear():
 def profile():
     return redirect(url_for("profile_page", email=current_user.email))
 
-
+# --- My Profile(shows user info, their recent posts) - Done by Hen Ee Von ---
 @app.route("/profile/<string:email>")
 @login_required
 def profile_page(email):
@@ -1031,7 +1033,7 @@ def profile_page(email):
     )
 
 
-
+# --- Edit Profile(update name/gender/lvl/security Q&A/bio/profile pic) - Done by Hen Ee Von ---
 @app.route("/profile/edit", methods=["GET", "POST"])
 @login_required
 def profile_edit():
