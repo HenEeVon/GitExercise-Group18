@@ -52,10 +52,7 @@
 
 {% block page_scripts %}
 <script>
-    const socket = io("https://ebfit.onrender.com", {
-    transports: ["websocket", "polling"]
-});
-
+    const socket = io();
     const chat = document.getElementById('chat');
     const room = chat.dataset.room;
     const me = chat.dataset.username;
