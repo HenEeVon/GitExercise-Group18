@@ -514,7 +514,7 @@ def search():
     #Also supports filtering posts by event date
 
     # Get user search input
-    sport = (request.args.get("sport") or "").strip().lower() #keyword entered by user
+    post_keyword = (request.args.get("post_keyword") or "").strip().lower() #keyword entered by user
     dateinpost = (request.args.get("date") or "").strip() #event date entered by user
     searched = False # flag to check if any search was done
 
@@ -522,14 +522,14 @@ def search():
     query = Posts.query.join(User).filter(Posts.is_hidden == False)
 
     # Filter by keyword
-    if sport:
+    if post_keyword:
         searched = True # Mark search as active
         query = query.filter(   # Look for matches in these field:
             or_(
-                func.lower(Posts.title).like(f"%{sport}%"), # Post title
-                func.lower(Posts.content).like(f"%{sport}%"), # Post content
-                func.lower(Posts.location).like(f"%{sport}%"), # Post location
-                func.lower(User.name).like(f"%{sport}%")  # Author's name(from User table)
+                func.lower(Posts.title).like(f"%{post_keyword}%"), # Post title
+                func.lower(Posts.content).like(f"%{post_keyword}%"), # Post content
+                func.lower(Posts.location).like(f"%{post_keyword}%"), # Post location
+                func.lower(User.name).like(f"%{post_keyword}%")  # Author's name(from User table)
                                                           # ✅ works because Posts has FK -> User
             )
         )
@@ -567,7 +567,7 @@ def search():
         "index.html",
         posts=results, # Pass the search results
         searched=searched, # Flag (True if a search wa performed)
-        sport=sport, #Pass keyword input back to template
+        post_keyword=post_keyword, #Pass keyword input back to template
         date=dateinpost, #Pass date input back to template
         admin=current_admin, # Info about logged-in admin
         user=current_user if current_user.is_authenticated else None # Info about logged-in user
