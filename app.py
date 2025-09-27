@@ -82,6 +82,9 @@ class User(db.Model, UserMixin):
     posts = db.relationship("Posts", back_populates="user", lazy=True, cascade="all, delete-orphan")
     # back_populates="..."= Matches relationship defined in Posts model
     # cascade="..."= If user is deleted → delete their posts as well (to avoid orphan records)
+
+    # One-to-many: User → JoinActivities
+    join_activities = db.relationship("JoinActivity", back_populates="user", lazy=True, cascade="all, delete-orphan")
     def get_id(self):
         return self.email
 
@@ -128,6 +131,18 @@ class Posts(db.Model):
     user = db.relationship("User", back_populates="posts") 
     is_hidden = db.Column(db.Boolean, default=False) # If True → hide this post from public views 
 
+    join_activities = db.relationship("JoinActivity", back_populates="post", lazy=True, cascade="all, delete-orphan")
+
+    # Each report belongs to ONE post
+    # Each post can have MANY reports
+    # cascade="all, delete-orphan" → if a post is deleted, its reports are deleted too
+    reports = db.relationship( 
+        "Reports",
+        backref="post",                # enables Reports.post
+        lazy=True,
+        cascade="all, delete-orphan"  # deleting a post deletes reports
+    )
+
 # REPORTS DATABASE MODEL
 class Reports(db.Model):
     __tablename__ = "reports"
@@ -136,14 +151,6 @@ class Reports(db.Model):
     post_id = db.Column(db.Integer, db.ForeignKey("posts.post_id"), nullable=False) # The post that was reported (foreign key links to Posts table)
     reporter_email = db.Column(db.String(255), nullable=False)  # Email of the person who reported (can be user OR admin)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow) # When the report was created (auto-filled with current UTC time)
-
-    post = db.relationship(
-        "Posts",
-        backref=db.backref("reports", lazy=True, cascade="all, delete-orphan")
-    )
-    # Each report belongs to ONE post
-    # Each post can have MANY reports
-    # cascade="all, delete-orphan" → if a post is deleted, its reports are deleted too
 
 
 class JoinActivity(db.Model):
@@ -154,9 +161,8 @@ class JoinActivity(db.Model):
     post_id = db.Column(db.Integer, db.ForeignKey("posts.post_id"), nullable=False)
     status = db.Column(db.String(20), default="pending")  # pending / accepted / rejected
 
-    user = db.relationship("User", backref="join_activities", lazy=True)
-    post = db.relationship("Posts", backref="join_activities", lazy=True)
-
+    user = db.relationship("User", back_populates="join_activities", lazy=True)
+    post = db.relationship("Posts", back_populates="join_activities", lazy=True)
 #done by LeeEeWen (StudentID:243FC245ST)    
 def load_locations():
     csv_path = os.path.join("instance", "locations.csv") #build path for csv file 
