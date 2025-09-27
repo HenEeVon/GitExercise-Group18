@@ -28,7 +28,7 @@
         <p class="email">
             <i class="fa-solid fa-envelope"></i>{{ user.email }}
         </p>
-        {% if current_user.email == user.email %}
+        {% if current_user.email == user.email %} <!--show edit profile for current user only-->
             <a href="{{ url_for('profile_edit') }}" class="btn btn-primary">Edit Profile</a>
         {% endif %}
     </div>

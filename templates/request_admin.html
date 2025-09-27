@@ -40,6 +40,7 @@
                 </div>
 
                 <!-- Right Form -->
+                <!--flash message-->
                 <div class="main">
                     {% with messages = get_flashed_messages() %}
                         {% if messages %}
@@ -74,7 +75,7 @@
                         </div>
                     {% else %}
                         <!-- Step 2: Admin request details -->
-                        <div class="login-box {% if existing_user %}existing-user{% endif %}">
+                        <div class="login-box {% if existing_user %}existing-user{% endif %}"> <!--if email is existing user show shorter form-->
                             <form action="{{ url_for('request_admin') }}" method="POST">
                                 <h2 class="form-title">Request Admin Access</h2>
 
@@ -118,9 +119,10 @@
                                     <p class="colortext">
                                         <strong>Security Question (For Reset Password)</strong>
                                         <select name="security_question" class="form-select" required>
-                                            <option value="" disabled selected>-- Select a security question --</option>
-                                            {% for key, text in question.items() %}
-                                                <option value="{{ key }}">{{ text }}</option>
+                                            <option value="" disabled selected>-- Select a security question --</option> <!--default option-->
+                                            {% for key, text in question.items() %}  <!--loop through dictionary question-->
+                                        <!--key set on dictionary-->
+                                                <option value="{{ key }}">{{ text }}</option> <!--when key match for user selected option, then question display-->
                                             {% endfor %}
                                         </select>
                                     </p>
@@ -145,13 +147,13 @@
         </div>
     </div>
 
-    <!-- Approval Modal -->
+    <!-- Approval Modal(check approval status for request to join admin) -->
     <div id="approvalModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="document.getElementById('approvalModal').style.display='none'">&times;</span>
             <h2>Check Approval Status</h2>
 
-            {% if approval_status is not defined %}
+            {% if approval_status is not defined %} <!--Check Flask hasn’t passed any status to the template, if true show email input form for status check-->
                 <form method="POST" action="{{ url_for('check_approval') }}">
                     <label>Email address</label>
                     <input type="email" name="email" required>
@@ -159,19 +161,20 @@
                         <input type="submit" class="big-cta-btn" value="Check Status">
                     </div>
                 </form>
-            {% else %}
+            {% else %} <!--if approval_status is defined,show result-->
                 <p>Status: <strong>{{ approval_status|capitalize }}</strong></p>
                 <div class="btn-group">
                     {% if approval_status == "approved" %}
-                        <a href="{{ url_for('login') }}" class="big-cta-btn">Done</a>
+                        <a href="{{ url_for('login') }}" class="big-cta-btn">Done</a> <!--link to login if status is approved after done-->
                     {% else %}
-                        <button type="button" class="big-cta-btn" onclick="document.getElementById('approvalModal').style.display='none'">Done</button>
+                        <button type="button" class="big-cta-btn" onclick="document.getElementById('approvalModal').style.display='none'">Done</button> <!--show normal back button if rejected-->
                     {% endif %}
                 </div>
             {% endif %}
         </div>
     </div>
 
+    <!--directly open the model-->
     {% if open_approval_modal %}
         <script>
             document.addEventListener("DOMContentLoaded", function() {
