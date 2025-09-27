@@ -131,8 +131,8 @@
         <p class="homeline2">Request to be a part of our admin community.</p>
 
         <!-- Email redirect form -->
-        <form action="{{ url_for('request_admin') }}" method="GET" class="admin-home-form">
-          <input type="email" name="email" placeholder="Enter your email" class="form-input" required>
+        <form action="{{ url_for('request_admin') }}" method="GET" class="admin-home-form"> <!--generate url, and sends data through the URL-->
+          <input type="email" name="email" placeholder="Enter your email" class="form-input" required> <!--type must email-->
           <button type="submit" class="big-cta-btn">Request Access</button>
         </form>
         <p class="admin-login-text">

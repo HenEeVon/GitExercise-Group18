@@ -926,7 +926,7 @@ section {
     max-width: 600px;  
     width: 100%;        
     height: auto;      
-    filter: drop-shadow(0 0 100px #0079fb);
+    filter: drop-shadow(0 0 100px #0079fb54);
 
     /* two animations with separate delays */
     animation: 
@@ -2683,6 +2683,8 @@ h3.direct-messages {
   position: absolute;
   width: 200px;
   text-align: center;
+  animation: fadeIn 2s ease forwards;
+    animation-delay: 0.6s;
 }
 
 .feature-item .icon-circle {

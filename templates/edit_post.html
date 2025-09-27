@@ -118,8 +118,8 @@
 </style>
 
 <script>
-    const select = document.getElementById("location-select"); 
-    const link = document.getElementById("map-link");
+    const select = document.getElementById("location-select"); //refer to the fropdown menu of location list
+    const link = document.getElementById("map-link"); //link to the view on google maps button
 
     // Show map link if a location is already selected
     if (select.value) {
@@ -129,10 +129,10 @@
 
     select.addEventListener("change", () => {
         const value = select.value;
-        if (value) {
+        if (value) { //if selected value is not empty, updates google maps and show the locations
             link.href = "https://www.google.com/maps/search/" + encodeURIComponent(value);
             link.style.display = "inline-block";
-        } else {
+        } else { //if selected value is empty, it hide the link
             link.style.display = "none";
         }
     });

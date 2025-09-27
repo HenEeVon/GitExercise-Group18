@@ -25,7 +25,7 @@
         <div class="container2">
             <div class="login">
 
-                <!-- Left Hero -->
+                <!-- Left Hero(link to register for user and request access page for admin) -->
                 <div class="hero">
                     <h1>Welcome <br>ebFit.</h1>
                     <p>
@@ -89,7 +89,7 @@
             <h2>Reset Password</h2>
 
             {% if not security_question %}
-            <!-- Step 1: Enter email -->
+            <!-- Step 1: Enter email, tell the backend now is email step -->
             <form method="POST" action="{{ url_for('reset_password') }}">
                 <input type="hidden" name="current" value="email">
                 <label>Email address</label>
@@ -100,9 +100,9 @@
             </form>
             {% else %}
             <!-- Step 2: Show security question -->
-            <form method="POST" action="{{ url_for('reset_password') }}">
-                <input type="hidden" name="current" value="reset">
-                <input type="hidden" name="email" value="{{ email }}">
+            <form method="POST" action="{{ url_for('reset_password') }}"> <!--submit data to route reset_password-->
+                <input type="hidden" name="current" value="reset"> <!--Tells the backend: this is step 2 of the reset process.-->
+                <input type="hidden" name="email" value="{{ email }}"> <!--always keep track on which email account need to reset pass-->
                 <label>Security Question</label>
                 <p class="security-question">{{ security_question }}</p>
 
@@ -119,6 +119,7 @@
         </div>
     </div>
 
+    <!--directly open the model after email validity step-->
     {% if open_reset_modal %}
     <script>
         document.addEventListener("DOMContentLoaded", function() {

@@ -23,7 +23,7 @@
         <img class="avatar" src="{{ url_for('static', filename='profile_pics/' ~ (user.image_file or 'default.png')) }}">
         <h1>{{ user.name }}</h1>
         <p class="email">{{ user.email }}</p>
-        {% if current_user.email == user.email %}
+        {% if current_user.email == user.email %} <!--show edit profile for current user only-->
             <a href="{{ url_for('profile_edit') }}" class="btn btn-primary">Edit Profile</a>
         {% endif %}
     </div>

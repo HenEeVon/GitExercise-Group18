@@ -33,12 +33,13 @@
             </tr>
         </thead>
         <tbody>
+            <!--showing pending request for authors post-->
             {% for req in pending_requests %}
             <tr>
                 <td>{{ req.email }}</td>
                 <td>{{ req.name }}</td>
                 <td>{{ req.join_reason }}</td>
-                <td>
+                <td> <!--button for accept and reject-->
                     <form action="{{ url_for('handle_request_admin', approval_id=req.approval_id) }}" method="POST" style="display:inline;">
                         <button type="submit" name="decision" value="accept" class="approve-btn">Approve</button>
                     </form>
@@ -54,7 +55,7 @@
     <p>No pending requests.</p>
     {% endif %}
 
-    <!-- Approved Requests -->
+    <!-- Approved Requests table -->
     <h2><i class="fa-solid fa-circle-check"></i> Approved Requests</h2>
     {% if approved_requests %}
     <table class="requests-table approved">
@@ -83,7 +84,7 @@
     <p>No approved requests.</p>
     {% endif %}
 
-    <!-- Rejected Requests -->
+    <!-- Rejected Requests table -->
     <h2><i class="fa-solid fa-circle-xmark"></i> Rejected Requests</h2>
     {% if rejected_requests %}
     <table class="requests-table rejected">

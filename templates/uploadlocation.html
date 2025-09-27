@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
 </head>
 <header>
+    <!-- nav bar-->
     <div class="navbar-container">
         <a class="header-logo" href="{{ url_for('home') }}"><span>ebFit</span></a>
 
@@ -71,8 +72,8 @@
         
         <p>Upload a CSV file with a list of locations within 5km distance from MMU (header: <strong>name,distance</strong>).</p>
 
-        <form method="POST" enctype="multipart/form-data">
-            <input type="file" name="file" accept=".csv" required>
+        <form method="POST" enctype="multipart/form-data"> <!--sends data via POST request (required file uploads).-->
+            <input type="file" name="file" accept=".csv" required> <!--restricts file for CSV files only.-->
             <!-- Info icon that links to modal -->
         <a href="#modalloc" class="info-icon">
             <i class="fa-solid fa-circle-info"></i>Click to view example of correct CSV File Format
