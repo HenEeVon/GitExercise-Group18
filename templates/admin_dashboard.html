@@ -5,7 +5,7 @@
 <div class="admin-dashboard container">
     <h1>Admin Dashboard</h1>
     
-    <!-- Flash messages -->
+    <!-- Flash messages: Show notifications like "User suspended" or "Post deleted" -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
@@ -19,11 +19,12 @@
         {% endif %}
     {% endwith %}
 
+    <!-- Display logged-in admin info -->
     {% if admin %}
         <p class="logged-in">Logged in as: <strong>{{ admin.email }}</strong></p>
     {% endif %}
 
-    <!-- Overview Cards -->
+    <!-- Overview cards showing total users and posts -->
     <div class="overview-cards">
         <div class="card">
             <h3>Total Users</h3>

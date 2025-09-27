@@ -24,15 +24,25 @@ import csv
 MALAYSIA_TZ = pytz.timezone("Asia/Kuala_Lumpur")
 UTC = pytz.utc
 
+# Import Flask and required extensions
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///ebfit.db"
+# Secret key is used by Flask to:
+# - Secure sessions
+# - Protect against CSRF attacks
+# - Sign cookies
+# (Should be kept secret in production, usually stored in environment variables)
 app.config["SECRET_KEY"] = "060226*"
 db = SQLAlchemy(app)
 socketio = SocketIO(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
+# Uploaded files (e.g., profile pictures, post images)
+# will be stored in "static/uploads" folder.
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
+# Restrict maximum upload file size (10 MB here).
+# Helps prevent server overload due to very large uploads.
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 *1024
 
 #--- Navbar unread notifications counter - Done by Hen Ee Von ---
@@ -68,9 +78,10 @@ class User(db.Model, UserMixin):
     image_file = db.Column(db.String(255), nullable=False, default="default_image.png")
     bio = db.Column(db.Text, default="This user has not added a bio yet.", nullable=False)
     role = db.Column(db.String(20), default="user") 
-    is_suspended = db.Column(db.Boolean, default=False)
+    is_suspended = db.Column(db.Boolean, default=False) # True = account suspended (blocked from login)
     posts = db.relationship("Posts", back_populates="user", lazy=True, cascade="all, delete-orphan")
-
+    # back_populates="..."= Matches relationship defined in Posts model
+    # cascade="..."= If user is deleted → delete their posts as well (to avoid orphan records)
     def get_id(self):
         return self.email
 
@@ -94,41 +105,45 @@ class AdminRequest(db.Model):
     security_question = db.Column(db.String(255), nullable=False) 
     security_answer = db.Column(db.String(255), nullable=False)  
 
-
+# POSTS DATABASE MODEL
 class Posts(db.Model):
-    __tablename__ = "posts"
+    __tablename__ = "posts" # Explicitly name the table "posts"
 
-    post_id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    location = db.Column(db.String(100), nullable=False)
-    event_date = db.Column(db.Date, nullable=False)
-    start_time = db.Column(db.Time, nullable=False)
-    end_time = db.Column(db.Time, nullable=False)
+    post_id = db.Column(db.Integer, primary_key=True) # Unique identifier for each post
+    title = db.Column(db.String(200), nullable=False) # Short title of the post/activity
+    content = db.Column(db.Text, nullable=False) # Full description of the activity
+    location = db.Column(db.String(100), nullable=False) # Where the activity happens
+    event_date = db.Column(db.Date, nullable=False) # Activity date
+    start_time = db.Column(db.Time, nullable=False) # Activity start time
+    end_time = db.Column(db.Time, nullable=False) # Activity end time
     date_posted = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     post_status = db.Column(db.String(20), default="open")
-    participants = db.Column(db.Integer, nullable=False)
-    image_filename = db.Column(db.String(200), nullable=True)   
-
+    participants = db.Column(db.Integer, nullable=False) # Max or current number of participants
+    image_filename = db.Column(db.String(200), nullable=True) # Optional: image uploaded for this post 
     # FK to user
-    email = db.Column(db.String(255), db.ForeignKey("users.email"), nullable=False)
-    user = db.relationship("User", back_populates="posts")
+    email = db.Column(db.String(255), db.ForeignKey("users.email"), nullable=False)  # Foreign key → link each post to the user who created it
+    # Bidirectional relationship → allows:
+    # post.user → get the owner of this post
+    # user.posts → get all posts by this user
+    user = db.relationship("User", back_populates="posts") 
+    is_hidden = db.Column(db.Boolean, default=False) # If True → hide this post from public views 
 
-    is_hidden = db.Column(db.Boolean, default=False)
-
-
+# REPORTS DATABASE MODEL
 class Reports(db.Model):
     __tablename__ = "reports"
 
-    id = db.Column(db.Integer, primary_key=True)
-    post_id = db.Column(db.Integer, db.ForeignKey("posts.post_id"), nullable=False)
-    reporter_email = db.Column(db.String(255), nullable=False)  # works for both users & admins
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    id = db.Column(db.Integer, primary_key=True) # Unique identifier for each report
+    post_id = db.Column(db.Integer, db.ForeignKey("posts.post_id"), nullable=False) # The post that was reported (foreign key links to Posts table)
+    reporter_email = db.Column(db.String(255), nullable=False)  # Email of the person who reported (can be user OR admin)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow) # When the report was created (auto-filled with current UTC time)
 
     post = db.relationship(
         "Posts",
         backref=db.backref("reports", lazy=True, cascade="all, delete-orphan")
     )
+    # Each report belongs to ONE post
+    # Each post can have MANY reports
+    # cascade="all, delete-orphan" → if a post is deleted, its reports are deleted too
 
 
 class JoinActivity(db.Model):
@@ -168,23 +183,25 @@ def load_locations():
     return choices
 
     
-# Activity Form database
+# ACTIVITY FORM (WTForms)
 class ActivityForm(FlaskForm):
-    title = StringField("Title", validators=[DataRequired()])
-    image = FileField("Upload Image", validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only!')])
-    content = TextAreaField("Content", validators=[DataRequired()])
-    location = SelectField("Location", choices=[], validators=[DataRequired()])
-    event_date = DateField("Activity Date", format="%Y-%m-%d", validators=[DataRequired()])
-    start_time = TimeField("Start Time", format="%H:%M", validators=[DataRequired()])
-    end_time = TimeField("End Time", format="%H:%M", validators=[DataRequired()])
-    participants = IntegerField("Required Participants", validators=[DataRequired(), NumberRange(min=1)])
-    submit = SubmitField("Post")
+    title = StringField("Title", validators=[DataRequired()]) # Activity title (must not be empty)
+    image = FileField("Upload Image", validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only!')]) # Optional image upload, but only allows specific formats
+    content = TextAreaField("Content", validators=[DataRequired()]) # Detailed description of the activity (required)
+    location = SelectField("Location", choices=[], validators=[DataRequired()]) # Dropdown list of locations (choices loaded dynamically later)
+    event_date = DateField("Activity Date", format="%Y-%m-%d", validators=[DataRequired()]) # Date of the activity (must not be in the past → see custom validator)
+    start_time = TimeField("Start Time", format="%H:%M", validators=[DataRequired()]) # Start time of the activity
+    end_time = TimeField("End Time", format="%H:%M", validators=[DataRequired()]) # End time of the activity
+    participants = IntegerField("Required Participants", validators=[DataRequired(), NumberRange(min=1)]) # Number of people required (must be at least 1)
+    submit = SubmitField("Post") # Button to submit the form
 
-    def validate_event_date(form, field):
+    #Ensure the event date is not in the past.
+    def validate_event_date(form, field): 
         if field.data < date.today():
             raise ValidationError("Event date must be today or in the future.")
 
-    def validate_end_time(form, field):
+    #Ensure the end time is after the start time.
+    def validate_end_time(form, field): 
         if form.start_time.data and field.data <= form.start_time.data:
             raise ValidationError("End time must be after start time.")
 
@@ -284,24 +301,27 @@ def load_user(user_id):
     return User.query.filter_by(email=user_id).first()
 
 
+# CUSTOM JINJA TEMPLATE FILTER
+# This filter lets us format dates easily inside HTML templates.
 @app.template_filter("datetimeformat")
+# Convert different types of date values into a human-readable format.Default format: DD/MM/YYYY.
 def datetimeformat(value, format="%d/%m/%Y"):
     """Convert YYYY-MM-DD or datetime into DD/MM/YYYY"""
     if not value:
-        return ""
+        return "" # If no value, return empty string (avoid errors)
     try:
         # If value is a datetime
         if isinstance(value, datetime):
             return value.strftime(format)
 
-        # If stored as string (like event_datetime)
+        # If 'value' is a string like '2025-09-27'
         if isinstance(value, str):
-            try:
+            try: # Convert from YYYY-MM-DD → DD/MM/YYYY
                 return datetime.strptime(value, "%Y-%m-%d").strftime(format)
             except ValueError:
-                return value  # return raw if it’s not in date format
+                return value  # If string isn't a date, just return as-is
     except Exception:
-        return value
+        return value # Catch any unexpected errors and return original value
 
 # Home page
 @app.route("/")
@@ -462,26 +482,31 @@ def reset_password():
     return render_template("login.html", open_reset_modal=True, question=question)
 
 
+# ROUTE: Show All Posts (/index)
 @app.route("/index")
-@login_required
+@login_required # Only logged-in users can access this page
 def posts():
-    # Default: show only non-hidden posts
-    posts = Posts.query.filter_by(is_hidden=False).order_by(Posts.date_posted.desc()).all()
+    #Displays the posts feed (like homepage). Shows only non-hidden posts and converts timestamps into Malaysia time.
+    posts = Posts.query.filter_by(is_hidden=False).order_by(Posts.date_posted.desc()).all() # 1. Get all posts that are NOT hidden, newest first
 
+    # 2. Convert each post's UTC timestamp → Malaysia local time
     for post in posts:
         if post.date_posted:
+            # If datetime has no timezone info, assume UTC
             if post.date_posted.tzinfo is None:
                 utc_time = pytz.utc.localize(post.date_posted)
             else:
                 utc_time = post.date_posted
+            # Convert UTC → Malaysia timezone
             post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
         else:
             post.local_date_posted_value = None
 
+    # 3. Render the posts in index.html
     return render_template(
         "index.html",
         posts=posts,
-        is_admin=current_user.role == "admin" if current_user.is_authenticated else False
+        is_admin=current_user.role == "admin" if current_user.is_authenticated else False # Pass a flag to template: is the user an admin?
     )
 
 
@@ -546,43 +571,49 @@ def search():
     )
 
 
-# Error page
-@app.errorhandler(404)
-def page_not_found(e):
+# ERROR HANDLER: 404 Not Found
+@app.errorhandler(404) # Catch all "Page Not Found" errors
+def page_not_found(e): #Custom 404 error page.This runs when a user visits a non-existent URL.
+    # Render the template '404.html' and return
+    # an HTTP status code of 404 (Not Found)
     return render_template("404.html"), 404
 
 
-# Create post form
+# ROUTE: Create a new post
 @app.route("/create", methods=["GET", "POST"])
 def create():
+    # Access control:
+    # Only allow logged-in users OR logged-in admins (via session).
     if not current_user.is_authenticated and not session.get("admin_email"):
         flash("You need to log in first!", "danger")
         return redirect(url_for("login"))
     
-    form = ActivityForm()
+    form = ActivityForm() # Load the Activity form
 
-    # Force reload of locations for this form instance (add safe defaults for testing)
+    # Reload location choices dynamically
     form.location.choices = load_locations()
     if not form.location.choices or form.location.choices == [("none", "--Please select a location--")]:
-        form.location.choices = []  # fallback choices
+        form.location.choices = []  # fallback: no choices available
     
+    # If form was submitted and is valid
     if form.validate_on_submit():
-        # Handle image upload
-        image_file = form.image.data
+        image_file = form.image.data # uploaded image
         filename = None
         start_time = form.start_time.data
         end_time = form.end_time.data
 
+        # Validation: End time must be after start time
         if start_time and end_time and end_time <= start_time:
             flash("End time must be after start time.", "danger")
             return render_template("create.html", form=form, current_date=date.today().isoformat())
         
-        if image_file:
-            filename = secure_filename(image_file.filename)
+        # Handle image upload securely
+        if image_file: 
+            filename = secure_filename(image_file.filename) # prevents unsafe filenames
             image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             image_file.save(image_path)
 
-        try:
+        try: # Create a new post object
             new_post = Posts(
                 title=form.title.data,
                 image_filename=filename,
@@ -595,23 +626,30 @@ def create():
                 email=current_user.email if current_user.is_authenticated else session.get("admin_email"),
             )
             
+            # Save post to the database
             db.session.add(new_post)
             db.session.commit()
             flash("Post created successfully!", "success")
+            # Redirect back to homepage (index of posts)
             return redirect(url_for("posts"))
         except Exception as e:
+            # Handle unexpected errors
             print("Error creating post:", e)
             flash(f"Error creating post: {e}", "danger")
 
+    # If GET request or validation fails, reload form page
     return render_template("create.html", form=form, current_date=date.today().isoformat())
 
 
-# Edit post
+# ROUTE: Edit an existing post
 @app.route("/edit/<int:post_id>", methods=["GET", "POST"])
 def edit_post(post_id):
+    # Fetch the post or return 404 if not found
     post = Posts.query.get_or_404(post_id)
 
     # Permission check
+    # - A logged-in user can edit their own post
+    # - Admins can edit any post
     if current_user.is_authenticated:
         is_owner = (post.email == current_user.email)
     elif session.get("admin_email"):
@@ -623,23 +661,25 @@ def edit_post(post_id):
         flash("You are not authorized to edit this post.", "danger")
         return redirect(url_for("posts"))
 
+    # Pre-fill the form with post data
     form = ActivityForm(obj=post)
 
-    # Reload location choices
+    # Reload location choices (fallback defaults if none are found)
     form.location.choices = load_locations()
     if not form.location.choices or form.location.choices == [("none", "--Please select a location--")]:
         form.location.choices = [("Gym", "Gym"), ("Pool", "Pool")]
 
+    # If form submitted and valid
     if form.validate_on_submit():
         start_time = form.start_time.data
         end_time = form.end_time.data
 
-        # Validate time logic
+        # Validation: End time must be later than start time
         if start_time and end_time and end_time <= start_time:
             form.end_time.errors.append("End time must be after start time.")
             return render_template("edit_post.html", form=form, post=post, current_date=date.today().isoformat())
 
-        # Update post fields
+        # Update post fields with new form data
         post.title = form.title.data
         post.content = form.content.data
         post.location = form.location.data
@@ -648,22 +688,22 @@ def edit_post(post_id):
         post.end_time = end_time
         post.participants = form.participants.data
 
-        # Handle new image upload
+        # Handle new image upload (replace old file if exists)
         if form.image.data:
             if post.image_filename:
                 old_path = os.path.join(current_app.root_path, "static/uploads", post.image_filename)
                 if os.path.exists(old_path):
-                    os.remove(old_path)
+                    os.remove(old_path) # delete old image
             file = form.image.data
             filename = secure_filename(file.filename)
             file.save(os.path.join(current_app.root_path, "static/uploads", filename))
             post.image_filename = filename
-
+        # Commit changes to the database
         db.session.commit()
         flash("Post updated successfully!", "success")
         return redirect(url_for("post_detail", post_id=post.post_id))
 
-    # Pre-fill form fields on GET
+    # On GET request, pre-fill the form manually (safety net)
     if request.method == "GET":
         form.title.data = post.title
         form.content.data = post.content
@@ -673,19 +713,22 @@ def edit_post(post_id):
         form.end_time.data = post.end_time
         form.participants.data = post.participants
 
+    # Render the edit post page
     return render_template("edit_post.html", form=form, post=post, current_date=date.today().isoformat())
 
 
-# admin delete post
+# ROUTE: Delete a post (User/Admin)
 @app.route("/delete/<int:post_id>", methods=["POST"])
-def delete(post_id):
+def delete(post_id): # Must be logged in (user or admin)
     if not current_user.is_authenticated and not session.get("as_admin"):
         flash("You must log in first.")
         return redirect(url_for("login"))
 
-    post = Posts.query.get_or_404(post_id)
+    post = Posts.query.get_or_404(post_id) # Fetch post or return 404 if not found
 
-    # ✅ If admin, allow delete
+    #  Permission check
+    # - Admin can delete any post
+    # - Normal users can delete only their own post
     if session.get("as_admin"):
         can_delete = True
     else:
@@ -695,19 +738,20 @@ def delete(post_id):
         flash("You don't have permission to delete this post.", "danger")
         return redirect(url_for("posts"))
 
-    # Delete image if exists
+    # If post has an image → delete from filesystem too
     if post.image_filename:
         img_path = os.path.join(current_app.root_path, "static/uploads", post.image_filename)
         if os.path.exists(img_path):
             os.remove(img_path)
 
+    # Delete post from database
     db.session.delete(post)
     db.session.commit()
     flash("Post deleted successfully!", "success")
 
-    # Redirect admin properly
+    # Redirect admin to the correct page depending on context
     if session.get("as_admin"):
-        if request.args.get("next"):
+        if request.args.get("next"): # e.g. if coming from a modal
             return redirect(request.args.get("next"))
         elif request.referrer and "admin/reports" in request.referrer:
             return redirect(url_for("admin_reports"))
@@ -716,88 +760,100 @@ def delete(post_id):
         else:
             return redirect(url_for("admin_dashboard"))
 
-    # Normal user
+    # Normal user → go back to posts page
     return redirect(url_for("posts"))
 
 
-# Report post
+# ROUTE: Report a post (User/Admin)
 @app.route("/report/<int:post_id>", methods=["POST"])
 def report_post(post_id):
+    # Must be logged in (either normal user or admin)
     if not current_user.is_authenticated and not session.get("admin_email"):
         flash("You must be logged in to report posts.", "danger")
         return redirect(url_for("login"))
 
+    # Fetch the target post
     post = Posts.query.get_or_404(post_id)
 
-    # reporter can be either user.email or admin_email
+    # Reporter identity:
+    # - Normal user → use current_user.email
+    # - Admin → use session['admin_email']
     reporter_email = current_user.email if current_user.is_authenticated else session.get("admin_email")
 
-    # Prevent duplicate reports by same reporter
+    # Prevent duplicate reports by the same user/admin
     existing_report = Reports.query.filter_by(post_id=post_id, reporter_email=reporter_email).first()
     if existing_report:
         flash("You already reported this post.", "warning")
         return redirect(url_for("post_detail", post_id=post_id))
 
-    # Create and commit the report
+    # Create and save new report entry
     new_report = Reports(post_id=post_id, reporter_email=reporter_email)
     db.session.add(new_report)
     db.session.commit()
 
-    # Count total reports from Reports table and hide post if threshold reached
+    # Auto-hide post if it reaches threshold (e.g. 3 reports)
     report_count = Reports.query.filter_by(post_id=post_id).count()
     if report_count >= 3:
         post.is_hidden = True
         db.session.commit()
 
+    # Notify user of successful report
     flash("Post reported successfully.", "success")
     return redirect(url_for("posts"))
 
 
-# Post detail
+# Route to show the detail of a single post
 @app.route("/post/<int:post_id>")
 def post_detail(post_id):
+    # Get the post from database, show 404 if not found
     post = Posts.query.get_or_404(post_id)
 
-    # Get query params with defaults
-    readonly = request.args.get("readonly", type=int)
-    from_reports = request.args.get("from_reports", default=0, type=int)
-    from_dashboard = request.args.get("from_dashboard", default=0, type=int)
-    next_url = request.args.get("next", url_for("posts"))
+    # Get query parameters from the URL (optional settings)
+    readonly = request.args.get("readonly", type=int) # Show as read-only 
+    from_reports = request.args.get("from_reports", default=0, type=int) # Came from reports page
+    from_dashboard = request.args.get("from_dashboard", default=0, type=int) # Came from dashboard
+    next_url = request.args.get("next", url_for("posts")) # Where to go next after this page
 
-    # Force readonly for admins on first visit, while preserving origin flags
+    # If user is admin and readonly is not set, force readonly mode
     if session.get("admin_email") and readonly is None:
-        args = request.args.to_dict(flat=True)  # copy all current args
-        args["readonly"] = 1                   # enforce readonly
+        args = request.args.to_dict(flat=True)  # Copy all current URL parameters
+        args["readonly"] = 1                   # Force readonly
         args.setdefault("from_reports", from_reports)
         args.setdefault("from_dashboard", from_dashboard)
+        # Redirect back to this page with readonly mode on
         return redirect(url_for("post_detail", post_id=post_id, **args))
 
-    # Date handling
+    # Convert post date from UTC to Malaysia timezone for display
     if post.date_posted:
-        utc_time = pytz.utc.localize(post.date_posted)
+        utc_time = pytz.utc.localize(post.date_posted) # Make sure time is UTC
         post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
     else:
-        post.local_date_posted_value = None
+        post.local_date_posted_value = None # No date available
 
+    # Get all activities related to this post
     join_activities = JoinActivity.query.filter_by(post_id=post.post_id).all()
+    # Prepare list to store conversations for post owner
     owner_conversations = []
 
-    owner_email = post.email  # ✅ correct owner field
+    owner_email = post.email  # Who owns this post
 
-    # If current user is the owner → show conversations
+    # If the logged-in user is the owner, show chat partners
     if current_user.is_authenticated and current_user.email.lower() == owner_email.lower():
+        # Find all distinct users who sent messages for this post
         partners = (
             db.session.query(ChatMessage.sender_email)
             .filter_by(post_id=post.post_id)
             .distinct()
         )
+        # Add each partner to the list (skip owner's own email)
         for (email,) in partners:
             if email.lower() != owner_email.lower():
-                user = User.query.get(email)
+                user = User.query.get(email) # Get user info
                 owner_conversations.append(
-                    {"email": email, "name": user.name if user else email}
+                    {"email": email, "name": user.name if user else email} # Use email if name not found
                 )
 
+    # Show the post detail page with all info
     return render_template(
         "post_detail.html",
         post=post,
@@ -1085,6 +1141,8 @@ def save_picture(form_picture):
         raise ValueError("Invalid image file") from e
 
     return picture_fn
+
+
 # Join Activity
 @app.route("/activityrequest/<int:post_id>", methods=["POST"])
 @login_required
@@ -1372,95 +1430,111 @@ def logout():
     return redirect(url_for("home"))
 
 
-# Admin dashboard
+# Admin dashboard page
 @app.route("/admin/dashboard")
-@login_required
+@login_required # Make sure user is logged in
 def admin_dashboard():
+    # Only allow access if the user is an admin
     if current_user.role != "admin":
-        abort(403)  # only admin can access
+        abort(403)  # Stop and show "Forbidden" if not admin
 
+    # Get all users and posts from the database
     users = User.query.all()
     posts = Posts.query.all()
 
+    # Get all users and posts from the database
     return render_template(
         "admin_dashboard.html",
-        admin=current_user,
-        users=users,
-        posts=posts,
-        is_admin=True
+        admin=current_user, # Info about the logged-in admin
+        users=users,  # List of all users
+        posts=posts,  # List of all posts
+        is_admin=True  # Flag to indicate admin view in the template
     )
 
 
-# Admin reports
+# Admin reports page
 @app.route("/admin/reports")
-@login_required
+@login_required # Make sure the user is logged in
 def admin_reports():
+    # Only allow access if the user is an admin
     if current_user.role != "admin":
-        abort(403)
+        abort(403)  # Stop and show "Forbidden" if not admin
 
+    # Get posts that have been reported 3 or more times
     flagged_posts = (
         db.session.query(Posts, db.func.count(Reports.id).label("report_count"))
-        .join(Reports, Reports.post_id == Posts.post_id)
-        .group_by(Posts.post_id)
-        .having(db.func.count(Reports.id) >= 3)  # threshold
+        .join(Reports, Reports.post_id == Posts.post_id) # Join posts with reports
+        .group_by(Posts.post_id) # Group by post
+        .having(db.func.count(Reports.id) >= 3)   # Only posts with 3+ reports
         .all()
     )
 
+    # Get all users who are currently suspended
     suspended_users = User.query.filter_by(is_suspended=True).all()
 
+    # Render the admin reports page with flagged posts and suspended users
     return render_template(
         "admin_reports.html",
-        flagged_posts=flagged_posts,
-        suspended_users=suspended_users
+        flagged_posts=flagged_posts, # List of posts with too many reports
+        suspended_users=suspended_users # List of suspended users
     )
 
-# Suspend user
+# Route to suspend a user
 @app.route("/suspend/<string:email>", methods=["POST"])
-@login_required
+@login_required # Make sure user is logged in
 def suspend_user(email):
+    # Only allow admins to suspend users
     if current_user.role != "admin":
-        abort(403)
+        abort(403)  # Stop and show "Forbidden" if not admin
 
+    # Find the user by email (case-insensitive), 404 if not found
     user = User.query.filter_by(email=email.lower()).first_or_404()
+    # Mark the user as suspended
     user.is_suspended = True
-    db.session.commit()
+    db.session.commit() # Save the change in the database
 
-    flash(f"User {user.email} has been suspended.", "warning")
-    return redirect(url_for("admin_reports"))
+    flash(f"User {user.email} has been suspended.", "warning") # Show a message to confirm the suspension
+    return redirect(url_for("admin_reports")) # Redirect back to the admin reports page
+  
 
-
-# Unsuspend user
+# Route to unsuspend a user
 @app.route("/unsuspend/<string:email>", methods=["POST"])
-@login_required
+@login_required # Make sure the user is logged in
 def unsuspend_user(email):
+    # Only allow admins to unsuspend users
     if current_user.role != "admin":
-        abort(403)
+        abort(403) # Stop and show "Forbidden" if not admin
 
+    # Find the user by email (case-insensitive), 404 if not found
     user = User.query.filter_by(email=email.lower()).first_or_404()
+    # Mark the user as active (not suspended)
     user.is_suspended = False
-    db.session.commit()
+    db.session.commit() # Save the change in the database
 
-    flash(f"User {user.email} has been unsuspended.", "success")
-    return redirect(url_for("admin_reports"))
+    flash(f"User {user.email} has been unsuspended.", "success") # Show a message to confirm the user has been unsuspended
+    return redirect(url_for("admin_reports")) # Redirect back to the admin reports page
 
 
 
-# Reactivate hidden post
+# Route to reactivate a hidden post
 @app.route("/reactivate/<int:post_id>", methods=["POST"])
-@login_required
+@login_required # Make sure the user is logged in
 def reactivate_post(post_id):
+    # Only allow admins to reactivate posts
     if current_user.role != "admin":
-        abort(403)
+        abort(403) # Stop and show "Forbidden" if not admin
 
+    # Find the post by ID, 404 if not found
     post = Posts.query.get_or_404(post_id)
+    # Make the post visible again
     post.is_hidden = False
 
-    # Remove all reports tied to this post
+    # Remove all reports related to this post
     Reports.query.filter_by(post_id=post_id).delete()
 
-    db.session.commit()
-    flash("Post has been reactivated and is now visible.", "success")
-    return redirect(url_for("admin_reports"))
+    db.session.commit() # Save changes in the database
+    flash("Post has been reactivated and is now visible.", "success") # Show a confirmation message
+    return redirect(url_for("admin_reports")) # Redirect back to the admin reports page
 
 
 
@@ -1543,27 +1617,32 @@ def view_user_profile(email):
     user = User.query.get_or_404(email)
     return render_template("profile.html", user=user)
 
-# Switch to admin view
+# Route to switch user to admin view
 @app.route("/switch_to_admin")
 def switch_to_admin():
+    # Only allow if user is logged in and is an admin
     if not current_user.is_authenticated or current_user.role != 'admin':
-        flash("You cannot switch to admin view.", "danger")
-        return redirect(url_for('posts'))
+        flash("You cannot switch to admin view.", "danger") # Show error
+        return redirect(url_for('posts')) # Redirect to posts page
 
+    # Mark the session as admin view
     session['as_admin'] = True
-    flash("Switched to Admin view.", "success")
+    flash("Switched to Admin view.", "success") # Show success message
+    # Redirect to the admin dashboard
     return redirect(url_for('admin_dashboard'))
 
 
-# Switch to user view
+# Route to switch from admin view back to normal user view
 @app.route("/switch_to_user")
 def switch_to_user():
+    # Make sure the user is logged in
     if not current_user.is_authenticated:
-        flash("You need to login first!", "danger")
-        return redirect(url_for('login'))
+        flash("You need to login first!", "danger") # Show error message
+        return redirect(url_for('login')) # Redirect to login page
 
-    session['as_admin'] = False
-    flash("Switched to User view.", "success")
+    session['as_admin'] = False # Turn off admin view for this session
+    flash("Switched to User view.", "success") # Show confirmation message
+    # Redirect to the main posts page
     return redirect(url_for('posts'))
 
 
