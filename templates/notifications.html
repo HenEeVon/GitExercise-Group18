@@ -3,45 +3,69 @@
 
 {% block content %}
 <div class="container">
-    <div class="notifications-header">
-        <h1>Notifications</h1>
+    <div class="welcome">
+        <h1>🔔 Notifications</h1>
+        <p>Stay updated with your latest activity</p>
+    </div>
         <div class="action-row">
             <!--Mark all as read button-->
             <form method="post" action="{{ url_for('notifications_read_all') }}">
-                <button type="submit" class="btn">Mark all as read</button>
+                <button type="submit" class="btn btn-outline small">Mark all as read</button>
             </form>
 
             <!--Delete all button-->
             <form method="post" action="{{ url_for('notifications_clear') }}" onsubmit="return confirm('Are you sure you want to delete all notifications?');">
-                <button type="submit" class="delete-all-btn">Delete all</button>
+                <button type="submit" class="btn btn-outline small">Delete all</button>
             </form>
         </div>
-    </div>
 
     {% if rows %}
         <ul class="notifications-list">
             {% for notif in rows %}
                 <li class="notification {{'read' if notif.is_read else 'unread'}}">
-                    {% if notif.link %}
-                        <a href="{{ url_for('open_notif', notif_id=notif.id) }}">{{ notif.text }}</a>
-                    {% else %}
-                        {{ notif.text }}
-                    {% endif %}
-                    <span class="time">
-                        {% if notif.local_time %}
-                            {{ notif.local_time.strftime('%d/%m/%Y %H:%M') }}
+                    <div class="notif-left">
+                        {% set notiftext = (notif.text or '').lower() %}
+                        {% if 'message' in notiftext %}
+                            <span class="notif-icon" type-message>💬</span>
+                        {% elif 'accepted' in notiftext %}
+                            <span class="notif-icon type-accepted">✅</span>
+                        {% elif 'rejected' in notiftext %}
+                            <span class="notif-icon type-rejected">❌</span>
+                        {% elif 'password' in notiftext %}
+                            <span class="notif-icon type-account">🔐</span>
+                        {% else %}
+                            <span class="notif-icon type-default">🔔</span>
                         {% endif %}
-                    </span>
+
+                        <div class="notif-main">
+                            <p class="notif-text">
+                                {% if notif.link %}
+                                    <a href="{{ url_for('open_notif', notif_id=notif.id) }}">{{ notif.text }}</a>
+                                {% else %}
+                                    {{ notif.text }}
+                                {% endif %}
+                            </p>
+                            {% if notif.local_time %}
+                            <span class="time">
+                                {{ notif.local_time.strftime('%d/%m/%Y %H:%M') }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
 
                     <!--Delete single notification-->
-                    <form method="post" action="{{ url_for('notifications_delete', notif_id=notif.id) }}">
-                        <button type="submit" class="single-delete-btn">delete</button>
-                    </form>
+                    <div class="notif-actions">
+                        <form method="post" action="{{ url_for('notifications_delete', notif_id=notif.id) }}">
+                            <button type="submit" class="single-delete-btn">x</button>
+                        </form>
+                    </div>
                 </li>
             {% endfor %}
         </ul>
     {% else %}
-        <p>No notifications yet.</p>
+        <div class="no-notif">
+            <p>📭No notifications yet</p>
+        </div>
     {% endif %}
 </div>
 {% endblock %}

@@ -31,6 +31,7 @@
                 {% if current_user.role == 'admin' %}
                     {% if session.get('as_admin', True) %}
                         <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                        <a href="{{ url_for('admin_reports') }}">Reports</a>
                         <a href="{{ url_for('admin_approval') }}">Admin Approvals</a>
                         <a href="{{ url_for('upload_location_csv') }}">Upload Location</a>
                         <a href="{{ url_for('switch_to_user') }}">User Panel</a>
@@ -75,9 +76,13 @@
         <form method="POST" enctype="multipart/form-data"> <!--sends data via POST request (required file uploads).-->
             <input type="file" name="file" accept=".csv" required> <!--restricts file for CSV files only.-->
             <!-- Info icon that links to modal -->
-        <a href="#modalloc" class="info-icon">
-            <i class="fa-solid fa-circle-info"></i>Click to view example of correct CSV File Format
+        <a href="#modalloc" class="info-link">
+            <span class="info-icon">
+                <i class="fa-solid fa-circle-info"></i>
+            </span>
+            <span class="info-text">Click to view example of correct CSV File Format</span>
         </a>
+
 
         <!-- Modal -->
         <div id="modalloc" class="modal">

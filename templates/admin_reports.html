@@ -5,7 +5,21 @@
 <div class="container">
     <h1>Admin Reports</h1>
 
-    <!-- Flagged Posts -->
+    <!-- Flash messages: Show notifications like "User suspended" or "Post reactivated" -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="popup">
+                    <div class="popup-content {{ category if category else '' }}">
+                        <p>{{ message }}</p>
+                        <a href="{{ request.path }}"><button class="submit">OK</button></a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Flagged Posts Section -->
     {% if flagged_posts %}
         <h3>Flagged Posts</h3>
         <table class="styled-table">
@@ -40,20 +54,25 @@
                     <td>
                         {% if post.is_hidden %}
                             <form action="{{ url_for('reactivate_post', post_id=post.post_id) }}" method="POST" style="display:inline;">
-                                <button class="btn btn-success btn-sm">Reactivate</button>
+                                <button class="btn reactivate-btn">Reactivate</button>
                             </form>
                         {% endif %}
-                        <form action="{{ url_for('delete', post_id=post.post_id) }}" method="POST" style="display:inline;">
-                            <button class="btn btn-danger btn-sm">Delete</button>
+                        {% set next_url = url_for('admin_reports') %}
+                        <form action="{{ url_for('delete', post_id=post.post_id, admin=1, next=next_url) }}" 
+                            method="POST" style="display:inline;">
+                            <button class="btn delete-btn">Delete</button>
                         </form>
-                        <a href="{{ url_for('post_detail', post_id=post.post_id, readonly=1, from_reports=1) }}" class="btn btn-info">View</a>
+
+
+
+                        <a href="{{ url_for('post_detail', post_id=post.post_id, readonly=1, from_reports=1) }}" class="btn view-btn">View</a>
 
                         {% if post.user %}
                             {% if post.user.is_suspended %}
                                 <span class="text-muted">User Suspended</span>
                             {% else %}
                                 <form action="{{ url_for('suspend_user', email=post.user.email) }}" method="POST" style="display:inline;">
-                                    <button class="btn btn-warning btn-sm">Suspend User</button>
+                                    <button class="btn suspend-btn">Suspend User</button>
                                 </form>
                             {% endif %}
                         {% endif %}
@@ -66,7 +85,7 @@
         <p>No flagged posts.</p>
     {% endif %}
 
-    <!-- Suspended Users -->
+    <!-- Suspended Users Section -->
     <h3 class="mt-4">Suspended Users</h3>
     {% if suspended_users %}
         <table class="styled-table">
@@ -84,7 +103,7 @@
                     <td>{{ user.name }}</td>
                     <td>
                         <form action="{{ url_for('unsuspend_user', email=user.email) }}" method="POST" style="display:inline;">
-                            <button class="btn btn-info btn-sm">Unsuspend</button>
+                            <button class="btn unsuspend-btn">Unsuspend</button>
                         </form>
                     </td>
                 </tr>
