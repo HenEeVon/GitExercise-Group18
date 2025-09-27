@@ -37,7 +37,7 @@
                 <!-- Right Register Form -->
                 <div class="main">
                     <div class="login-box">
-
+                        <!--flash message-->
                         {% with messages = get_flashed_messages() %}
                         {% if messages %}
                         {% for message in messages %}
@@ -51,7 +51,8 @@
                         {% endif %}
                         {% endwith %}
                         
-                        <form action="{{ url_for('register') }}" method="POST" enctype="multipart/form-data">
+                        <!--when submitted, form send data to route-->
+                        <form action="{{ url_for('register') }}" method="POST" enctype="multipart/form-data"> <!--for file uploaded-->
                             <h2 class="form-title">Register User</h2>
 
                             <p class="colortext">
@@ -92,11 +93,12 @@
                             <p class="colortext">
                                 <span><strong>Security Question (For Reset Password)</strong></span>
                                 <select name="security_question" class="form-select" required>
-                                    <option value="" disabled selected>-- Select a security question --</option>
-                                    {% for key, text in question.items() %}
+                                    <option value="" disabled selected>-- Select a security question --</option> <!--default option-->
+                                    {% for key, text in question.items() %} <!--loop through dictionary question-->
+                                        <!--key set on dictionary-->
                                         <option value="{{ key }}"
-                                            {% if user and user.security_question == key %} selected {% endif %}>
-                                            {{ text }}
+                                            {% if user and user.security_question == key %} selected {% endif %}> <!--when user selected option match the key-->
+                                            {{ text }} <!--question display-->
                                         </option>
                                     {% endfor %}
                                 </select>

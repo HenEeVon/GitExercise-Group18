@@ -157,27 +157,27 @@ class JoinActivity(db.Model):
     user = db.relationship("User", backref="join_activities", lazy=True)
     post = db.relationship("Posts", backref="join_activities", lazy=True)
 
-
+#done by LeeEeWen (StudentID:243FC245ST)    
 def load_locations():
-    csv_path = os.path.join("instance", "locations.csv")
-    choices = []
+    csv_path = os.path.join("instance", "locations.csv") #build path for csv file 
+    choices = [] #hold formatted output
 
     if os.path.exists(csv_path):
-        locations = []
-        with open(csv_path, "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
+        locations = [] 
+        with open(csv_path, "r", encoding="utf-8") as f: 
+            reader = csv.DictReader(f) #reads the CSV file into dictionary(key= name,distance)
             for row in reader:
-                if row.get("name") and row.get("distance"):
+                if row.get("name") and row.get("distance"): #ensure each row have name and distance value
                     try:
-                        name = row["name"].strip()
-                        distance = float(row["distance"])
-                        locations.append((name, f"{name} ({distance}km)", distance))
+                        name = row["name"].strip() #removes extra spaces from the location name.
+                        distance = float(row["distance"]) #converts the distance from string to number.
+                        locations.append((name, f"{name} ({distance}km)", distance)) #append tuple into locations
                     except ValueError:
                         continue  # skip invalid distances
 
-        # sort by distance
-        locations.sort(key=lambda x: x[2])
-        # only keep (value, label)
+        # line sort by distance
+        locations.sort(key=lambda x: x[2]) #third elements of tuple(distance)
+        # only keep (value save in db, formatted label tht user see)
         choices = [(loc[0], loc[1]) for loc in locations]
 
     return choices
@@ -320,13 +320,14 @@ def datetimeformat(value, format="%d/%m/%Y"):
     except Exception:
         return value # Catch any unexpected errors and return original value
 
+#done by LeeEeWen (StudentID:243FC245ST)    
 # Home page
 @app.route("/")
 def home():
     return render_template("home.html")
 
-
-# Register page
+#done by LeeEeWen (StudentID:243FC245ST)    
+# Register page（show for and submit form)
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -339,13 +340,13 @@ def register():
         security_answer = request.form.get("security_answer", "").strip().lower()
         password = request.form.get("password", "").strip()
 
-        if not (email and name and password):
+        if not (email and name and password): #ensure required field not empty
             flash("Please fill in all required fields.")
             return redirect(url_for("register"))
 
         # Hash the password
         hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
-        picture_file = "default_image.png"
+        picture_file = "default_image.png" #default image if not file uploaded for profile picture
         if "picture" in request.files and request.files["picture"].filename:
             picture_file = save_profile_picture(request.files["picture"], email)
 
@@ -363,28 +364,28 @@ def register():
         )
 
         try:
-            db.session.add(new_user)
+            db.session.add(new_user)#save to db
             db.session.commit()
 
             flash("Registration successful! Please log in.", "success")
             return redirect(url_for("login"))  # direct to login page
 
-        except IntegrityError:
+        except IntegrityError: 
             db.session.rollback()
             flash("Email already exists. Please log in.", "warning")
             return redirect(url_for("login"))
 
     return render_template("register.html", question=question)
 
-
+#done by LeeEeWen (StudentID:243FC245ST)    
 # Login page
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == "POST":
+    if request.method == "POST": #user submit form
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "").strip()
 
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=email).first() #fetch by email
 
         if not user:
             flash("Email not found.")
@@ -401,7 +402,7 @@ def login():
         # Login successful
         login_user(user)
 
-        if user.role == 'admin':
+        if user.role == 'admin': #set session role 
             session['as_admin'] = True
         else:
             session['as_admin'] = False
@@ -417,24 +418,25 @@ def login():
 
     return render_template("login.html")
 
-
+#done by LeeEeWen (StudentID:243FC245ST)    
 @app.route("/reset_password", methods=["GET", "POST"])
 def reset_password():
     if request.method == "POST":
-        step = request.form.get("current")
+        step = request.form.get("current") #get value from name="current" in templates
 
-        # Step 1: Enter email
+        # Step 1: Enter email(If valid, show security question.)
         if step == "email":
             email = request.form.get("email", "").strip().lower()
-            user = User.query.filter_by(email=email).first()
+            user = User.query.filter_by(email=email).first() #return first matching results
 
             if not user:
                 flash("Email not found.", "warning")
                 return render_template("login.html", open_reset_modal=True, question=question)
 
-            security_question = question.get(
+            security_question = question.get( #look for key inside dictionary
+                #retrieves the stored security question key
                 user.security_question.strip().lower(),
-                "Security question not found"
+                "Security question not found" #if sec doesnt exist
             )
 
             return render_template(
@@ -448,8 +450,8 @@ def reset_password():
         # Step 2: Submit answer & new password
         elif step == "reset":
             email = request.form.get("email", "").strip().lower()
-            answer = request.form.get("security_answer", "").strip().lower()
-            new_password = request.form.get("new_password", "")
+            answer = request.form.get("security_answer", "").strip().lower() #get answer from user
+            new_password = request.form.get("new_password", "") 
 
             user = User.query.filter_by(email=email).first()
             if not user:
@@ -457,13 +459,14 @@ def reset_password():
                 return render_template("login.html", open_reset_modal=True, question=question)
 
             if user.security_answer.lower() == answer:
-                user.password = generate_password_hash(new_password, method="pbkdf2:sha256")
-                db.session.commit()
+                user.password = generate_password_hash(new_password, method="pbkdf2:sha256") #hash new password
+                db.session.commit() #update in database
                 add_notification(user.email, "Your password was reset successfully.")
                 flash("Password updated successfully!")
                 return redirect(url_for("login"))
             else:
                 flash("Security answer incorrect.", "danger")
+                #render templates but keep the modal open(email stay filled in and correct security question)
                 return render_template(
                     "login.html",
                     open_reset_modal=True,
@@ -670,7 +673,7 @@ def edit_post(post_id):
     # Reload location choices (fallback defaults if none are found)
     form.location.choices = load_locations()
     if not form.location.choices or form.location.choices == [("none", "--Please select a location--")]:
-        form.location.choices = [("Gym", "Gym"), ("Pool", "Pool")]
+        form.location.choices = []
 
     # If form submitted and valid
     if form.validate_on_submit():
@@ -1137,19 +1140,19 @@ def profile_edit():
 @app.route("/activityrequest/<int:post_id>", methods=["POST"])
 @login_required
 def activityrequest(post_id):
-    post = Posts.query.get_or_404(post_id)
+    post = Posts.query.get_or_404(post_id) #fetch post or return 404
 
     if post.post_status == "closed":
         flash("This activity is already closed.")
         return redirect(url_for("post_detail", post_id=post.post_id))
 
     # Prevent duplicate request
-    existing = JoinActivity.query.filter_by(email=current_user.email, post_id=post.post_id).first()
+    existing = JoinActivity.query.filter_by(email=current_user.email, post_id=post.post_id).first() #database query on the JoinActivity table and look for current user email and request related for specific post
     if existing:
         flash("You already requested this activity.")
     else:
-        join_act = JoinActivity(email=current_user.email, post_id=post.post_id)
-        db.session.add(join_act)
+        join_act = JoinActivity(email=current_user.email, post_id=post.post_id) #create a new JoinActivity record
+        db.session.add(join_act) #add in db
         db.session.commit()
         flash("Your request has been sent to the post owner.")
 
@@ -1161,12 +1164,12 @@ def activityrequest(post_id):
 
     return redirect(url_for("post_detail", post_id=post.post_id))
 
-
-# Handle Join Activity requests
-@app.route("/handleactivity/<int:request_id>/<string:decision>", methods=["POST"])
+#done by LeeEeWen (StudentID:243FC245ST)    
+# Handle Join Activity requests by authors post
+@app.route("/handleactivity/<int:request_id>/<string:decision>", methods=["POST"]) 
 @login_required
 def handle_request(request_id, decision):
-    join_activity = JoinActivity.query.get_or_404(request_id)
+    join_activity = JoinActivity.query.get_or_404(request_id) #Finds the JoinActivity record by request_id.
     post = join_activity.post
 
     # Only the post owner can handle requests
@@ -1174,16 +1177,16 @@ def handle_request(request_id, decision):
         flash("You are not authorized to manage this request.")
         return redirect(url_for("post_detail", post_id=post.post_id))
 
-    if post.post_status == "closed":
+    if post.post_status == "closed": #if status is closed,don’t allow further actions.
         flash("This activity is already closed.")
         return redirect(url_for("post_detail", post_id=post.post_id))
 
     if decision == "accept":
-        accepted_count = JoinActivity.query.filter_by(post_id=post.post_id, status="accepted").count()
+        accepted_count = JoinActivity.query.filter_by(post_id=post.post_id, status="accepted").count() #Count how many users have already been accepted for this activity.
 
         if accepted_count < post.participants:
             join_activity.status = "accepted"
-            flash(f"{join_activity.user.name if join_activity.user else join_activity.email} has been accepted!")
+            flash(f"{join_activity.user.name if join_activity.user else join_activity.email} has been accepted!") 
 
             add_notification(
                 join_activity.email,
@@ -1208,13 +1211,13 @@ def handle_request(request_id, decision):
     return redirect(url_for("post_detail", post_id=post.post_id))
 
 
-
+#done by LeeEeWen (StudentID:243FC245ST)    
 #admin interface
 # Create default first admin
 def create_first_admin():
-    existing_admin = User.query.filter(User.role.in_(["admin"])).first()
+    existing_admin = User.query.filter(User.role.in_(["admin"])).first() #look in user db and look for if role is "admin".
     
-    if not existing_admin:
+    if not existing_admin: 
         admin_user = User(
             email="eewen@gmail.com",
             name="Lee Ee Wen",
@@ -1225,15 +1228,15 @@ def create_first_admin():
             security_answer="Cinderella",
             role="admin"
         )
-        db.session.add(admin_user)
+        db.session.add(admin_user) #if not add, default admin to database
         db.session.commit()
 
 
-
+#done by LeeEeWen (StudentID:243FC245ST)    
 # REQUEST ADMIN ACCESS
 @app.route("/request_admin", methods=["GET", "POST"])
 def request_admin():
-    # Get email from form (POST) or query string (GET)
+    # if request is post, take the email from request.form. if request is get, get the eamil from url
     email = request.form.get("email", "").strip().lower() if request.method == "POST" else request.args.get("email", "").strip().lower()
 
     # Prevent existing admins from submitting requests
@@ -1242,21 +1245,21 @@ def request_admin():
         flash("You are already an admin. Please log in.")
         return redirect(url_for("login"))
 
-    # Determine step: default to "email"
+    # Determine step: default to "email" step1
     step = request.form.get("step", "email")
 
     # Step 1: show email / pre-filled form
     if step == "email" and request.method == "POST" or request.method == "GET":
         return render_template(
-            "request_admin.html",
+            "request_admin.html", #show form of the templates
             email=email,
-            existing_user=existing_user,
-            question=question
+            existing_user=existing_user, #if user is existing user, the form will auto fill email and full name
+            question=question #pass security question to templates
         )
 
-    # Step 2: submit admin request
+    # Step 2: submit admin full request 
     elif step == "submit" and request.method == "POST":
-        join_reason = request.form.get("join_reason", "").strip()
+        join_reason = request.form.get("join_reason", "").strip() #user had filled in the form and form grab the join_reason
 
         # Check if a request already exists
         existing_request = AdminRequest.query.filter_by(email=email).first()
@@ -1283,7 +1286,7 @@ def request_admin():
 
             password_hash = generate_password_hash(password, method="pbkdf2:sha256")
 
-        # Create new admin request
+        # Create new admin request in database
         new_request = AdminRequest(
             email=email,
             name=name,
@@ -1302,7 +1305,7 @@ def request_admin():
     # Default render
     return render_template("request_admin.html", question=question, email=email, existing_user=existing_user)
 
-        
+#done by LeeEeWen (StudentID:243FC245ST)       
 # HANDLE REQUEST (any logged-in admin can approve/reject)
 @app.route("/handle-request/<int:approval_id>", methods=["GET", "POST"])
 @login_required
@@ -1310,24 +1313,24 @@ def handle_request_admin(approval_id):
     if current_user.role not in ["admin"]:
         flash("You do not have permission to perform this action.")
         return redirect(url_for("home"))
-
+    #Fetches an AdminRequest from the database with that approval_id
     join_request = AdminRequest.query.get_or_404(approval_id)
 
     if request.method == "POST":
         decision = request.form.get("decision")
 
         if decision == "accept":
-            # Check if user already exists
+            # Look up the user email in the User table 
             user = User.query.filter_by(email=join_request.email).first()
 
             if user:
-                # Existing user: only update role
+                # Existing user: only upgrade them to admin role
                 if user.role == "user":
                     user.role = "admin"
 
-                # Ensure security question and answer exist
+                # Ensure security question and answer exist(if missing, get value from AdminRequest. ) 
                 if not user.security_question or not user.security_answer:
-                    user.security_question = join_request.security_question
+                    user.security_question = join_request.security_question 
                     user.security_answer = join_request.security_answer
 
             else:
@@ -1345,7 +1348,7 @@ def handle_request_admin(approval_id):
                 db.session.add(new_user)
 
             join_request.approval = "approved"
-            db.session.commit()
+            db.session.commit() #add new admin into db if accepted by existing admin
             flash(f"{join_request.name} has been approved as admin.")
 
         elif decision == "reject":
@@ -1355,19 +1358,18 @@ def handle_request_admin(approval_id):
 
         return redirect(url_for("admin_approval"))
 
-    return render_template("join_admin.html", request=join_request)
 
-
-# ADMIN APPROVAL PAGE
+#done by LeeEeWen (StudentID:243FC245ST)    
+# show ADMIN APPROVAL PAGE for admin know who request to join admin
 @app.route("/admin_approval")
 @login_required
 def admin_approval():
     # check role
-    if current_user.role not in ["admin"]:
+    if current_user.role not in ["admin"]: # If the logged-in user’s role is not "admin" , then block them.
         flash("You do not have permission to access this page.")
         return redirect(url_for("home"))
 
-    # normal admin logic
+    # Fetch all and pull admin requests from the db table
     pending_requests = AdminRequest.query.filter_by(approval="pending").all()
     approved_requests = AdminRequest.query.filter_by(approval="approved").all()
     rejected_requests = AdminRequest.query.filter_by(approval="rejected").all()
@@ -1379,20 +1381,20 @@ def admin_approval():
         rejected_requests=rejected_requests
     )
 
-
+#done by LeeEeWen (StudentID:243FC245ST)    
 @app.route("/check_approval", methods=["GET", "POST"])
 def check_approval():
-    email = request.form.get("email", "").strip().lower()
+    email = request.form.get("email", "").strip().lower() #Pulls email from the submitted form
     open_approval_modal = True
-    approval_status = None
+    approval_status = None #placeholder storing approval_status or none for not found
 
-    if request.method == "POST" and email:
-        # Check if there is a pending or approved request
-        req = AdminRequest.query.filter_by(email=email).first()
+    if request.method == "POST" and email: #run only when user submit email
+        # Looks in the AdminRequest table for a record with this email.
+        req = AdminRequest.query.filter_by(email=email).first() #access approval column
         if req:
             approval_status = req.approval.lower()
         else:
-            # Check if user exists and has admin role
+            # if not found, Check if user exists and has admin role
             user = User.query.filter_by(email=email).first()
             if user and user.role in ["admin"]:
                 approval_status = "approved"
@@ -1538,8 +1540,7 @@ def inject_admin():
 
 
 # Upload location list
-import io
-
+#done by LeeEeWen (StudentID:243FC245ST)    
 @app.route("/admin/updatelocation", methods=["GET", "POST"])
 @login_required
 def upload_location_csv():
@@ -1548,35 +1549,35 @@ def upload_location_csv():
         return redirect(url_for("login"))
 
     if request.method == "POST":
-        file = request.files.get("file")
+        file = request.files.get("file") #holds all uploaded files from a form and name:file from templates input must match here
         if not file or file.filename == "":
             flash("Please select a CSV file.")
             return redirect(url_for("upload_location_csv"))
 
         try:
-            csv_path = os.path.join("instance", "locations.csv")
+            csv_path = os.path.join("instance", "locations.csv") #file is always stored in instance/locations.csv.
 
             # Load existing locations
-            locations = {}
-            if os.path.exists(csv_path):
+            locations = {} 
+            if os.path.exists(csv_path): #Checks if the file (locations.csv) already exists in the instance/ folder.
                 with open(csv_path, "r", encoding="utf-8") as f:
-                    for row in csv.DictReader(f):
-                        try:
-                            locations[row["name"].strip()] = float(row["distance"])
+                    for row in csv.DictReader(f): #Reads the CSV file using csv.DictReader. each line of csv file become key, value
+                        try: #gets the "name" value, and converts distance string into a float
+                            locations[row["name"].strip()] = float(row["distance"]) 
                         except:
-                            continue
+                            continue #if the row missing, it will skip reading
 
-            # Read uploaded
-            reader = csv.DictReader(io.TextIOWrapper(file.stream, encoding="utf-8"))
-            if not {"name", "distance"}.issubset(reader.fieldnames):
-                flash("CSV must have 'name' and 'distance' columns.")
+            #read csv files ,parses the CSV into dictionaries and ensures the file stream is read as text (UTF-8).
+            reader = csv.DictReader(io.TextIOWrapper(file.stream, encoding="utf-8")) 
+            if not {"name", "distance"}.issubset(reader.fieldnames):#check required column
+                flash("CSV must have 'name' and 'distance' columns.") 
                 return redirect(url_for("upload_location_csv"))
 
-            new_or_updated = 0
+            new_or_updated = 0 #initialize counter
             for row in reader:
                 try:
-                    name, dist = row["name"].strip(), float(row["distance"])
-                    if name not in locations or locations[name] != dist:
+                    name, dist = row["name"].strip(), float(row["distance"]) #get name and distance of location convert to float
+                    if name not in locations or locations[name] != dist: #new location or name exist but distance change
                         locations[name] = dist
                         new_or_updated += 1
                 except:
@@ -1588,9 +1589,11 @@ def upload_location_csv():
 
             # Save sorted
             with open(csv_path, "w", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=["name", "distance"])
+                writer = csv.DictWriter(f, fieldnames=["name", "distance"]) #Writes the first row (name,distance)
                 writer.writeheader()
-                for n, d in sorted(locations.items(), key=lambda x: x[1]):
+                #locations.items() give key-value pairs from the dictionary, take each pair (name, distance)and compare with the secondelement (x[1] → distance) and sort by that value.
+                for n, d in sorted(locations.items(), key=lambda x: x[1]): 
+                    # write name and distance with formats the distance as a number with 2 decimal places.
                     writer.writerow({"name": n, "distance": f"{d:.2f}"})
 
             flash(f"Upload successful! {new_or_updated} location(s) added/updated.")
