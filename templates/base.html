@@ -13,7 +13,7 @@
         <a class="header-logo" href="{{ url_for('home') }}"><span>ebFit</span></a>
 
         <div class="nav-right">
-            <!-- Search bar for normal users -->
+            <!-- Search bar (visible for normal users or admins in user view) -->
             {% if current_user.is_authenticated and current_user.role != 'admin' or (current_user.role == 'admin' and not session.get('as_admin', True)) %}
             <div class="navbar-search">
                 <details>
@@ -41,7 +41,7 @@
                     {% endif %}
                     <a href="{{ url_for('logout') }}">Logout</a>
                 {% else %}
-                    <!-- User view -->
+                    <!-- Normal User view -->
                     <a href="{{ url_for('posts') }}">Posts</a>
                     <a href="{{ url_for('notifications') }}">Notifications
                             {% if unread_count > 0 %}
@@ -70,6 +70,7 @@
     {% block content %}{% endblock %}
 </main>
 
+<!-- Socket.io script for real-time features (like notifications or chat) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
         integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
         crossorigin="anonymous">

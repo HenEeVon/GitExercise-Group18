@@ -5,10 +5,11 @@
 <div class="container">
     <h1>Create Post</h1>
 
+    <!-- Form to create a new post -->
     <form method="POST" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
 
-        <!-- Title -->
+        <!-- Title input -->
         <div class="form-group">
             {{ form.title.label(class="form-label") }}
             {{ form.title(class="form-control", placeholder="Enter a short title") }}
@@ -17,7 +18,7 @@
             {% endfor %}
         </div>
 
-        <!-- Image -->
+        <!-- Image upload -->
         <div class="form-group">
             {{ form.image.label(class="form-label") }}
             {{ form.image(class="form-control-file") }}
@@ -26,13 +27,13 @@
             {% endfor %}
         </div>
 
-        <!-- Content -->
+        <!-- Content textarea -->
         <div class="form-group">
             {{ form.content.label(class="form-label") }}
             {{ form.content(class="form-control", rows=5, placeholder="Describe your activity...") }}
         </div>
 
-        <!-- Location -->
+        <!-- Location dropdown -->
         <div class="form-group">
             <label for="location-select"><strong>{{ form.location.label.text }}</strong></label>
             <select name="{{ form.location.name }}" id="location-select" class="form-select" required>
@@ -48,7 +49,7 @@
             </div>
         </div>
 
-        <!-- Event Date (future only) -->
+        <!-- Event date (future dates only) -->
         <div class="form-group">
             {{ form.event_date.label(class="form-label") }}
             <input type="date" name="{{ form.event_date.name }}" class="form-control"
@@ -82,7 +83,7 @@
         </div>
 
 
-        <!-- Participants -->
+        <!-- Number of participants -->
         <div class="form-group">
             {{ form.participants.label(class="form-label") }}
             {{ form.participants(class="form-control", min="1") }}
@@ -91,7 +92,7 @@
             {% endfor %}
         </div>
 
-        <!-- Submit -->
+        <!-- Submit buttons -->
         <div class="form-group">
             <a href="{{ url_for('posts') }}" class="btnpost5 btn-gap">Cancel</a>
             <button type="submit" class="btnpost5">Post</button>
@@ -99,6 +100,7 @@
     </form>
 </div>
 
+<!-- Simple styling for error messages -->
 <style>
     .alert {
         margin-top: 5px;
@@ -108,6 +110,7 @@
     }
 </style>
 
+<!-- Script to show Google Maps link for selected location -->
 <script>
     const select = document.getElementById("location-select"); 
     const link = document.getElementById("map-link");

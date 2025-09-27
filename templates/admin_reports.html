@@ -5,7 +5,7 @@
 <div class="container">
     <h1>Admin Reports</h1>
 
-    <!-- Flash messages -->
+    <!-- Flash messages: Show notifications like "User suspended" or "Post reactivated" -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
@@ -19,7 +19,7 @@
         {% endif %}
     {% endwith %}
 
-    <!-- Flagged Posts -->
+    <!-- Flagged Posts Section -->
     {% if flagged_posts %}
         <h3>Flagged Posts</h3>
         <table class="styled-table">
@@ -85,7 +85,7 @@
         <p>No flagged posts.</p>
     {% endif %}
 
-    <!-- Suspended Users -->
+    <!-- Suspended Users Section -->
     <h3 class="mt-4">Suspended Users</h3>
     {% if suspended_users %}
         <table class="styled-table">
