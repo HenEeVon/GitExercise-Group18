@@ -39,13 +39,13 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 # Uploaded files (e.g., profile pictures, post images)
-# will be stored in "static/uploads" folder.
+# will be stored in "static/uploads" and "static/profile_pics" folder.
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 # Restrict maximum upload file size (10 MB here).
 # Helps prevent server overload due to very large uploads.
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 *1024
 
-#--- Navbar unread notifications counter - Done by Hen Ee Von ---
+#--- Navbar unread notifications counter ---
 @app.context_processor
 def notif_count():
     if current_user.is_authenticated:
@@ -206,19 +206,17 @@ class ActivityForm(FlaskForm):
             raise ValidationError("End time must be after start time.")
 
 
-# Chat database
+# --- Chat message model ---
 class ChatMessage(db.Model):
     __tablename__ = "chat_messages"
 
-    id = db.Column(db.Integer, primary_key=True)
-    post_id = db.Column(db.Integer, nullable=False, index=True)
-    conversation = db.Column(db.String(600), nullable=False, index=True)
-
-    sender_email = db.Column(db.String(255), nullable=False)  # unified with email convention
-    sender_name = db.Column(db.String(255), nullable=False)
-    text = db.Column(db.Text, nullable=False)
-
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    id = db.Column(db.Integer, primary_key=True) #unique ID for each chat message
+    post_id = db.Column(db.Integer, nullable=False, index=True) #Link the messages to a specific post
+    conversation = db.Column(db.String(600), nullable=False, index=True) #Conversation key is to ensure owner and user messages stay in one thread
+    sender_email = db.Column(db.String(255), nullable=False)  #Email of the sender
+    sender_name = db.Column(db.String(255), nullable=False) #Name of the sender
+    text = db.Column(db.Text, nullable=False) # Message content
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True) #Timestamp when the message is created
 
 question = {
     "pet": "What was your first pet name?",
@@ -231,69 +229,68 @@ question = {
     "book": "What was your favorite childhood book?"
 }
 
-#Update Profile database
+# --- Update Profile database ---
 class UpdateProfileForm(FlaskForm):
-    name = StringField("Full Name", validators=[DataRequired(), Length(min=2, max=50)])
-    gender = SelectField("Gender", choices=[("Male", "Male"), ("Female", "Female")])
-    sport_level = SelectField("Fitness Level", choices=[("newbie","Newbie"),("intermediate","Intermediate"),("advanced","Advanced")], validators=[DataRequired()])
-    bio = TextAreaField("Bio", validators=[Length(max=200)])
+    name = StringField("Full Name", validators=[DataRequired(), Length(min=2, max=50)]) #User's full name
+    gender = SelectField("Gender", choices=[("Male", "Male"), ("Female", "Female")]) #Gender options
+    sport_level = SelectField("Fitness Level", choices=[("newbie","Newbie"),("intermediate","Intermediate"),("advanced","Advanced")], validators=[DataRequired()]) #Fitness level
+    bio = TextAreaField("Bio", validators=[Length(max=200)]) #bio to introduce themselves
     security_question = SelectField("Security Question", choices=question, validators=[DataRequired()])
     security_answer = StringField("Security Answer", validators=[DataRequired(), Length(max=255)])
-    picture = FileField("Update Profile Picture", validators=[FileAllowed(["jpg", "png"])])
-    submit = SubmitField("Update")
+    picture = FileField("Update Profile Picture", validators=[FileAllowed(["jpg", "png"])]) #Upload new profile picture
+    submit = SubmitField("Update") #Button to save profile updates
 
 
-# --- Notifications model(who get what msg and read status) - Done by Hen Ee Von ---
+# --- Notifications model ---
 class Notification(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(255), db.ForeignKey("users.email"), nullable=False)
-    text = db.Column(db.String(500), nullable=False)
-    link = db.Column(db.String(500), nullable=True)
-    is_read = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    id = db.Column(db.Integer, primary_key=True) #unique ID for each notification
+    email = db.Column(db.String(255), db.ForeignKey("users.email"), nullable=False) #user who will receive this notification (linked to User table)
+    text = db.Column(db.String(500), nullable=False) #the content/message of the notification
+    link = db.Column(db.String(500), nullable=True) #link to redirect when clicking the notifications
+    is_read = db.Column(db.Boolean, default=False) #Status: False means unread, True means read
+    created_at = db.Column(db.DateTime, default=datetime.utcnow) #Timestamp when the notification is created
 
-# --- Helper to create notifications safely - Done by Hen Ee Von ---
-def add_notification(email, text, link=None):
+def add_notification(email, text, link=None): #Safely add a new notification for a user
     try:
-        db.session.add(Notification(email=email, text=text, link=link))
-        db.session.commit()
+        db.session.add(Notification(email=email, text=text, link=link)) #Insert notification
+        db.session.commit() #Save to database
     except Exception:
-        db.session.rollback()
+        db.session.rollback() #Rollback if error occurs
 
-def save_profile_picture(uploaded, owner_email=None,old_filename=None):
+def save_profile_picture(uploaded, owner_email=None,old_filename=None): # define the folder path to store profile pics inside static/profile_pics
     folder = os.path.join(current_app.root_path, "static", "profile_pics")
-    os.makedirs(folder, exist_ok=True)
+    os.makedirs(folder, exist_ok=True) # Create folder if it doesn't exist
 
-    if owner_email:
+    if owner_email: # Decide the filename prefix based on who owns the picture
         prefix_src = owner_email
     elif getattr(current_user, "is_authenticated", False):
-        prefix_src = current_user.email
+        prefix_src = current_user.email # If logged in, use current_user's email
     else:
-        prefix_src = "user"
+        prefix_src = "user" # Fallback
 
-    prefix = secure_filename(prefix_src.split("@")[0])
-    filename = f"{prefix}_{secure_filename(uploaded.filename)}"
-    path = os.path.join(folder, filename)
+    prefix = secure_filename(prefix_src.split("@")[0]) # Only safe characters and take before @
+    filename = f"{prefix}_{secure_filename(uploaded.filename)}" # Combine prefix with original filename
+    path = os.path.join(folder, filename) # Full save path
 
-    if old_filename and old_filename != "default_image.png":
+    if old_filename and old_filename != "default_image.png": # If an old picture exists(not default), try to remove it first
         old_path = os.path.join(folder, old_filename)
         if os.path.exists(old_path):
             try:
-                os.remove(old_path)
-            except PermissionError:
+                os.remove(old_path) # Delete old file
+            except PermissionError: # If file is locked, rename then delete
                 tmp = old_path + ".old"
                 try:
                     os.replace(old_path, tmp)
                     os.remove(tmp)
                 except Exception:
-                    pass
-    try:
+                    pass # Fail silently if still not deletable
+    try: # Reset file stream pointer before saving
         uploaded.stream.seek(0)
     except Exception:
-        pass
+        pass # Ignore if seek not supported
 
-    uploaded.save(path)
-    return filename
+    uploaded.save(path) # Save the new file
+    return filename # Return the new filename to store in database
 
 # User loader
 @login_manager.user_loader
@@ -510,64 +507,70 @@ def posts():
     )
 
 
-# --- Search by keyword (title/content/location/author) and event date filter - Done by Hen Ee Von ---
+# --- Search posts by keyword or event date
 @app.route("/search", methods=["GET"])
-def search():
-    sport = (request.args.get("sport") or "").strip().lower()
-    dateinpost = (request.args.get("date") or "").strip()
+def search(): 
+    #Allow user to search posts by keyword (title/content/location/author name)
+    #Also supports filtering posts by event date
 
-    searched = False
-    # Join User so we can filter by user name too
+    # Get user search input
+    sport = (request.args.get("sport") or "").strip().lower() #keyword entered by user
+    dateinpost = (request.args.get("date") or "").strip() #event date entered by user
+    searched = False # flag to check if any search was done
+
+    # Join posts with user so we can also filter by author name
     query = Posts.query.join(User).filter(Posts.is_hidden == False)
 
-    # Filter by sport if provided
+    # Filter by keyword
     if sport:
-        searched = True
-        query = query.filter(
+        searched = True # Mark search as active
+        query = query.filter(   # Look for matches in these field:
             or_(
-                func.lower(Posts.title).like(f"%{sport}%"),
-                func.lower(Posts.content).like(f"%{sport}%"),
-                func.lower(Posts.location).like(f"%{sport}%"),
-                func.lower(User.name).like(f"%{sport}%")   # ✅ works because Posts has FK -> User
+                func.lower(Posts.title).like(f"%{sport}%"), # Post title
+                func.lower(Posts.content).like(f"%{sport}%"), # Post content
+                func.lower(Posts.location).like(f"%{sport}%"), # Post location
+                func.lower(User.name).like(f"%{sport}%")  # Author's name(from User table)
+                                                          # ✅ works because Posts has FK -> User
             )
         )
 
-    # Filter by date if provided
+    # Filter by event date
     if dateinpost:
         searched = True
         try:
-            date_obj = datetime.strptime(dateinpost, "%Y-%m-%d").date()
-            query = query.filter(Posts.event_date == date_obj)
+            date_obj = datetime.strptime(dateinpost, "%Y-%m-%d").date() #Convert string to date
+            query = query.filter(Posts.event_date == date_obj) # Match posts on that date
         except ValueError:
-            flash("Invalid date format. Please use YYYY-MM-DD.", "warning")
+            flash("Invalid date format. Please use YYYY-MM-DD.", "warning") #Show warning if wrong date format
 
-    # Execute query
+    # run search and sort by newest posts first
     results = query.order_by(Posts.date_posted.desc()).all()
 
     # Convert posted date to Malaysia timezone
     for post in results: 
         if post.date_posted:
-            if post.date_posted.tzinfo is None:
+            if post.date_posted.tzinfo is None: #if no timezone info, assume UTC
                 utc_time = pytz.utc.localize(post.date_posted)
             else:
                 utc_time = post.date_posted
-            post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ)
+            post.local_date_posted_value = utc_time.astimezone(MALAYSIA_TZ) # Convert into malaysia time
         else:
-            post.local_date_posted_value = None
+            post.local_date_posted_value = None # No date available
 
     # Detect if admin is logged in (for template use)
     current_admin = None
-    if session.get("admin_email"):
+    if session.get("admin_email"): # if session has admin email
         current_admin = Admin.query.get(session.get("admin_email"))
 
+    #render search results in index.html
     return render_template(
         "index.html",
-        posts=results,
-        searched=searched,
-        sport=sport,
-        date=dateinpost,
-        admin=current_admin,
-        user=current_user if current_user.is_authenticated else None
+        posts=results, # Pass the search results
+        searched=searched, # Flag (True if a search wa performed)
+        sport=sport, #Pass keyword input back to template
+        date=dateinpost, #Pass date input back to template
+        admin=current_admin, # Info about logged-in admin
+        user=current_user if current_user.is_authenticated else None # Info about logged-in user
     )
 
 
@@ -865,57 +868,60 @@ def post_detail(post_id):
         next_url=next_url, 
     )
 
-
+# --- Helper for stable conversation key between two emails
 def conversation_key(a_email: str, b_email: str) -> str:
-    """Generate a stable key for two users’ conversation."""
     return "|".join(sorted([a_email.lower(), b_email.lower()]))
 
-
+# --- Chat between post owner and a partner ---
 @app.route("/chat/<int:post_id>/<partner_email>")
 @login_required
-def chat_with_user(post_id, partner_email):
-    post = Posts.query.get_or_404(post_id)
-    owner_email = post.email.lower()
-    current_email = current_user.email.lower()
+def chat_with_user(post_id, partner_email): #Load all chat messages between current user and partner for a specific posts
+    post = Posts.query.get_or_404(post_id) # Chat is tied to a post
+    owner_email = post.email.lower() # Post owner
+    current_email = current_user.email.lower() # User that is viewing nnow
+    partner_email = partner_email.lower() # partner
 
-    partner_email = partner_email.lower()
-
-    # Prevent outsiders from chatting → only owner or partner allowed
+    # Prevent outsiders from chatting → only owner or partner can view this chat
     if current_email != owner_email and partner_email != owner_email:
         return redirect(url_for("chat_with_user", post_id=post_id, partner_email=owner_email))
 
-    conv = conversation_key(current_email, partner_email)
-    room = f"post-{post_id}-{conv}"
+    #room ID is based on post and emails
+    conv = conversation_key(current_email, partner_email) # Room key
+    room = f"post-{post_id}-{conv}" # Socket.IO room name
 
+    #load chat messages from oldest to latest messages
     messages = (
         ChatMessage.query.filter_by(post_id=post_id, conversation=conv)
         .order_by(asc(ChatMessage.created_at))
         .all()
     )
 
-    for msg in messages:
+    for msg in messages: # Prepare local time label for display below each message
         if msg.created_at:
             msg.local_time = pytz.utc.localize(msg.created_at).astimezone(MALAYSIA_TZ).strftime("%H:%M")
         else:
             msg.local_time = ""
 
+    #Partner display info (name and profile pic)
     partner_user = User.query.get(partner_email)
     partner_name = partner_user.name if partner_user else partner_email
     partner_img = url_for("static", filename=f"profile_pics/{partner_user.image_file or 'default_image.png'}") if partner_user else url_for("static", filename="profile_pics/default.png")
 
+    #Owner sees partner name, partner sees post owner's name
     if current_email == owner_email:
         header_name = partner_name
     else:
         header_name = post.user.name  # ✅ uses Posts.user relationship
 
     return render_template("chat.html",post=post, room=room, username=current_user.name,header_name=header_name, 
-                           messages=messages, post_id=post_id, partner_email=partner_email,partner_img=partner_img)
+                           messages=messages, post_id=post_id, partner_email=partner_email,partner_img=partner_img) # Render room, messages, name, profile picture
 
+# --- Socket.IO(user joins a chat room)
 @socketio.on("join")
 def on_join(data):
-    room = data.get("room")
+    room = data.get("room") # Which room to join
 
-    # Identify sender
+    # Identify the joining user (supports user or admin session)
     if current_user.is_authenticated:
         name = current_user.name
         email = current_user.email
@@ -928,16 +934,16 @@ def on_join(data):
 
     if room:
         print("JOIN ->", email, "to", room)
-        join_room(room)
-        send(f"{name} joined the chat.", to=room)
+        join_room(room) # Join Socket.IO room
+        send(f"{name} joined the chat.", to=room) #Broadcast system message
 
-
+# --- Socket.IO to handle sending a new message
 @socketio.on("send_message")
 def on_send_message(data):
-    room = (data or {}).get("room")
-    text = ((data or {}).get("message") or "").strip()
-    post_id = (data or {}).get("post_id")
-    partner = ((data or {}).get("partner_email") or "").lower().strip()
+    room = (data or {}).get("room") # Room name
+    text = ((data or {}).get("message") or "").strip() # Message
+    post_id = (data or {}).get("post_id") # Tied post
+    partner = ((data or {}).get("partner_email") or "").lower().strip() # Receiver
 
     if not (room and text and post_id and partner):
         return
@@ -955,7 +961,7 @@ def on_send_message(data):
     else:
         return  # nobody logged in, ignore
 
-    conv = conversation_key(current_email, partner)
+    conv = conversation_key(current_email, partner) # Conversation key
 
     msg = ChatMessage(
         post_id=int(post_id),
@@ -963,11 +969,12 @@ def on_send_message(data):
         sender_email=sender_email,
         sender_name=sender_name,
         text=text,
-    )
+    ) # Save message in database
+
     db.session.add(msg)
     db.session.commit()
 
-    if msg.created_at:
+    if msg.created_at: # local time label 
         utc_time = pytz.utc.localize(msg.created_at)
         local_time = utc_time.astimezone(MALAYSIA_TZ)
     else:
@@ -975,92 +982,92 @@ def on_send_message(data):
 
     ts = local_time.strftime("%H:%M") if local_time else ""
 
-    try:
-        # ✅ Notify partner if it’s not the same as sender
+    try: # ✅ Notify partner if it’s not the same as sender
         if partner != current_email:
             chat_url = url_for("chat_with_user", post_id=post_id, partner_email=sender_email)
             add_notification(partner, f"{sender_name} sent you a message", link=chat_url)
     except Exception:
         db.session.rollback()
 
-    send({"user": msg.sender_name,"email": msg.sender_email ,"text": msg.text, "time": ts}, to=room)
+    send({"user": msg.sender_name,"email": msg.sender_email ,"text": msg.text, "time": ts}, to=room) # Emit the message to everyone in the room
 
 
-# --- Notifications page(lists all notifications(unread + read)) - Done by Hen Ee Von ---
+# --- Show all notifications for the logged-in user ---
 @app.route("/notifications")
 @login_required
 def notifications():
     rows = (
-        Notification.query.filter_by(email=current_user.email)
-        .order_by(Notification.created_at.desc())
+        Notification.query.filter_by(email=current_user.email) # Only this user's notifications
+        .order_by(Notification.created_at.desc()) # Newest notification first
         .all()
     )
 
+    # Prepare Malaysia time display for each notifications
     for notif in rows:
         if notif.created_at:
             if notif.created_at.tzinfo is None:
-                notif.local_time = pytz.utc.localize(notif.created_at).astimezone(MALAYSIA_TZ)
+                notif.local_time = pytz.utc.localize(notif.created_at).astimezone(MALAYSIA_TZ) # assume UTC to Malaysia time
             else:
-                notif.local_time = notif.created_at.astimezone(MALAYSIA_TZ)
+                notif.local_time = notif.created_at.astimezone(MALAYSIA_TZ) # convert existing timezone into malaysia time
         else:
             notif.local_time = None
 
-    return render_template("notifications.html", rows=rows)
+    return render_template("notifications.html", rows=rows) # Render list page
 
-
+# --- Mark all notifications as read(one-click)---
 @app.route("/notifications/read_all", methods=["POST"])
 @login_required
 def notifications_read_all():
-    Notification.query.filter_by(email=current_user.email, is_read=False).update({"is_read": True})
-    db.session.commit()
-    return redirect(url_for("notifications"))
+    Notification.query.filter_by(email=current_user.email, is_read=False).update({"is_read": True}) # Target only this user's unread items
+    db.session.commit() #Save changes
+    return redirect(url_for("notifications")) #Back to list
 
-# --- Notifications page (open a notification(mark read and redirect link)) - Done by Hen Ee Von
+# --- Open a single notification and redirect to its link ---
 @app.route("/notif/<int:notif_id>")
 @login_required
 def open_notif(notif_id):
-    notif = Notification.query.get_or_404(notif_id)
+    notif = Notification.query.get_or_404(notif_id) # Load notif or 404
 
-    if notif.email.lower() == current_user.email.lower():
-        notif.is_read = True
+    if notif.email.lower() == current_user.email.lower(): #Security(must belong to current user)
+        notif.is_read = True # Mark as read
         db.session.commit()
 
-    return redirect(notif.link or url_for("notifications"))
+    return redirect(notif.link or url_for("notifications")) # Go to target link, fallback to list
 
-#Delete notification
+#Delete single notification
 @app.route("/notifications/delete/<int:notif_id>", methods=["POST"])
 @login_required
 def notifications_delete(notif_id):
-    notif = Notification.query.get_or_404(notif_id)
-    if notif.email == current_user.email:
+    notif = Notification.query.get_or_404(notif_id) # Load notif or 404
+    if notif.email == current_user.email: #Only owner can delete
         db.session.delete(notif)
         db.session.commit()
-    return redirect(url_for("notifications"))
+    return redirect(url_for("notifications")) #Back to list
 
+#Delete all notifications
 @app.route("/notifications/clear", methods=["POST"])
 @login_required
 def notifications_clear():
-    Notification.query.filter_by(email=current_user.email).delete()
+    Notification.query.filter_by(email=current_user.email).delete() # Delete all notifications for this user
     db.session.commit()
-    return redirect(url_for("notifications"))
+    return redirect(url_for("notifications")) # Back to list
 
-#My profile
-@app.route("/profile")
+# ---My profile ---
+@app.route("/profile") # Redirecr to own profile by email
 @login_required
 def profile():
-    return redirect(url_for("profile_page", email=current_user.email))
+    return redirect(url_for("profile_page", email=current_user.email)) # Convinience redirect
 
-# --- My Profile(shows user info, their recent posts) - Done by Hen Ee Von ---
+# --- View a user's profile page ---
 @app.route("/profile/<string:email>")
 @login_required
-def profile_page(email):
-    # fetch the user being viewed by email
-    user = User.query.filter_by(email=email).first_or_404()
+def profile_page(email): #Show a user's account information and their recent posts
+    user = User.query.filter_by(email=email).first_or_404() # Target profile user
 
-    # fetch only this user's posts
+    # load all posts by this user
     recent_posts = (
         Posts.query.filter_by(email=user.email)
-        .order_by(Posts.date_posted.desc())
+        .order_by(Posts.date_posted.desc()) # latest posts first
         .all()
     )
 
@@ -1075,7 +1082,7 @@ def profile_page(email):
         else:
             post.local_date_posted_value = None
 
-    # correct image path (use their image, not always current_user)
+    # correct profile picture path (use their image, not always current_user)
     image_url = url_for(
         "static",
         filename=f"profile_pics/{user.image_file or 'default_image.png'}"
@@ -1086,19 +1093,19 @@ def profile_page(email):
         user=user,
         image_url=image_url,
         recent_posts=recent_posts
-    )
+    ) # Render profile template
 
 
 # --- Edit Profile(update name/gender/lvl/security Q&A/bio/profile pic) - Done by Hen Ee Von ---
 @app.route("/profile/edit", methods=["GET", "POST"])
 @login_required
 def profile_edit():
-    form = UpdateProfileForm()
+    form = UpdateProfileForm() #WTForms form
 
-     # Set the choices dynamically
-    form.security_question.choices = list(question.items())
+    form.security_question.choices = list(question.items()) # Dropdown
 
-    if form.validate_on_submit():
+    if form.validate_on_submit(): 
+        # Update basic field
         current_user.name = form.name.data
         current_user.gender = form.gender.data
         current_user.sport_level = form.sport_level.data
@@ -1106,15 +1113,16 @@ def profile_edit():
         current_user.security_question = form.security_question.data
         current_user.security_answer = (form.security_answer.data or "").strip().lower()
 
+        # Optional for profile pic upload
         uploaded = request.files.get("picture")
         if uploaded and uploaded.filename:
-            current_user.image_file = save_profile_picture(uploaded, current_user.email, current_user.image_file)
+            current_user.image_file = save_profile_picture(uploaded, current_user.email, current_user.image_file) # Save new file and cleanup old profile picture
 
         db.session.commit()
         flash("Profile updated.")
-        return redirect(url_for("profile"))
+        return redirect(url_for("profile")) # Back to my Profile page
     
-    if request.method == "GET":
+    if request.method == "GET": # Prefill existing values on GET
         form.name.data = current_user.name
         form.gender.data = current_user.gender
         form.bio.data = current_user.bio
@@ -1124,24 +1132,6 @@ def profile_edit():
     image_url = url_for("static", filename=f"profile_pics/{current_user.image_file or 'default_image.png'}")
 
     return render_template("edit_profile.html", form=form, image_url=image_url, question=question)
-
-
-
-def save_picture(form_picture):
-    random_hex = secrets.token_hex(8)
-    _, f_ext = os.path.splitext(form_picture.filename)
-    picture_fn = random_hex + f_ext.lower()
-    picture_path = os.path.join(app.root_path, "static/profile_pics", picture_fn)
-
-    try:
-        img = Image.open(form_picture)
-        img.thumbnail((256, 256))
-        img.save(picture_path, optimize=True)
-    except Exception as e:
-        raise ValueError("Invalid image file") from e
-
-    return picture_fn
-
 
 # Join Activity
 @app.route("/activityrequest/<int:post_id>", methods=["POST"])
