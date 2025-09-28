@@ -1244,7 +1244,7 @@ def create_first_admin():
         admin_user = User(
             email="eewen@gmail.com",
             name="Lee Ee Wen",
-            password=generate_password_hash("mipAplus", method="pbkdf2:sha256"),
+            password=generate_password_hash("aaaa", method="pbkdf2:sha256"),
             gender="Female",
             sport_level="Advanced",
             security_question="book",  #  key from the question dict
