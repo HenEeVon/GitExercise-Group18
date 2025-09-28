@@ -34,7 +34,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///ebfit.db"
 # (Should be kept secret in production, usually stored in environment variables)
 app.config["SECRET_KEY"] = "060226*"
 db = SQLAlchemy(app)
-socketio = SocketIO(app, async_mode="eventlet", cors_allowed_origins="*")
+socketio = SocketIO(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
